@@ -22,14 +22,12 @@
         <!-- Page Title Row: displays the "Tracker" heading and a small badge showing map & GPS tools are active -->
         <div class="page-title-row">
           <div><span class="eyebrow">Explore and record</span><h1>Tracker</h1><p>Choose a location, check the conditions, and track your session.</p></div>
-          <span class="pill green"><span class="dot"></span>Map and GPS tools</span>
+          <span class="pill green" id="tracker-mode-pill"><span class="dot"></span>Outdoor GPS &amp; route tools</span>
         </div>
 
-        <!-- Main Tracker Workspace: splits the page into the interactive map on the left and workout/route controls on the right -->
-        <div class="tracker-layout">
-
-          <!-- Left Side — Interactive Map Card: lets you search locations, find your current GPS spot, and click to set start/end points -->
-          <section class="card map-card">
+        <!-- Full-width outdoor map, followed by route planning and activity controls. -->
+        <div class="tracker-workspace">
+          <section class="card map-card" id="tracker-map-panel">
             <div class="map-toolbar">
               <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button"><img class="asset-icon" src="images/input/icons/icon-search.svg" alt="" aria-hidden="true">Search</button></div>
               <button class="btn secondary small-btn" id="my-location" type="button"><img class="asset-icon" src="images/input/icons/icon-gps.svg" alt="" aria-hidden="true">My location</button>
@@ -40,61 +38,17 @@
               <button class="map-view-btn" type="button" data-map-style="satellite" aria-pressed="false">Satellite</button>
             </div>
             <div class="map-area-bar" aria-live="polite">
-              <div class="map-area-name-group">
-                <span class="map-area-kicker">Viewing area</span>
-                <strong id="map-area-name">Loading nearby area name…</strong>
-              </div>
+              <div class="map-area-name-group"><span class="map-area-kicker">Viewing area</span><strong id="map-area-name">Loading nearby area name…</strong></div>
               <span class="map-connection-status" id="map-connection-status">Loading OpenStreetMap tiles…</span>
             </div>
-            <div id="tracker-map" role="application" aria-label="Interactive Leaflet map using OpenStreetMap. Place names are shown on the map. Click once for a start point and again for a destination."></div>
+            <div id="tracker-map" role="application" aria-label="Interactive Leaflet map using OpenStreetMap. Click once for a start point and again for a destination."></div>
             <div class="map-legend"><span>Click map to set start and destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
             <div class="map-credits">Street map © OpenStreetMap contributors · Satellite imagery © Esri, Maxar, Earthstar Geographics · Routing by OSRM (FOSSGIS)</div>
           </section>
 
-          <!-- Right Side — Workout Controls & Route Planner Stack -->
-          <aside class="stack">
-
-            <!-- Workout Recorder Card: lets you pick an exercise type, track live time/distance/calories (or reps/weights), and save your session -->
-            <section class="card">
-              <div class="card-head"><div><span class="eyebrow">Your session</span><h3>Activity tracker</h3></div><span class="pill" id="tracking-state">Ready</span></div>
-
-              <!-- Exercise Category Tabs: switch between Outdoor, Indoor, Bodyweight, Gym, and Mind & body -->
-              <div class="activity-tabs" role="tablist" aria-label="Activity category">
-                <button class="activity-tab active" type="button" data-category="outdoor">Outdoor</button>
-                <button class="activity-tab" type="button" data-category="indoor">Indoor</button>
-                <button class="activity-tab" type="button" data-category="bodyweight">Bodyweight</button>
-                <button class="activity-tab" type="button" data-category="gym">Gym</button>
-                <button class="activity-tab" type="button" data-category="mind">Mind & body</button>
-              </div>
-
-              <!-- Specific Activity Picker & Simulation Toggle: pick a workout (like Run or Walk) and toggle pretend GPS mode -->
-              <div class="field" style="margin-top:14px"><label for="activity-type">Activity</label><select id="activity-type"><option>Run</option><option>Walk</option><option>Ride</option><option>Hike</option></select></div>
-              <label class="check-row"><input type="checkbox" id="simulation-mode" checked><span>Simulation mode (demonstration only; not real GPS)</span></label>
-
-              <!-- Live Workout Numbers: displays elapsed time, distance covered, and estimated calories -->
-              <div class="tracker-metrics" style="margin:15px 0">
-                <div class="tracker-metric"><small>Time</small><strong id="track-time">00:00</strong></div>
-                <div class="tracker-metric"><small>Distance</small><strong id="track-distance">0.00 km</strong></div>
-                <div class="tracker-metric"><small>Calories*</small><strong id="track-calories">—</strong></div>
-              </div>
-
-              <!-- Extra Inputs for Gym/Indoor Workouts: hidden by default, appear when you pick strength or indoor activities -->
-              <div class="field" id="rep-field" hidden><label for="rep-count">Repetitions</label><input id="rep-count" type="number" min="0" max="999" value="0"><label for="set-count">Sets</label><input id="set-count" type="number" min="1" max="99" value="1"></div>
-              <div class="field" id="weight-field" hidden><label for="lift-weight">Weight (kg, optional)</label><input id="lift-weight" type="number" min="0" max="500" step="0.5" placeholder="e.g. 20"></div>
-              <div class="field" id="manual-distance-field" hidden><label for="manual-distance">Distance (km, optional)</label><input id="manual-distance" type="number" min="0" step="0.01" placeholder="0.00"></div>
-
-              <!-- Session Playback Buttons: Start, Pause, and Finish (which saves the workout) -->
-              <div class="tracker-actions">
-                <button class="btn" id="track-start" type="button">Start session</button>
-                <button class="btn secondary" id="track-pause" type="button" disabled>Pause</button>
-                <button class="btn secondary" id="track-finish" type="button" disabled>Finish</button>
-              </div>
-              <p class="small muted" style="margin:12px 0 0">*Calorie values are optional rough estimates, not health or nutrition advice. Keep the session comfortable and stop when needed.</p>
-            </section>
-
-            <!-- Route Planner Card: calculates walking, cycling, or driving directions between two points clicked on the map -->
-            <section class="card">
-              <div class="card-head"><div><span class="eyebrow">Route planner</span><h3>Plan a route</h3></div></div>
+          <div class="tracker-controls-grid">
+            <section class="card route-planner-card" id="route-planner-panel">
+              <div class="card-head"><div><span class="eyebrow">Outdoor route</span><h3>Plan a route</h3></div></div>
               <div class="field"><label for="travel-mode">Travel mode</label><select id="travel-mode"><option value="foot">Walk / Run / Hike</option><option value="ride">Ride</option><option value="drive">Drive</option></select></div>
               <div class="route-points" id="route-point-labels"><div class="route-point">Start point <small>Choose on the map or use My Location</small></div><div class="route-point">Destination <small>Choose another point on the map</small></div></div>
               <button class="text-button map-swap-button" id="swap-points" type="button">Swap start and destination</button>
@@ -105,7 +59,117 @@
               <div id="saved-routes" style="margin-top:15px"></div>
             </section>
 
-          </aside>
+            <section class="card activity-tracker-card">
+              <div class="card-head"><div><span class="eyebrow">Your session</span><h3>Activity tracker</h3></div><span class="pill" id="tracking-state">Ready</span></div>
+              <div class="activity-tabs category-tabs" role="tablist" aria-label="Activity category">
+                <button class="activity-tab active" type="button" data-category="outdoor" role="tab" aria-selected="true">Outdoor</button>
+                <button class="activity-tab" type="button" data-category="indoor" role="tab" aria-selected="false">Indoor</button>
+                <button class="activity-tab" type="button" data-category="bodyweight" role="tab" aria-selected="false">Bodyweight</button>
+                <button class="activity-tab" type="button" data-category="gym" role="tab" aria-selected="false">Gym</button>
+                <button class="activity-tab" type="button" data-category="mind" role="tab" aria-selected="false">Mind &amp; Body</button>
+              </div>
+
+              <div class="field activity-picker"><label for="activity-type">Activity</label><select id="activity-type"></select></div>
+
+              <div class="category-panel" id="outdoor-controls">
+                <label class="check-row"><input type="checkbox" id="simulation-mode" checked><span>Simulation mode (demonstration only; not real GPS)</span></label>
+                <div class="tracker-metrics">
+                  <div class="tracker-metric"><small>Time</small><strong id="track-time">00:00</strong></div>
+                  <div class="tracker-metric"><small>Distance</small><strong id="track-distance">0.00 km</strong></div>
+                  <div class="tracker-metric"><small>Pace / Speed</small><strong id="track-pace">—</strong></div>
+                  <div class="tracker-metric"><small>Calories</small><strong id="track-calories">—</strong></div>
+                </div>
+                <p class="small muted">GPS route recording is available when Simulation mode is off and location permission is granted.</p>
+              </div>
+
+              <div class="category-panel" id="indoor-controls" hidden>
+                <div class="tracker-metrics">
+                  <div class="tracker-metric"><small>Elapsed time</small><strong id="indoor-time">00:00</strong></div>
+                  <div class="tracker-metric" id="indoor-distance-metric"><small>Distance</small><strong id="indoor-distance">—</strong></div>
+                  <div class="tracker-metric"><small>Calories</small><strong id="indoor-calories">—</strong></div>
+                  <div class="tracker-metric"><small id="indoor-output-label">Speed / Intensity</small><strong id="indoor-output-value">—</strong></div>
+                </div>
+                <div class="form-grid two-col">
+                  <div class="field" id="indoor-distance-field"><label for="indoor-distance-input">Distance (km)</label><input id="indoor-distance-input" type="number" min="0" step="0.01" placeholder="Enter machine distance"></div>
+                  <div class="field" id="indoor-intensity-field"><label for="indoor-intensity-input" id="indoor-intensity-label">Speed / Intensity</label><input id="indoor-intensity-input" type="number" min="0" step="0.1" placeholder="Optional"></div>
+                  <div class="field" id="indoor-incline-field"><label for="indoor-incline-input">Incline (%)</label><input id="indoor-incline-input" type="number" min="0" max="30" step="0.5" value="0"></div>
+                  <div class="field" id="indoor-count-field" hidden><label for="indoor-count-input" id="indoor-count-label">Jump count / strokes</label><input id="indoor-count-input" type="number" min="0" step="1" value="0"></div>
+                </div>
+                <p class="small muted">Enter the machine reading manually. No GPS or outdoor route is used for indoor sessions.</p>
+              </div>
+
+              <div class="category-panel" id="bodyweight-controls" hidden>
+                <div class="form-grid two-col">
+                  <div class="field"><label for="bodyweight-target-sets">Planned sets</label><input id="bodyweight-target-sets" type="number" min="1" max="99" value="3"></div>
+                  <div class="field" id="bodyweight-target-reps-field"><label for="bodyweight-target-reps">Target reps per set</label><input id="bodyweight-target-reps" type="number" min="1" max="999" value="10"></div>
+                  <div class="field" id="bodyweight-hold-target-field" hidden><label for="bodyweight-hold-target">Target hold (seconds)</label><input id="bodyweight-hold-target" type="number" min="1" max="3600" value="30"></div>
+                  <div class="field"><label for="bodyweight-rest-duration">Rest between sets (seconds)</label><input id="bodyweight-rest-duration" type="number" min="0" max="900" value="60"></div>
+                </div>
+                <div class="tracker-metrics">
+                  <div class="tracker-metric"><small>Current set</small><strong id="bodyweight-current-set">1 / 3</strong></div>
+                  <div class="tracker-metric"><small>Total reps</small><strong id="bodyweight-total-reps">0</strong></div>
+                  <div class="tracker-metric"><small>Total sets</small><strong id="bodyweight-total-sets">0</strong></div>
+                  <div class="tracker-metric"><small>Active time</small><strong id="bodyweight-active-time">00:00</strong></div>
+                  <div class="tracker-metric"><small>Rest timer</small><strong id="bodyweight-rest-timer">Ready</strong></div>
+                  <div class="tracker-metric" id="bodyweight-hold-metric" hidden><small>Hold duration</small><strong id="bodyweight-hold-time">00:00</strong></div>
+                  <div class="tracker-metric"><small>Estimated calories</small><strong id="bodyweight-calories">—</strong></div>
+                </div>
+                <div class="form-grid two-col set-entry-fields">
+                  <div class="field" id="bodyweight-completed-reps-field"><label for="bodyweight-completed-reps">Completed reps</label><input id="bodyweight-completed-reps" type="number" min="0" max="999" value="10"></div>
+                  <div class="field" id="bodyweight-completed-hold-field" hidden><label for="bodyweight-completed-hold">Manual hold override (seconds, optional)</label><input id="bodyweight-completed-hold" type="number" min="1" max="3600" placeholder="Use the hold timer"></div>
+                </div>
+                <button class="btn secondary full set-log-button" id="bodyweight-log-set" type="button" disabled>Log set / Next set</button>
+              </div>
+
+              <div class="category-panel" id="gym-controls" hidden>
+                <div class="form-grid two-col">
+                  <div class="field"><label for="gym-weight">Weight</label><input id="gym-weight" type="number" min="0" step="0.5" value="20"></div>
+                  <div class="field"><label for="gym-weight-unit">Unit</label><select id="gym-weight-unit"><option value="kg">kg</option><option value="lbs">lbs</option></select></div>
+                  <div class="field"><label for="gym-reps">Reps this set</label><input id="gym-reps" type="number" min="1" max="999" value="10"></div>
+                  <div class="field"><label for="gym-rest-duration">Rest between sets (seconds)</label><input id="gym-rest-duration" type="number" min="0" max="900" value="90"></div>
+                </div>
+                <div class="tracker-metrics">
+                  <div class="tracker-metric"><small>Total volume</small><strong id="gym-total-volume">0 kg</strong></div>
+                  <div class="tracker-metric"><small>Sets completed</small><strong id="gym-sets-completed">0</strong></div>
+                  <div class="tracker-metric"><small>Session time</small><strong id="gym-session-time">00:00</strong></div>
+                  <div class="tracker-metric"><small>Estimated calories</small><strong id="gym-calories">—</strong></div>
+                  <div class="tracker-metric"><small>Rest timer</small><strong id="gym-rest-timer">Ready</strong></div>
+                </div>
+                <button class="btn secondary full set-log-button" id="gym-complete-set" type="button" disabled>Complete set</button>
+                <div id="gym-set-log" class="set-log-list" aria-live="polite"></div>
+              </div>
+
+              <div class="category-panel" id="mind-controls" hidden>
+                <div class="form-grid two-col">
+                  <div class="field"><label for="mind-duration-mode">Timer mode</label><select id="mind-duration-mode"><option value="open">Open-ended count-up</option><option value="target">Target countdown</option></select></div>
+                  <div class="field" id="mind-target-field" hidden><label for="mind-target-minutes">Target duration (minutes)</label><select id="mind-target-minutes"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></div>
+                  <div class="field"><label for="mind-focus">Focus / Style (optional)</label><select id="mind-focus"><option value="">Choose a focus</option><option>Vinyasa</option><option>Guided Breathwork</option><option>Deep Stretch</option><option>Mindful Meditation</option><option>Pilates Flow</option></select></div>
+                </div>
+                <div class="mind-timer-display"><small>Session timer</small><strong id="mind-session-timer">00:00</strong><span id="mind-timer-caption">Open-ended session</span></div>
+                <div class="tracker-metrics">
+                  <div class="tracker-metric"><small>Duration</small><strong id="mind-duration">00:00</strong></div>
+                  <div class="tracker-metric"><small>Cycles / rounds</small><strong id="mind-cycles">0</strong></div>
+                  <div class="tracker-metric"><small>Estimated calories</small><strong id="mind-calories">—</strong></div>
+                </div>
+                <div class="form-grid two-col">
+                  <div class="field"><label for="mind-cycles-input">Cycles / rounds (optional)</label><input id="mind-cycles-input" type="number" min="0" step="1" placeholder="e.g. 5"></div>
+                  <div class="field"><label for="mind-mood">Post-session mood / intensity</label><select id="mind-mood"><option value="">Skip check-in</option><option>Calm</option><option>Focused</option><option>Relaxed</option><option>Gentle</option><option>Moderate</option><option>Challenging</option></select></div>
+                </div>
+              </div>
+
+              <div class="field session-notes-field"><label for="session-notes">Notes (optional)</label><input id="session-notes" type="text" maxlength="240" placeholder="How did the session feel?"></div>
+              <div class="tracker-actions">
+                <button class="btn" id="track-start" type="button">Start session</button>
+                <button class="btn secondary" id="track-pause" type="button" disabled>Pause</button>
+                <button class="btn secondary" id="track-finish" type="button" disabled>Finish</button>
+              </div>
+              <section class="finish-summary" id="session-finish-summary" hidden aria-live="polite">
+                <div class="card-head"><h3>Session summary</h3><a class="text-button" href="history.html">Open History</a></div>
+                <p id="session-finish-summary-text"></p>
+              </section>
+              <p class="small muted tracker-disclaimer">Calorie values are rough optional estimates. Choose a comfortable pace and stop when needed.</p>
+            </section>
+          </div>
         </div>
 
         <!-- Bottom Weather & Outdoor Advice Row: shows local weather forecasts and tips on the best time to exercise -->

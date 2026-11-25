@@ -19,47 +19,18 @@
   const firstPresent = (...ids) => ids.map(byId).find(Boolean) || null;
   const DEFAULT_CENTER = CONFIG.defaultMapCenter || [14.5995, 120.9842];
   const ACTIVITY_OPTIONS = {
-    outdoor: ["Walk", "Run", "Ride", "Hike"],
-    indoor: [
-      "Treadmill",
-      "Stationary bike",
-      "Elliptical",
-      "Jump rope",
-      "Stair climber",
-    ],
-    bodyweight: [
-      "Push-ups",
-      "Sit-ups",
-      "Squats",
-      "Lunges",
-      "Jumping jacks",
-      "Burpees",
-    ],
-    gym: ["Strength training", "Weightlifting"],
-    mind: ["Yoga", "Stretching", "Plank", "Pilates"],
+    outdoor: ["Running", "Cycling", "Walking", "Hiking"],
+    indoor: ["Treadmill", "Stationary Bike", "Rowing Machine", "Jump Rope", "Elliptical"],
+    bodyweight: ["Push-ups", "Pull-ups", "Squats", "Planks", "Burpees"],
+    gym: ["Bench Press", "Deadlift", "Barbell Squat", "Dumbbell Curl", "Lat Pulldown"],
+    mind: ["Yoga", "Meditation", "Stretching", "Pilates", "Breathwork"],
   };
   const MET_VALUES = {
-    Walk: 3.5,
-    Run: 7,
-    Ride: 6.5,
-    Hike: 5.5,
-    Treadmill: 4.5,
-    "Stationary bike": 5,
-    Elliptical: 5,
-    "Jump rope": 8,
-    "Stair climber": 6,
-    "Push-ups": 4,
-    "Sit-ups": 3,
-    Squats: 4,
-    Lunges: 4,
-    "Jumping jacks": 5,
-    Burpees: 7,
-    "Strength training": 4,
-    Weightlifting: 4,
-    Yoga: 2.5,
-    Stretching: 2,
-    Plank: 3,
-    Pilates: 3,
+    Running: 7, Cycling: 6.5, Walking: 3.5, Hiking: 5.5,
+    Treadmill: 4.5, "Stationary Bike": 5, "Rowing Machine": 6, "Jump Rope": 8, Elliptical: 5,
+    "Push-ups": 4, "Pull-ups": 4, Squats: 4, Planks: 3, Burpees: 7,
+    "Bench Press": 4, Deadlift: 5, "Barbell Squat": 5, "Dumbbell Curl": 3.5, "Lat Pulldown": 4,
+    Yoga: 2.5, Meditation: 1.3, Stretching: 2, Pilates: 3, Breathwork: 1.5,
   };
 
   // App State Memory: keeps track of map pins, drawn routes, weather data, and your active workout timer
@@ -69,6 +40,7 @@
   let currentMarker = null;
   let routeLayer = null;
   let routeWeatherLayer = null;
+  let sessionTrailLayer = null;
   let streetTiles = null;
   let satelliteTiles = null;
   let satelliteLabels = null;
@@ -102,6 +74,8 @@
     watchId: null,
     simulation: true,
     lastGeoUpdate: 0,
+    setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0,
+    holdElapsed: 0, totalVolumeKg: 0,
   };
 
   // Unit & Coordinate Helpers: converts kilometers to miles if preferred and checks that GPS coordinates are valid numbers
@@ -275,14 +249,16 @@
       L.control.scale({ metric: true, imperial: false, position: "bottomleft" }).addTo(map);
       routeLayer = L.layerGroup().addTo(map);
       routeWeatherLayer = L.layerGroup().addTo(map);
+      sessionTrailLayer = L.layerGroup().addTo(map);
       map.on("click", (event) => {
         const point = [event.latlng.lat, event.latlng.lng];
-        if (!startPoint) setStart(point, "Map selection");
-        else if (!endPoint) setEnd(point, "Map selection");
-        else setEnd(point, "Map selection");
+        if (trackerCategory === "outdoor") {
+          if (!startPoint) setStart(point, "Map selection");
+          else setEnd(point, "Map selection");
+          showMapPopup(point, "Selected map point");
+        }
         selectWeatherLocation(point, "Selected map point");
         updateMapAreaName(point, `${point[0].toFixed(4)}, ${point[1].toFixed(4)}`);
-        showMapPopup(point, "Selected map point");
       });
       updateMapAreaName(DEFAULT_CENTER, "Loading nearby area name…");
       window.setTimeout(() => map && map.invalidateSize(), 250);
@@ -407,10 +383,12 @@
         place.display_name.split(",").slice(0, 3).join(", "),
       );
       setMapAreaName(shortName);
-      setEnd(point, shortName);
+      if (trackerCategory === "outdoor") {
+        setEnd(point, shortName);
+        showMapPopup(point, shortName);
+      }
       selectWeatherLocation(point, shortName);
       map?.flyTo(point, 15, { duration: 1.1 });
-      showMapPopup(point, shortName);
     } catch (error) {
       EF.ui.toast(error.message || "Place search failed.", "error");
     } finally {
@@ -651,7 +629,7 @@
     return (route.geometry?.coordinates || []).map(([lon, lat]) => [lat, lon]);
   }
   function routeDurationSeconds(route) {
-    if (routeMode === "foot" && $("#activity-type").value === "Run") {
+    if (routeMode === "foot" && $("#activity-type").value === "Running") {
       const pace = Number(
         getData().settings.runningPaceSecondsPerKm ||
           CONFIG.defaultRunningPaceSecondsPerKm ||
@@ -674,7 +652,7 @@
         ? `<div class="field" style="margin-top:10px"><label for="route-alternative">Alternative route</label><select id="route-alternative">${allRoutes.map((item, index) => `<option value="${index}" ${index === chosenRouteIndex ? "selected" : ""}>Route ${index + 1} · ${(item.distance / 1000).toFixed(2)} km</option>`).join("")}</select></div>`
         : "";
     const estimateNote =
-      routeMode === "foot" && $("#activity-type").value === "Run"
+      routeMode === "foot" && $("#activity-type").value === "Running"
         ? "Running time uses your saved pace estimate."
         : "Travel time is supplied by the routing service.";
     $("#route-summary").innerHTML =
@@ -1041,222 +1019,268 @@
   // ==========================================
   // LIVE ACTIVITY SESSION (GPS OR SIMULATION)
   // ==========================================
-  // Category & Exercise Selector: updates the workout dropdown and shows GPS/simulation controls only for outdoor activities
+  // Category-aware tracker controls and session workflows.
   function setCategory(category) {
-    trackerCategory = category;
-    document
-      .querySelectorAll("[data-category]")
-      .forEach((button) =>
-        button.classList.toggle("active", button.dataset.category === category),
-      );
+    if (session.active) { EF.ui.toast("Finish the current session before changing categories.", "warning"); return; }
+    trackerCategory = ACTIVITY_OPTIONS[category] ? category : "outdoor";
+    document.querySelectorAll("[data-category]").forEach((button) => {
+      const active = button.dataset.category === trackerCategory;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
     const select = $("#activity-type");
-    const list = ACTIVITY_OPTIONS[category] || ACTIVITY_OPTIONS.outdoor;
-    select.innerHTML = list
-      .map(
-        (name) =>
-          `<option value="${EF.Store.escapeHTML(name)}">${EF.Store.escapeHTML(name)}</option>`,
-      )
-      .join("");
-    const isOutdoor = category === "outdoor";
-    const outdoorControls = $("#outdoor-controls");
-    const indoorControls = $("#indoor-controls");
-    if (outdoorControls) outdoorControls.hidden = !isOutdoor;
-    if (indoorControls) indoorControls.hidden = isOutdoor;
-    const repsField = $("#rep-field");
-    const weightField = $("#weight-field");
-    const distanceField = $("#manual-distance-field");
-    if (repsField) repsField.hidden = !["bodyweight", "gym"].includes(category);
-    if (weightField) weightField.hidden = category !== "gym";
-    if (distanceField) distanceField.hidden = !["indoor", "outdoor"].includes(category);
-    if (weatherBundle?.current) {
-      $("#weather-advice").textContent = EF.Weather.adviceForActivity(
-        category,
-        weatherBundle.current,
-      );
-      $("#advice-category").textContent = category
-        .replace("bodyweight", "Bodyweight")
-        .replace("mind", "Mind and body");
+    select.innerHTML = ACTIVITY_OPTIONS[trackerCategory].map((name) => `<option value="${EF.Store.escapeHTML(name)}">${EF.Store.escapeHTML(name)}</option>`).join("");
+    ["outdoor", "indoor", "bodyweight", "gym", "mind"].forEach((key) => {
+      const panel = byId(`${key}-controls`);
+      if (panel) panel.hidden = key !== trackerCategory;
+    });
+    const outdoor = trackerCategory === "outdoor";
+    const modePill = byId("tracker-mode-pill");
+    if (modePill) modePill.innerHTML = `<span class="dot"></span>${outdoor ? "Outdoor GPS &amp; route tools" : trackerCategory === "indoor" ? "Indoor workout mode" : trackerCategory === "bodyweight" ? "Sets &amp; reps mode" : trackerCategory === "gym" ? "Strength logging mode" : "Mindful session mode"}`;
+    if (byId("tracker-map-panel")) byId("tracker-map-panel").hidden = false;
+    if (byId("route-planner-panel")) byId("route-planner-panel").hidden = !outdoor;
+    const controlsGrid = document.querySelector(".tracker-controls-grid");
+    if (controlsGrid) controlsGrid.classList.toggle("activity-only", !outdoor);
+    ["my-location", "clear-route"].forEach((id) => { if (byId(id)) byId(id).hidden = !outdoor; });
+    const legend = document.querySelector(".map-legend");
+    if (legend) legend.hidden = !outdoor;
+    if (map) {
+      if (outdoor) {
+        routeLayer?.addTo(map); routeWeatherLayer?.addTo(map); sessionTrailLayer?.addTo(map);
+        updatePointMarkers();
+      } else {
+        [routeLayer, routeWeatherLayer, sessionTrailLayer].forEach((layer) => { if (layer && map.hasLayer(layer)) map.removeLayer(layer); });
+        sessionTrailLayer?.clearLayers();
+        [startMarker, endMarker, currentMarker].forEach((marker) => { if (marker) map.removeLayer(marker); });
+        startMarker = null; endMarker = null; currentMarker = null;
+      }
     }
+    Object.assign(session, { elapsed: 0, distance: 0, points: [], lastPoint: null, setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0, holdElapsed: 0, totalVolumeKg: 0 });
+    updateActivitySpecificFields();
+    resetCategoryReadouts();
+    if (weatherBundle?.current && $("#weather-advice") && $("#advice-category")) {
+      $("#weather-advice").textContent = EF.Weather.adviceForActivity(trackerCategory, weatherBundle.current);
+      $("#advice-category").textContent = trackerCategory === "mind" ? "Mind and body" : trackerCategory[0].toUpperCase() + trackerCategory.slice(1);
+    }
+    window.setTimeout(() => map && map.invalidateSize(), 100);
   }
 
-  // Live Timer, Distance, Pace & Calorie Updater: refreshes the on-screen stopwatch and estimates calories burned using MET values
+  function updateActivitySpecificFields() {
+    const type = $("#activity-type").value;
+    const toggle = (id, visible) => { const node = byId(id); if (node) node.hidden = !visible; };
+    const plank = trackerCategory === "bodyweight" && type === "Planks";
+    const jump = trackerCategory === "indoor" && type === "Jump Rope";
+    const rower = trackerCategory === "indoor" && type === "Rowing Machine";
+    const incline = trackerCategory === "indoor" && ["Treadmill", "Elliptical"].includes(type);
+    toggle("bodyweight-target-reps-field", !plank);
+    toggle("bodyweight-hold-target-field", plank);
+    toggle("bodyweight-completed-reps-field", !plank);
+    toggle("bodyweight-completed-hold-field", plank);
+    toggle("bodyweight-hold-metric", plank);
+    toggle("indoor-distance-field", !jump);
+    toggle("indoor-distance-metric", !jump);
+    toggle("indoor-intensity-field", !jump);
+    toggle("indoor-incline-field", incline);
+    toggle("indoor-count-field", jump || rower);
+    if ($("#indoor-count-label")) $("#indoor-count-label").textContent = rower ? "Strokes" : "Jump count";
+    const metricLabel = type === "Treadmill" ? "Speed (km/h)" : type === "Stationary Bike" ? "Speed / resistance level" : type === "Rowing Machine" ? "Split / intensity" : "Resistance / intensity";
+    if ($("#indoor-intensity-label")) $("#indoor-intensity-label").textContent = metricLabel;
+    if ($("#indoor-output-label")) $("#indoor-output-label").textContent = jump ? "Jump count" : rower ? "Strokes / intensity" : "Speed / intensity";
+    toggle("mind-target-field", $("#mind-duration-mode")?.value === "target");
+  }
+
   function formatClock(seconds) {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    return hrs > 0
-      ? `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
-      : `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    const value = Math.max(0, Number(seconds) || 0);
+    const hours = Math.floor(value / 3600), minutes = Math.floor((value % 3600) / 60), secs = Math.floor(value % 60);
+    return hours ? `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(secs).padStart(2,"0")}` : `${String(minutes).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
   }
   function estimateCalories(type, seconds) {
-    const met = MET_VALUES[type] || 4;
-    const weightKg = Number(getData().profile.weight) || 70;
-    return Math.round(met * weightKg * (seconds / 3600));
+    return Math.round((MET_VALUES[type] || 4) * (Number(getData().profile.weight) || 70) * (Math.max(0, seconds) / 3600));
   }
+  function fmtSummaryDuration(seconds) {
+    const total = Math.max(0, Number(seconds) || 0);
+    const minutes = Math.floor(total / 60), remaining = Math.floor(total % 60);
+    return `${minutes}m ${remaining}s`;
+  }
+  function selectedIndoorDistance() { return Math.max(0, Number($("#indoor-distance-input")?.value) || 0); }
+
   function updateSessionReadout() {
-    const timeOutput = firstPresent("session-time", "track-time");
-    const distanceOutput = firstPresent("session-distance", "track-distance");
-    const caloriesOutput = firstPresent("session-calories", "track-calories");
-    if (timeOutput) timeOutput.textContent = formatClock(session.elapsed);
-    if (distanceOutput) distanceOutput.textContent = displayDistance(session.distance);
-    const paceSeconds =
-      session.distance > 0.02 ? session.elapsed / session.distance : 0;
-    const paceOutput = $("#session-pace");
-    if (paceOutput)
-      paceOutput.textContent =
-        paceSeconds > 0
-          ? `${Math.floor(paceSeconds / 60)}:${String(Math.round(paceSeconds % 60)).padStart(2, "0")} /km`
-          : "—";
-    if (caloriesOutput)
-      caloriesOutput.textContent =
-        `${estimateCalories($("#activity-type").value, session.elapsed)} kcal`;
-
-    // Update remaining distance if the user is following a planned route
-    const planned = routes[chosenRouteIndex];
-    const progressEl = document.getElementById("route-live-progress");
-    if (planned && progressEl && !progressEl.hidden) {
-      const remaining = Math.max(0, planned.distance / 1000 - session.distance);
-      progressEl.textContent = `Remaining distance: ${displayDistance(remaining)}`;
+    const type = $("#activity-type")?.value || "Activity";
+    const calories = estimateCalories(type, session.elapsed);
+    if (trackerCategory === "outdoor") {
+      if ($("#track-time")) $("#track-time").textContent = formatClock(session.elapsed);
+      if ($("#track-distance")) $("#track-distance").textContent = displayDistance(session.distance);
+      if ($("#track-calories")) $("#track-calories").textContent = `${calories} kcal`;
+      const pace = session.distance > 0.02 ? session.elapsed / session.distance : 0;
+      if ($("#track-pace")) $("#track-pace").textContent = type === "Cycling" ? (pace ? `${(3600 / pace).toFixed(1)} km/h` : "—") : (pace ? `${Math.floor(pace/60)}:${String(Math.round(pace%60)).padStart(2,"0")} /km` : "—");
+    } else if (trackerCategory === "indoor") {
+      const distance = type === "Jump Rope" ? null : selectedIndoorDistance();
+      if ($("#indoor-time")) $("#indoor-time").textContent = formatClock(session.elapsed);
+      if ($("#indoor-distance")) $("#indoor-distance").textContent = distance === null ? "Not used" : `${distance.toFixed(2)} km`;
+      if ($("#indoor-calories")) $("#indoor-calories").textContent = `${calories} kcal`;
+      const count = Number($("#indoor-count-input")?.value) || 0, intensity = Number($("#indoor-intensity-input")?.value) || 0, incline = Number($("#indoor-incline-input")?.value) || 0;
+      if ($("#indoor-output-value")) $("#indoor-output-value").textContent = type === "Jump Rope" ? `${count} jumps` : type === "Rowing Machine" ? `${count} strokes${intensity ? ` · ${intensity}` : ""}` : `${intensity || "—"}${type === "Treadmill" && intensity ? " km/h" : ""}${incline ? ` · ${incline}% incline` : ""}`;
+    } else if (trackerCategory === "bodyweight") {
+      const activeTime = Math.max(0, session.elapsed - session.restElapsed), planned = Math.max(1, Number($("#bodyweight-target-sets")?.value) || 1), complete = session.setLogs.length >= planned;
+      if ($("#bodyweight-current-set")) $("#bodyweight-current-set").textContent = `${Math.min(session.setLogs.length + 1, planned)} / ${planned}`;
+      if ($("#bodyweight-total-reps")) $("#bodyweight-total-reps").textContent = session.totalReps;
+      if ($("#bodyweight-total-sets")) $("#bodyweight-total-sets").textContent = session.setLogs.length;
+      if ($("#bodyweight-active-time")) $("#bodyweight-active-time").textContent = formatClock(activeTime);
+      if ($("#bodyweight-rest-timer")) $("#bodyweight-rest-timer").textContent = session.restRemaining ? formatClock(session.restRemaining) : (session.setLogs.length ? "Ready" : "—");
+      if ($("#bodyweight-hold-time")) $("#bodyweight-hold-time").textContent = formatClock(session.holdElapsed);
+      if ($("#bodyweight-calories")) $("#bodyweight-calories").textContent = `${estimateCalories(type, activeTime)} kcal`;
+      if ($("#bodyweight-log-set")) { $("#bodyweight-log-set").disabled = !session.active || session.paused || session.restRemaining > 0 || complete; $("#bodyweight-log-set").textContent = complete ? "Planned sets complete" : session.setLogs.length ? "Log set / Next set" : "Log first set"; }
+    } else if (trackerCategory === "gym") {
+      if ($("#gym-total-volume")) $("#gym-total-volume").textContent = `${session.totalVolumeKg.toFixed(1)} kg`;
+      if ($("#gym-sets-completed")) $("#gym-sets-completed").textContent = session.setLogs.length;
+      if ($("#gym-session-time")) $("#gym-session-time").textContent = formatClock(session.elapsed);
+      if ($("#gym-calories")) $("#gym-calories").textContent = `${estimateCalories(type, Math.max(0, session.elapsed - session.restElapsed))} kcal`;
+      if ($("#gym-rest-timer")) $("#gym-rest-timer").textContent = session.restRemaining ? formatClock(session.restRemaining) : (session.setLogs.length ? "Ready" : "—");
+      if ($("#gym-complete-set")) $("#gym-complete-set").disabled = !session.active || session.paused || session.restRemaining > 0;
+    } else if (trackerCategory === "mind") {
+      const targetMode = $("#mind-duration-mode")?.value === "target", target = (Number($("#mind-target-minutes")?.value) || 10) * 60, remaining = Math.max(0, target - session.elapsed);
+      if ($("#mind-session-timer")) $("#mind-session-timer").textContent = formatClock(targetMode ? remaining : session.elapsed);
+      if ($("#mind-timer-caption")) $("#mind-timer-caption").textContent = targetMode ? (remaining ? "Time remaining" : "Target duration reached") : "Open-ended session";
+      if ($("#mind-duration")) $("#mind-duration").textContent = formatClock(session.elapsed);
+      if ($("#mind-cycles")) $("#mind-cycles").textContent = Number($("#mind-cycles-input")?.value) || 0;
+      if ($("#mind-calories")) $("#mind-calories").textContent = `${calories} kcal`;
     }
+    const plannedRoute = routes[chosenRouteIndex], progress = byId("route-live-progress");
+    if (trackerCategory === "outdoor" && plannedRoute && progress && !progress.hidden) progress.textContent = `Remaining distance: ${displayDistance(Math.max(0, plannedRoute.distance / 1000 - session.distance))}`;
   }
 
-  // Record GPS / Simulated Trail Point: adds each new coordinate to the recorded path, adds distance, and moves your live dot on the map
+  function resetCategoryReadouts() {
+    ["indoor-distance-input","indoor-intensity-input","indoor-count-input","indoor-incline-input","mind-cycles-input"].forEach((id) => { const el = byId(id); if (el) el.value = ["indoor-count-input","indoor-incline-input","mind-cycles-input"].includes(id) ? "0" : ""; });
+    if ($("#bodyweight-total-reps")) $("#bodyweight-total-reps").textContent = "0";
+    if ($("#bodyweight-total-sets")) $("#bodyweight-total-sets").textContent = "0";
+    if ($("#gym-total-volume")) $("#gym-total-volume").textContent = "0 kg";
+    if ($("#gym-sets-completed")) $("#gym-sets-completed").textContent = "0";
+    if ($("#gym-set-log")) $("#gym-set-log").innerHTML = "";
+    updateSessionReadout();
+  }
+
   function recordPoint(point) {
     if (!coordsValid(point)) return;
-    if (session.lastPoint) {
-      const stepMeters = EF.Routing.distanceMeters(session.lastPoint, point);
-      if (stepMeters >= 2 && stepMeters < 500)
-        session.distance += stepMeters / 1000;
-    }
-    session.lastPoint = point;
-    session.points.push(point);
+    if (session.lastPoint) { const meters = EF.Routing.distanceMeters(session.lastPoint, point); if (meters >= 2 && meters < 500) session.distance += meters / 1000; }
+    session.lastPoint = point; session.points.push(point);
     if (map) {
       if (currentMarker) map.removeLayer(currentMarker);
-      currentMarker = L.circleMarker(point, {
-        radius: 8,
-        color: "#fff",
-        weight: 3,
-        fillColor: "#16a34a",
-        fillOpacity: 1,
-      }).addTo(map);
-      if (session.points.length > 1)
-        L.polyline(session.points, { color: "#16a34a", weight: 4 }).addTo(
-          routeLayer,
-        );
+      currentMarker = L.circleMarker(point, { radius: 8, color: "#fff", weight: 3, fillColor: "#16a34a", fillOpacity: 1 }).addTo(map);
+      if (session.points.length > 1 && sessionTrailLayer) {
+        sessionTrailLayer.clearLayers();
+        L.polyline(session.points, { color: "#16a34a", weight: 4 }).addTo(sessionTrailLayer);
+      }
     }
   }
 
-  // Start, Pause, Resume & Finish Workout Controls: manages the stopwatch, real device GPS watch, or simulated movement
   function startSession() {
     if (session.active) return;
-    session.active = true;
-    session.paused = false;
-    session.elapsed = 0;
-    session.distance = 0;
-    session.points = [];
-    session.lastPoint = null;
-    session.simulation =
-      trackerCategory === "outdoor" && $("#simulation-mode").checked;
-    const startButton = firstPresent("session-start", "track-start");
-    const pauseButton = firstPresent("session-pause", "track-pause");
-    const finishButton = firstPresent("session-finish", "track-finish");
-    const statusOutput = firstPresent("session-status", "tracking-state");
-    if (startButton) startButton.disabled = true;
-    if (pauseButton) pauseButton.disabled = false;
-    if (finishButton) finishButton.disabled = false;
-    if (statusOutput) statusOutput.textContent = session.simulation
-      ? "Running (simulation mode)"
-      : "Session active";
-
+    Object.assign(session, { active: true, paused: false, elapsed: 0, distance: 0, points: [], lastPoint: null, setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0, holdElapsed: 0, totalVolumeKg: 0 });
+    if (currentMarker && map) { map.removeLayer(currentMarker); currentMarker = null; }
+    if (sessionTrailLayer) sessionTrailLayer.clearLayers();
+    session.simulation = trackerCategory === "outdoor" && Boolean($("#simulation-mode")?.checked);
+    if ($("#session-finish-summary")) $("#session-finish-summary").hidden = true;
+    $("#track-start").disabled = true; $("#track-pause").disabled = false; $("#track-finish").disabled = false;
+    $("#activity-type").disabled = true;
+    if ($("#simulation-mode")) $("#simulation-mode").disabled = true;
+    if ($("#tracking-state")) $("#tracking-state").textContent = session.simulation ? "Simulation active" : "Session active";
     if (trackerCategory === "outdoor") {
-      if (session.simulation) {
-        const origin = startPoint || selectedLocation || DEFAULT_CENTER;
-        recordPoint(origin);
-      } else if (navigator.geolocation) {
-        session.watchId = navigator.geolocation.watchPosition(
-          (pos) => {
-            if (!session.paused)
-              recordPoint([pos.coords.latitude, pos.coords.longitude]);
-          },
-          () => {
-            const status = firstPresent("session-status", "tracking-state");
-            if (status) status.textContent = "GPS signal weak — timer still running";
-          },
-          { enableHighAccuracy: true, maximumAge: 5000 },
-        );
-      }
+      if (session.simulation) recordPoint(startPoint || selectedLocation || DEFAULT_CENTER);
+      else if (navigator.geolocation) session.watchId = navigator.geolocation.watchPosition((pos) => { if (!session.paused) recordPoint([pos.coords.latitude,pos.coords.longitude]); }, () => { if ($("#tracking-state")) $("#tracking-state").textContent = "GPS signal weak — timer still running"; }, { enableHighAccuracy: true, maximumAge: 5000 });
     }
-
     session.timer = window.setInterval(() => {
       if (session.paused) return;
-      session.elapsed += 1;
-      if (session.simulation && session.lastPoint) {
-        const next = [
-          session.lastPoint[0] + 0.00003,
-          session.lastPoint[1] + 0.000035,
-        ];
-        recordPoint(next);
-      }
+      session.elapsed++;
+      if (session.restRemaining > 0) { session.restRemaining--; session.restElapsed++; if (!session.restRemaining) EF.ui.toast("Rest complete. Ready for the next set."); }
+      if (session.simulation && session.lastPoint && trackerCategory === "outdoor") recordPoint([session.lastPoint[0] + 0.00003, session.lastPoint[1] + 0.000035]);
+      if (trackerCategory === "bodyweight" && $("#activity-type").value === "Planks" && session.restRemaining === 0) session.holdElapsed++;
       updateSessionReadout();
+      if (trackerCategory === "mind" && $("#mind-duration-mode").value === "target" && session.elapsed >= (Number($("#mind-target-minutes").value) || 10) * 60) {
+        session.paused = true; $("#tracking-state").textContent = "Target reached — finish to save"; $("#track-pause").textContent = "Resume";
+      }
     }, 1000);
+    updateSessionReadout();
+  }
+
+  function logBodyweightSet() {
+    if (!session.active || session.paused || session.restRemaining) return;
+    const plank = $("#activity-type").value === "Planks", target = Math.max(1, Number($("#bodyweight-target-sets").value) || 1);
+    if (session.setLogs.length >= target) return;
+    const manualHold = Number($("#bodyweight-completed-hold").value) || 0;
+    const value = plank ? Math.max(1, manualHold || session.holdElapsed || 1) : Math.max(0, Number($("#bodyweight-completed-reps").value) || 0);
+    session.setLogs.push(plank ? { holdSeconds: value } : { reps: value });
+    if (!plank) session.totalReps += value;
+    else { session.holdElapsed = 0; $("#bodyweight-completed-hold").value = ""; }
+    session.restRemaining = session.setLogs.length < target ? Math.max(0, Number($("#bodyweight-rest-duration").value) || 0) : 0;
+    updateSessionReadout();
+  }
+
+  function logGymSet() {
+    if (!session.active || session.paused || session.restRemaining) return;
+    const weight = Math.max(0, Number($("#gym-weight").value) || 0), reps = Math.max(1, Number($("#gym-reps").value) || 1), unit = $("#gym-weight-unit").value;
+    const weightKg = unit === "lbs" ? weight * 0.45359237 : weight;
+    const item = { weight, unit, weightKg: Number(weightKg.toFixed(3)), reps, volumeKg: Number((weightKg * reps).toFixed(2)) };
+    session.setLogs.push(item); session.totalReps += reps; session.totalVolumeKg += item.volumeKg;
+    const row = document.createElement("div"); row.className = "set-log-row"; row.textContent = `Set ${session.setLogs.length}: ${weight} ${unit} × ${reps} reps`; $("#gym-set-log").prepend(row);
+    session.restRemaining = Math.max(0, Number($("#gym-rest-duration").value) || 0);
     updateSessionReadout();
   }
 
   function togglePauseSession() {
     if (!session.active) return;
     session.paused = !session.paused;
-    const pauseButton = firstPresent("session-pause", "track-pause");
-    const statusOutput = firstPresent("session-status", "tracking-state");
-    if (pauseButton) pauseButton.textContent = session.paused ? "Resume" : "Pause";
-    if (statusOutput) statusOutput.textContent = session.paused ? "Paused" : "Session active";
+    $("#track-pause").textContent = session.paused ? "Resume" : "Pause";
+    $("#tracking-state").textContent = session.paused ? "Paused" : "Session active";
+    updateSessionReadout();
   }
 
   function finishSession() {
     if (!session.active) return;
     window.clearInterval(session.timer);
-    if (session.watchId != null && navigator.geolocation)
-      navigator.geolocation.clearWatch(session.watchId);
-    session.active = false;
-    session.paused = false;
-    session.timer = null;
-    session.watchId = null;
-
-    const type = $("#activity-type").value;
-    const duration = Math.max(1, session.elapsed);
-    const reps = Number(firstPresent("session-reps", "rep-count")?.value || 0);
-    const sets = Number(firstPresent("session-sets", "set-count")?.value || 0);
-    const notes = $("#session-notes")?.value.trim() || "";
-
-    EF.Store.updateData((data) => {
-      data.activities.push({
-        id: EF.Store.createId("activity"),
-        type,
-        category: trackerCategory,
-        date: new Date().toISOString(),
-        duration,
-        distance: Number(session.distance.toFixed(3)),
-        calories: estimateCalories(type, duration),
-        reps,
-        sets,
-        notes,
-        route: session.points.length > 1 ? session.points : null,
-        simulation: session.simulation,
-      });
-    });
-
-    const startButton = firstPresent("session-start", "track-start");
-    const pauseButton = firstPresent("session-pause", "track-pause");
-    const finishButton = firstPresent("session-finish", "track-finish");
-    const statusOutput = firstPresent("session-status", "tracking-state");
-    if (startButton) startButton.disabled = false;
-    if (pauseButton) { pauseButton.disabled = true; pauseButton.textContent = "Pause"; }
-    if (finishButton) finishButton.disabled = true;
-    if (statusOutput) statusOutput.textContent = "Saved to History";
-    const notesInput = $("#session-notes");
-    if (notesInput) notesInput.value = "";
+    if (session.watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(session.watchId);
+    session.active = false; session.paused = false; session.timer = null; session.watchId = null;
+    const type = $("#activity-type").value, duration = Math.max(1, session.elapsed), notes = $("#session-notes")?.value.trim() || "";
+    const record = { id: EF.Store.createId("activity"), type, category: trackerCategory, date: new Date().toISOString(), duration, distance: 0, calories: estimateCalories(type, duration), reps: session.totalReps, sets: session.setLogs.length, notes, route: null, simulation: false, setDetails: session.setLogs };
+    if (trackerCategory === "outdoor") {
+      const pace = session.distance > 0 ? duration / session.distance : 0;
+      Object.assign(record, { distance: Number(session.distance.toFixed(3)), paceSecondsPerKm: Number(pace.toFixed(1)), speedKph: pace ? Number((3600 / pace).toFixed(2)) : 0, route: session.points.length > 1 ? session.points : null, simulation: session.simulation });
+    } else if (trackerCategory === "indoor") {
+      const jump = type === "Jump Rope";
+      Object.assign(record, { distance: jump ? 0 : Number(selectedIndoorDistance().toFixed(3)), intensity: Number($("#indoor-intensity-input").value) || 0, incline: Number($("#indoor-incline-input").value) || 0, machineCount: Number($("#indoor-count-input").value) || 0, countLabel: jump ? "jumps" : type === "Rowing Machine" ? "strokes" : "", activeMetric: type === "Treadmill" ? "speed" : type === "Stationary Bike" ? "speed / resistance" : "intensity" });
+    } else if (trackerCategory === "bodyweight") {
+      const plank = type === "Planks";
+      Object.assign(record, { reps: plank ? 0 : session.totalReps, totalHoldSeconds: plank ? session.setLogs.reduce((sum, item) => sum + (item.holdSeconds || 0), 0) : 0, targetSets: Math.max(1, Number($("#bodyweight-target-sets").value) || 1), targetReps: plank ? 0 : Math.max(0, Number($("#bodyweight-target-reps").value) || 0), targetHoldSeconds: plank ? Math.max(0, Number($("#bodyweight-hold-target").value) || 0) : 0, activeDuration: Math.max(0, duration - session.restElapsed), restSeconds: session.restElapsed });
+      record.calories = estimateCalories(type, record.activeDuration);
+    } else if (trackerCategory === "gym") {
+      Object.assign(record, { volumeKg: Number(session.totalVolumeKg.toFixed(2)), weightUnit: $("#gym-weight-unit").value, activeDuration: Math.max(0, duration - session.restElapsed), restSeconds: session.restElapsed });
+      record.calories = estimateCalories(type, record.activeDuration);
+    } else if (trackerCategory === "mind") {
+      Object.assign(record, { focus: $("#mind-focus").value || "", mood: $("#mind-mood").value || "", durationMode: $("#mind-duration-mode").value, targetDuration: $("#mind-duration-mode").value === "target" ? (Number($("#mind-target-minutes").value) || 0) * 60 : 0, cycles: Number($("#mind-cycles-input").value) || 0 });
+    }
+    EF.Store.updateData((data) => data.activities.push(record));
+    let summary = `${fmtSummaryDuration(duration)} · ${record.calories} kcal estimated`;
+    if (trackerCategory === "outdoor") summary = `${Number(record.distance).toFixed(2)} km · ${type === "Cycling" && record.speedKph ? `${record.speedKph} km/h` : record.paceSecondsPerKm ? `${Math.floor(record.paceSecondsPerKm / 60)}:${String(Math.round(record.paceSecondsPerKm % 60)).padStart(2, "0")} /km` : "Pace not recorded"} · ${summary}`;
+    else if (trackerCategory === "indoor") {
+      const machineDistance = record.distance ? `${record.distance.toFixed(2)} km machine distance` : "No distance recorded";
+      const machineCount = record.machineCount ? `${record.machineCount} ${record.countLabel}` : "";
+      const intensityText = record.intensity ? `${record.intensity} ${record.activeMetric === "speed" ? "km/h" : record.activeMetric === "speed / resistance" ? "speed / resistance" : "intensity"}` : "";
+      const inclineText = record.incline ? `${record.incline}% incline` : "";
+      summary = [machineDistance, machineCount, intensityText, inclineText, summary].filter(Boolean).join(" · ");
+    }
+    else if (trackerCategory === "bodyweight") summary = `${record.sets} sets · ${record.reps} reps${record.totalHoldSeconds ? ` · ${record.totalHoldSeconds}s total hold` : ""} · ${fmtSummaryDuration(record.activeDuration)} active · ${record.calories} kcal estimated`;
+    else if (trackerCategory === "gym") summary = `${record.volumeKg.toFixed(1)} kg total volume · ${record.sets} sets · ${record.reps} reps · ${summary}`;
+    else if (trackerCategory === "mind") summary = `${fmtSummaryDuration(duration)}${record.focus ? ` · ${record.focus}` : ""}${record.cycles ? ` · ${record.cycles} cycles / rounds` : ""}${record.mood ? ` · Mood: ${record.mood}` : ""} · ${record.calories} kcal estimated`;
+    if ($("#session-finish-summary-text")) $("#session-finish-summary-text").textContent = summary;
+    if ($("#session-finish-summary")) $("#session-finish-summary").hidden = false;
+    $("#track-start").disabled = false; $("#track-pause").disabled = true; $("#track-pause").textContent = "Pause"; $("#track-finish").disabled = true;
+    $("#activity-type").disabled = false;
+    if ($("#simulation-mode")) $("#simulation-mode").disabled = false;
+    if ($("#tracking-state")) $("#tracking-state").textContent = "Saved to History";
+    if ($("#session-notes")) $("#session-notes").value = "";
+    if ($("#bodyweight-log-set")) $("#bodyweight-log-set").disabled = true;
+    if ($("#gym-complete-set")) $("#gym-complete-set").disabled = true;
     EF.ui.toast("Workout saved to your History!");
   }
-
   // ==========================================
   // EVENT LISTENERS AND INITIALIZATION
   // ==========================================
@@ -1296,6 +1320,11 @@
   document.querySelectorAll("[data-category]").forEach((button) =>
     button.addEventListener("click", () => setCategory(button.dataset.category)),
   );
+  bindIfPresent("#activity-type", "change", () => { updateActivitySpecificFields(); updateSessionReadout(); });
+  bindIfPresent("#bodyweight-log-set", "click", logBodyweightSet);
+  bindIfPresent("#gym-complete-set", "click", logGymSet);
+  bindIfPresent("#mind-duration-mode", "change", () => { updateActivitySpecificFields(); updateSessionReadout(); });
+  ["#indoor-distance-input", "#indoor-intensity-input", "#indoor-count-input", "#indoor-incline-input", "#mind-cycles-input"].forEach((selector) => bindIfPresent(selector, "input", updateSessionReadout));
   bindIfPresent("#session-start", "click", startSession);
   bindIfPresent("#track-start", "click", startSession);
   bindIfPresent("#session-pause", "click", togglePauseSession);
@@ -1312,12 +1341,13 @@
   setCategory("outdoor");
   const defaultAct = getData().settings.defaultActivity;
   if (defaultAct) {
-    const foundCat = Object.keys(ACTIVITY_OPTIONS).find((cat) =>
-      ACTIVITY_OPTIONS[cat].includes(defaultAct),
-    );
+    const oldNames = { Walk: "Walking", Run: "Running", Ride: "Cycling", Hike: "Hiking" };
+    const compatibleDefault = oldNames[defaultAct] || defaultAct;
+    const foundCat = Object.keys(ACTIVITY_OPTIONS).find((cat) => ACTIVITY_OPTIONS[cat].includes(compatibleDefault));
     if (foundCat) {
       setCategory(foundCat);
-      $("#activity-type").value = defaultAct;
+      $("#activity-type").value = compatibleDefault;
+      updateActivitySpecificFields();
     }
   }
   renderSavedRoutes();

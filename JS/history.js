@@ -13,6 +13,34 @@
   const dateKey = (value) => EF.Store.localDateKey(value);
   const fmtDuration = (seconds) =>
     `${Math.floor((seconds || 0) / 60)}m ${Math.round((seconds || 0) % 60)}s`;
+  const fmtClock = (seconds) => {
+    const total = Math.max(0, Number(seconds) || 0);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = Math.floor(total % 60);
+    return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}` : `${minutes}:${String(secs).padStart(2, "0")}`;
+  };
+  function sessionStats(item) {
+    if (item.category === "outdoor") {
+      const pace = Number(item.paceSecondsPerKm) || 0;
+      const paceText = item.type === "Cycling" && item.speedKph ? `${item.speedKph} km/h` : pace ? `${Math.floor(pace / 60)}:${String(Math.round(pace % 60)).padStart(2, "0")} /km` : "Pace not recorded";
+      return `${paceText}${item.simulation ? " · Simulation" : ""}`;
+    }
+    if (item.category === "indoor") {
+      const bits = [];
+      if (item.intensity) bits.push(`${item.intensity} ${item.type === "Treadmill" ? "km/h" : item.type === "Stationary Bike" ? "speed / resistance" : "intensity"}`);
+      if (item.incline) bits.push(`${item.incline}% incline`);
+      if (item.machineCount) bits.push(`${item.machineCount} ${item.countLabel || "counts"}`);
+      return bits.join(" · ") || (item.distance ? `${Number(item.distance).toFixed(2)} km machine distance` : "Machine session");
+    }
+    if (item.category === "bodyweight") {
+      const hold = Number(item.totalHoldSeconds) || 0;
+      return `${Number(item.sets) || 0} sets · ${Number(item.reps) || 0} reps${hold ? ` · ${fmtClock(hold)} hold` : ""}`;
+    }
+    if (item.category === "gym") return `${Number(item.volumeKg || 0).toFixed(1)} kg volume · ${Number(item.sets) || 0} sets · ${Number(item.reps) || 0} reps`;
+    if (item.category === "mind") return [item.focus, item.cycles ? `${item.cycles} cycles / rounds` : "", item.mood ? `Mood: ${item.mood}` : ""].filter(Boolean).join(" · ") || "Mindful session";
+    return `${Number(item.reps) || 0} reps · ${Number(item.sets) || 0} sets`;
+  }
 
   // Search, Filter & Sort: narrows down your saved workouts by keyword, category, and date range, then sorts the list
   function filteredActivities() {
@@ -56,7 +84,9 @@
         distance: 0,
         duration: 0,
         reps: 0,
+        volumeKg: 0,
       };
+      current.volumeKg = Math.max(current.volumeKg, Number(item.volumeKg) || 0);
       current.distance = Math.max(current.distance, Number(item.distance) || 0);
       current.duration = Math.max(current.duration, Number(item.duration) || 0);
       current.reps = Math.max(current.reps, Number(item.reps) || 0);
@@ -75,10 +105,9 @@
           value: fmtDuration(record.duration),
         });
       if (record.reps > 0)
-        result.push({
-          label: `${record.type} · most repetitions`,
-          value: `${record.reps} reps`,
-        });
+        result.push({ label: `${record.type} · most repetitions`, value: `${record.reps} reps` });
+      if (record.volumeKg > 0)
+        result.push({ label: `${record.type} · highest volume`, value: `${record.volumeKg.toFixed(1)} kg` });
     });
     return result.sort((a, b) => a.label.localeCompare(b.label));
   }
@@ -128,7 +157,7 @@
       body.innerHTML = activities
         .map(
           (item) =>
-            `<tr><td><strong>${EF.Store.escapeHTML(item.type || "Activity")}</strong></td><td>${EF.Store.escapeHTML(item.category || "—")}</td><td>${EF.Store.escapeHTML(new Date(item.date).toLocaleDateString())}</td><td>${fmtDuration(item.duration)}</td><td>${Number(item.distance || 0).toFixed(2)} km</td><td>${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal` : "—"}</td><td>${Number(item.reps || 0) || "—"}</td><td><div class="row-actions"><button class="text-button" data-view-activity="${EF.Store.escapeHTML(item.id)}" type="button">View</button><button class="text-button" data-delete-activity="${EF.Store.escapeHTML(item.id)}" type="button">Delete</button></div></td></tr>`,
+            `<tr><td><strong>${EF.Store.escapeHTML(item.type || "Activity")}</strong></td><td>${EF.Store.escapeHTML(item.category || "—")}</td><td>${EF.Store.escapeHTML(new Date(item.date).toLocaleDateString())}</td><td>${fmtDuration(item.duration)}</td><td>${Number(item.distance || 0) > 0 ? `${Number(item.distance).toFixed(2)} km` : "—"}</td><td>${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal` : "—"}</td><td>${EF.Store.escapeHTML(sessionStats(item))}</td><td><div class="row-actions"><button class="text-button" data-view-activity="${EF.Store.escapeHTML(item.id)}" type="button">View</button><button class="text-button" data-delete-activity="${EF.Store.escapeHTML(item.id)}" type="button">Delete</button></div></td></tr>`,
         )
         .join("");
     }
@@ -167,7 +196,7 @@
     container.innerHTML = activities
       .map(
         (item) =>
-          `<article class="card history-mobile-card"><div class="between"><strong>${EF.Store.escapeHTML(item.type || "Activity")}</strong><span class="pill">${EF.Store.escapeHTML(item.category || "Activity")}</span></div><p class="small muted">${new Date(item.date).toLocaleString()}</p><div class="between"><span>${fmtDuration(item.duration)}</span><strong>${Number(item.distance || 0).toFixed(2)} km</strong></div><small class="muted">${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal estimate` : "No calorie estimate"} · ${Number(item.reps || 0)} reps</small><div class="row" style="justify-content:flex-end;margin-top:9px"><button class="text-button" data-view-activity="${EF.Store.escapeHTML(item.id)}">View</button><button class="text-button" data-delete-activity="${EF.Store.escapeHTML(item.id)}">Delete</button></div></article>`,
+          `<article class="card history-mobile-card"><div class="between"><strong>${EF.Store.escapeHTML(item.type || "Activity")}</strong><span class="pill">${EF.Store.escapeHTML(item.category || "Activity")}</span></div><p class="small muted">${new Date(item.date).toLocaleString()}</p><div class="between"><span>${fmtDuration(item.duration)}</span><strong>${Number(item.distance || 0) > 0 ? `${Number(item.distance).toFixed(2)} km` : "No distance"}</strong></div><small class="muted">${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal estimate` : "No calorie estimate"} · ${EF.Store.escapeHTML(sessionStats(item))}</small><div class="row" style="justify-content:flex-end;margin-top:9px"><button class="text-button" data-view-activity="${EF.Store.escapeHTML(item.id)}">View</button><button class="text-button" data-delete-activity="${EF.Store.escapeHTML(item.id)}">Delete</button></div></article>`,
       )
       .join("");
     container
@@ -209,7 +238,7 @@
         : "";
     const dialog = EF.ui.openModal(
       `${item.type || "Activity"} details`,
-      `<div class="grid two"><div class="profile-data"><small>Date</small><strong>${new Date(item.date).toLocaleString()}</strong></div><div class="profile-data"><small>Category</small><strong>${EF.Store.escapeHTML(item.category || "—")}</strong></div><div class="profile-data"><small>Duration</small><strong>${fmtDuration(item.duration)}</strong></div><div class="profile-data"><small>Distance</small><strong>${Number(item.distance || 0).toFixed(2)} km</strong></div><div class="profile-data"><small>Repetitions / sets</small><strong>${item.reps || 0} / ${item.sets || 0}</strong></div><div class="profile-data"><small>Estimated calories</small><strong>${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal` : "Not estimated"}</strong></div><div class="profile-data"><small>Route</small><strong>${routeText}</strong></div></div>${routeSection}<p class="small muted" style="margin-top:15px">${EF.Store.escapeHTML(item.notes || "No notes saved.")}${item.simulation ? " · This session used simulation mode." : ""}</p>`,
+      `<div class="grid two"><div class="profile-data"><small>Date</small><strong>${new Date(item.date).toLocaleString()}</strong></div><div class="profile-data"><small>Category</small><strong>${EF.Store.escapeHTML(item.category || "—")}</strong></div><div class="profile-data"><small>Duration</small><strong>${fmtDuration(item.duration)}</strong></div><div class="profile-data"><small>Distance</small><strong>${Number(item.distance || 0) > 0 ? `${Number(item.distance).toFixed(2)} km` : "Not recorded"}</strong></div><div class="profile-data"><small>Session stats</small><strong>${EF.Store.escapeHTML(sessionStats(item))}</strong></div><div class="profile-data"><small>Estimated calories</small><strong>${Number(item.calories || 0) ? `${Math.round(item.calories)} kcal` : "Not estimated"}</strong></div>${item.category === "gym" ? `<div class="profile-data"><small>Total volume lifted</small><strong>${Number(item.volumeKg || 0).toFixed(1)} kg</strong></div>${item.activeDuration !== undefined ? `<div class="profile-data"><small>Active time / rest</small><strong>${fmtDuration(item.activeDuration)} active · ${fmtDuration(item.restSeconds)} rest</strong></div>` : ""}` : ""}${item.category === "bodyweight" && item.activeDuration !== undefined ? `<div class="profile-data"><small>Active time / rest</small><strong>${fmtDuration(item.activeDuration)} active · ${fmtDuration(item.restSeconds)} rest</strong></div>` : ""}${item.category === "bodyweight" && item.totalHoldSeconds ? `<div class="profile-data"><small>Total hold time</small><strong>${fmtDuration(item.totalHoldSeconds)}</strong></div>` : ""}${item.category === "mind" && item.targetDuration ? `<div class="profile-data"><small>Target duration</small><strong>${fmtDuration(item.targetDuration)}</strong></div>` : ""}<div class="profile-data"><small>Route</small><strong>${routeText}</strong></div></div>${item.setDetails?.length ? `<div style="margin-top:14px"><strong>Set log</strong><div class="stack" style="margin-top:8px">${item.setDetails.map((set, index) => `<div class="set-log-row">Set ${index + 1}: ${set.holdSeconds ? `${set.holdSeconds}s hold` : set.weight !== undefined ? `${set.weight} ${EF.Store.escapeHTML(set.unit || "kg")} × ${set.reps} reps` : `${set.reps || 0} reps`}</div>`).join("")}</div></div>` : ""}${routeSection}<p class="small muted" style="margin-top:15px">${EF.Store.escapeHTML(item.notes || "No notes saved.")}${item.simulation ? " · This session used simulation mode." : ""}</p>`,
       '<button type="button" class="btn" data-modal-close>Close</button>',
     );
 
@@ -382,14 +411,15 @@
       "duration",
       "distance",
       "calories",
-      "reps",
-      "sets",
-      "notes",
+      "reps", "sets", "paceSecondsPerKm", "speedKph", "intensity", "incline",
+      "machineCount", "countLabel", "activeMetric", "volumeKg", "weightUnit", "totalHoldSeconds",
+      "activeDuration", "restSeconds", "targetSets", "targetReps", "targetHoldSeconds", "focus", "mood", "durationMode",
+      "targetDuration", "cycles", "setDetails", "notes",
     ];
     const quote = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
     return [
       fields.join(","),
-      ...rows.map((row) => fields.map((field) => quote(row[field])).join(",")),
+      ...rows.map((row) => fields.map((field) => quote(field === "setDetails" ? JSON.stringify(row[field] || []) : row[field])).join(",")),
     ].join("\n");
   }
   function exportCSV() {
