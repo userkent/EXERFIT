@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Page setup: sets the page title ("Profile — ExerFit"), mobile screen sizing, and connects the main CSS file -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f8f5">
+  <title>Profile — ExerFit</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-app-page="profile">
+  <div class="app-shell">
+    <!-- Left Navigation Menu: JavaScript automatically fills this empty box with the sidebar menu -->
+    <div id="sidebar-root"></div>
+
+    <div class="app-main">
+      <!-- Top Header Bar: JavaScript automatically fills this with the user profile and top controls -->
+      <div id="topbar-root"></div>
+
+      <main class="page-content">
+        <!-- Page Title Row: shows the "Profile" heading and the main "Edit profile" button -->
+        <div class="page-title-row">
+          <div><span class="eyebrow">Your space</span><h1>Profile</h1><p>Personal information is private by default in this local demo.</p></div>
+          <button class="btn" id="edit-profile-open" type="button">Edit profile</button>
+        </div>
+
+        <!-- Main Profile Card: holds the cover banner, user info, lifetime stats, personal details, and badges -->
+        <section class="card flat" style="padding:0;overflow:hidden">
+
+          <!-- Profile Header: displays the decorative cover banner, user initial avatar, full name, username, and privacy badge -->
+          <div class="profile-cover"></div>
+          <div class="profile-header">
+            <div class="profile-avatar" id="profile-avatar">E</div>
+            <div class="profile-info"><h2 id="profile-name">ExerFit Member</h2><div class="muted" id="profile-username">@member</div></div>
+            <div style="margin-left:auto;padding-bottom:7px"><span class="pill green">Private profile</span></div>
+          </div>
+
+          <!-- Lifetime Stats Strip: shows total saved activities, active minutes, distance, and earned badges -->
+          <div class="profile-stats">
+            <div><strong id="profile-activity-count">0</strong><small>Activities</small></div>
+            <div><strong id="profile-total-minutes">0</strong><small>Active minutes</small></div>
+            <div><strong id="profile-total-distance">0 km</strong><small>Distance</small></div>
+            <div><strong id="profile-badge-count">0</strong><small>Badges</small></div>
+          </div>
+
+          <!-- Personal Details & Badges Area -->
+          <div class="profile-readonly">
+            <!-- Section Header: title and a second "Edit details" button -->
+            <div class="between" style="margin-bottom:14px">
+              <div><h3 style="margin:0">Personal information</h3><p class="small muted" style="margin:4px 0 0">Only shown to you on this device.</p></div>
+              <button class="btn secondary small-btn" id="edit-profile-inline" type="button">Edit details</button>
+            </div>
+
+            <!-- Personal Info Grid: displays optional details like bio, location, birthday, height, and weight -->
+            <div class="profile-data-grid">
+              <div class="profile-data"><small>Bio</small><strong id="profile-bio">Not added</strong></div>
+              <div class="profile-data"><small>Location</small><strong id="profile-location">Not added</strong></div>
+              <div class="profile-data"><small>Birthday</small><strong id="profile-birthday">Not added</strong></div>
+              <div class="profile-data"><small>Height</small><strong id="profile-height">Not added</strong></div>
+              <div class="profile-data"><small>Weight (private)</small><strong id="profile-weight">Not added</strong></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Activity Milestones: shows unlocked and locked achievement badges -->
+            <h3>Activity milestones</h3>
+            <div class="badge-grid" id="profile-badges"><span class="badge-item locked">First session · Locked</span></div>
+            <p class="small muted" style="margin-top:18px">ExerFit focuses on activity and consistency. Body measurements are optional private profile fields and are not used to rank people or recommend weight changes.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation: JavaScript fills this with a bottom menu bar when viewed on phones -->
+  <div id="mobile-nav-root"></div>
+
+  <!-- JavaScript Files: loads saved user data, animations, menus, and the logic to view and edit profile info -->
+  <script src="js/storage.js"></script>
+  <script src="js/motion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>
