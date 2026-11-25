@@ -1,0 +1,214 @@
+/* ==========================================================================
+   EXERFIT — LIVE TRACKER, MAP & WEATHER STYLES (pages/tracker.css)
+   Used by: tracker.html (and weather snapshot on home.html)
+   ========================================================================== */
+
+.tracker-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(310px, 0.75fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* Interactive Map Card */
+.map-card {
+  padding: 12px;
+}
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 5px 12px;
+  flex-wrap: wrap;
+}
+.map-search {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  gap: 7px;
+}
+.map-search input {
+  min-width: 0;
+  flex: 1;
+}
+#tracker-map {
+  width: 100%;
+  height: 510px;
+  border-radius: 17px;
+  overflow: hidden;
+  background: #d8eadb;
+  z-index: 1;
+}
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+  padding: 11px 7px 1px;
+  font-size: 0.73rem;
+  color: var(--muted);
+}
+.map-credits {
+  font-size: 0.69rem;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+/* Activity Session Controls */
+.activity-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  overflow: auto;
+}
+.activity-tab {
+  white-space: nowrap;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  padding: 9px 13px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.activity-tab.active {
+  background: var(--surface);
+  color: var(--green-deep);
+  box-shadow: var(--shadow-soft);
+}
+.tracker-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.tracker-metric {
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.tracker-metric small {
+  display: block;
+  color: var(--muted);
+}
+.tracker-metric strong {
+  display: block;
+  font: 700 1.35rem var(--font-display);
+  margin-top: 4px;
+}
+.tracker-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tracker-actions .btn:first-child {
+  grid-column: span 2;
+}
+
+/* Route Planner */
+.route-points {
+  display: grid;
+  gap: 9px;
+}
+.route-point {
+  border-left: 3px solid var(--green);
+  padding: 5px 10px;
+  font-size: 0.8rem;
+}
+.route-point small {
+  display: block;
+  color: var(--muted);
+}
+
+/* Weather Panels & Forecast Strip */
+.weather-now {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.weather-temp {
+  font: 700 3rem var(--font-display);
+  letter-spacing: -0.07em;
+}
+.weather-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin-top: 15px;
+}
+.weather-detail {
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.weather-detail strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.93rem;
+}
+.forecast-strip {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding: 3px 0 9px;
+  scrollbar-width: thin;
+}
+.forecast-slot {
+  flex: 0 0 87px;
+  padding: 12px 8px;
+  text-align: center;
+  border-radius: 13px;
+  background: var(--surface-2);
+  font-size: 0.74rem;
+}
+.forecast-slot strong {
+  display: block;
+  font: 700 1.2rem var(--font-display);
+  margin: 5px 0;
+}
+.weather-status.good {
+  color: var(--green);
+}
+.weather-status.caution {
+  color: var(--amber);
+}
+.weather-status.poor {
+  color: var(--danger);
+}
+
+@media (max-width: 1100px) {
+  .tracker-layout {
+    grid-template-columns: 1fr;
+  }
+  #tracker-map {
+    height: 440px;
+  }
+}
+@media (max-width: 640px) {
+  .tracker-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tracker-metric {
+    padding: 9px;
+  }
+  .tracker-metric strong {
+    font-size: 1.03rem;
+  }
+  #tracker-map {
+    height: 360px;
+  }
+  .map-toolbar {
+    align-items: stretch;
+  }
+  .map-search {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 380px) {
+  .tracker-metric strong {
+    font-size: 0.95rem;
+  }
+}
