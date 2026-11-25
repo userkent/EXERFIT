@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Page setup: sets the page title ("Tracker — ExerFit"), mobile screen sizing, and connects the main CSS and map styles -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f8f5">
+  <title>Tracker — ExerFit</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body data-app-page="tracker">
+  <div class="app-shell">
+    <!-- Left Navigation Menu: JavaScript automatically fills this empty box with the sidebar menu -->
+    <div id="sidebar-root"></div>
+
+    <div class="app-main">
+      <!-- Top Header Bar: JavaScript automatically fills this with the user profile and top controls -->
+      <div id="topbar-root"></div>
+
+      <main class="page-content">
+        <!-- Page Title Row: displays the "Tracker" heading and a small badge showing map & GPS tools are active -->
+        <div class="page-title-row">
+          <div><span class="eyebrow">Explore and record</span><h1>Tracker</h1><p>Choose a location, check the conditions, and track your session.</p></div>
+          <span class="pill green"><span class="dot"></span>Map and GPS tools</span>
+        </div>
+
+        <!-- Main Tracker Workspace: splits the page into the interactive map on the left and workout/route controls on the right -->
+        <div class="tracker-layout">
+
+          <!-- Left Side — Interactive Map Card: lets you search locations, find your current GPS spot, and click to set start/end points -->
+          <section class="card map-card">
+            <div class="map-toolbar">
+              <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button">Search</button></div>
+              <button class="btn secondary small-btn" id="my-location" type="button">My location</button>
+              <button class="icon-btn" id="clear-route" type="button" aria-label="Clear selected route">×</button>
+            </div>
+            <div id="tracker-map" role="application" aria-label="Interactive OpenStreetMap. Click once for a start point and again for a destination."></div>
+            <div class="map-legend"><span>Click map to set start and destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
+            <div class="map-credits">Map data © OpenStreetMap contributors · Routing by OSRM (FOSSGIS)</div>
+          </section>
+
+          <!-- Right Side — Workout Controls & Route Planner Stack -->
+          <aside class="stack">
+
+            <!-- Workout Recorder Card: lets you pick an exercise type, track live time/distance/calories (or reps/weights), and save your session -->
+            <section class="card">
+              <div class="card-head"><div><span class="eyebrow">Your session</span><h3>Activity tracker</h3></div><span class="pill" id="tracking-state">Ready</span></div>
+
+              <!-- Exercise Category Tabs: switch between Outdoor, Indoor, Bodyweight, Gym, and Mind & body -->
+              <div class="activity-tabs" role="tablist" aria-label="Activity category">
+                <button class="activity-tab active" type="button" data-category="outdoor">Outdoor</button>
+                <button class="activity-tab" type="button" data-category="indoor">Indoor</button>
+                <button class="activity-tab" type="button" data-category="bodyweight">Bodyweight</button>
+                <button class="activity-tab" type="button" data-category="gym">Gym</button>
+                <button class="activity-tab" type="button" data-category="mind">Mind & body</button>
+              </div>
+
+              <!-- Specific Activity Picker & Simulation Toggle: pick a workout (like Run or Walk) and toggle pretend GPS mode -->
+              <div class="field" style="margin-top:14px"><label for="activity-type">Activity</label><select id="activity-type"><option>Run</option><option>Walk</option><option>Ride</option><option>Hike</option></select></div>
+              <label class="check-row"><input type="checkbox" id="simulation-mode" checked><span>Simulation mode (demonstration only; not real GPS)</span></label>
+
+              <!-- Live Workout Numbers: displays elapsed time, distance covered, and estimated calories -->
+              <div class="tracker-metrics" style="margin:15px 0">
+                <div class="tracker-metric"><small>Time</small><strong id="track-time">00:00</strong></div>
+                <div class="tracker-metric"><small>Distance</small><strong id="track-distance">0.00 km</strong></div>
+                <div class="tracker-metric"><small>Calories*</small><strong id="track-calories">—</strong></div>
+              </div>
+
+              <!-- Extra Inputs for Gym/Indoor Workouts: hidden by default, appear when you pick strength or indoor activities -->
+              <div class="field" id="rep-field" hidden><label for="rep-count">Repetitions</label><input id="rep-count" type="number" min="0" max="999" value="0"><label for="set-count">Sets</label><input id="set-count" type="number" min="1" max="99" value="1"></div>
+              <div class="field" id="weight-field" hidden><label for="lift-weight">Weight (kg, optional)</label><input id="lift-weight" type="number" min="0" max="500" step="0.5" placeholder="e.g. 20"></div>
+              <div class="field" id="manual-distance-field" hidden><label for="manual-distance">Distance (km, optional)</label><input id="manual-distance" type="number" min="0" step="0.01" placeholder="0.00"></div>
+
+              <!-- Session Playback Buttons: Start, Pause, and Finish (which saves the workout) -->
+              <div class="tracker-actions">
+                <button class="btn" id="track-start" type="button">Start session</button>
+                <button class="btn secondary" id="track-pause" type="button" disabled>Pause</button>
+                <button class="btn secondary" id="track-finish" type="button" disabled>Finish</button>
+              </div>
+              <p class="small muted" style="margin:12px 0 0">*Calorie values are optional rough estimates, not health or nutrition advice. Keep the session comfortable and stop when needed.</p>
+            </section>
+
+            <!-- Route Planner Card: calculates walking, cycling, or driving directions between two points clicked on the map -->
+            <section class="card">
+              <div class="card-head"><div><span class="eyebrow">Route planner</span><h3>Plan a route</h3></div></div>
+              <div class="field"><label for="travel-mode">Travel mode</label><select id="travel-mode"><option value="foot">Walk / Run / Hike</option><option value="ride">Ride</option><option value="drive">Drive</option></select></div>
+              <div class="route-points" id="route-point-labels"><div class="route-point">Start point <small>Choose on the map or use My Location</small></div><div class="route-point">Destination <small>Choose another point on the map</small></div></div>
+              <button class="btn full" id="get-route" type="button" style="margin-top:14px">Get route</button>
+              <div id="route-summary" style="margin-top:14px"><p class="small muted">Your route distance and estimated travel time will appear here.</p></div>
+              <div id="route-instructions" class="stack" style="margin-top:10px"></div>
+              <div id="route-weather" style="margin-top:12px"></div>
+              <div id="saved-routes" style="margin-top:15px"></div>
+            </section>
+
+          </aside>
+        </div>
+
+        <!-- Bottom Weather & Outdoor Advice Row: shows local weather forecasts and tips on the best time to exercise -->
+        <section class="grid two" style="margin-top:18px">
+
+          <!-- Left Card — Weather Forecast: switch between Now, Hourly chart, and 5-Day forecast for your chosen map spot -->
+          <article class="card">
+            <div class="card-head"><div><span class="eyebrow">Conditions</span><h3 id="weather-place-title">Selected location</h3></div><button class="text-button" id="refresh-weather" type="button">Refresh</button></div>
+            <div class="activity-tabs" role="tablist" aria-label="Weather section">
+              <button class="activity-tab active" type="button" data-weather-tab="now">Now</button>
+              <button class="activity-tab" type="button" data-weather-tab="hourly">Hourly</button>
+              <button class="activity-tab" type="button" data-weather-tab="five-day">5-Day</button>
+            </div>
+            <div id="weather-now" style="margin-top:15px"><div class="empty-state"><strong>Weather has not been loaded</strong>Choose a map location and add your API key in Settings to load conditions.</div></div>
+            <div id="weather-hourly" style="display:none;margin-top:15px"><canvas id="weather-chart" height="120" aria-label="Temperature and rain chance trend"></canvas><div id="weather-forecast-strip" class="forecast-strip" style="margin-top:12px"></div></div>
+            <div id="weather-five-day" style="display:none;margin-top:15px"></div>
+          </article>
+
+          <!-- Right Card — Weather Advice: gives workout tips based on current weather and suggests the best time window to go out -->
+          <article class="card">
+            <div class="card-head"><div><span class="eyebrow">Activity guidance</span><h3>Weather advice</h3></div><span class="pill" id="advice-category">Outdoor</span></div>
+            <div id="weather-advice" class="empty-state"><strong>Advice appears with weather data</strong>Choose an activity and location to see a short conditions summary.</div>
+            <div class="divider"></div>
+            <div class="card-head"><h3>Best time to be active</h3></div>
+            <div id="best-time" class="muted small">The recommendation will use the available forecast intervals.</div>
+          </article>
+
+        </section>
+
+        <!-- Data Attribution Footer: credits OpenWeather, OpenStreetMap, and OSRM for map and weather data -->
+        <p class="map-credits" style="margin-top:18px">Weather data by OpenWeather. Map data by OpenStreetMap contributors. Routing by OSRM (FOSSGIS) using OpenStreetMap data.</p>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation: JavaScript fills this with a bottom menu bar when viewed on phones -->
+  <div id="mobile-nav-root"></div>
+
+  <!-- JavaScript Libraries & App Scripts: loads Chart.js for weather graphs, Leaflet for maps, plus routing, weather, and workout timer logic -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/config.example.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/motion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/routing.js"></script>
+  <script src="js/tracker.js"></script>
+</body>
+</html>
