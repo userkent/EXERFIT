@@ -10,6 +10,13 @@
   const EF = window.ExerFit;
   const $ = (selector) => document.querySelector(selector);
   const CONFIG = window.ExerFitConfig || {};
+  const byId = (id) => document.getElementById(id);
+  const bindIfPresent = (selector, eventName, handler) => {
+    const element = $(selector);
+    if (element) element.addEventListener(eventName, handler);
+    return element;
+  };
+  const firstPresent = (...ids) => ids.map(byId).find(Boolean) || null;
   const DEFAULT_CENTER = CONFIG.defaultMapCenter || [14.5995, 120.9842];
   const ACTIVITY_OPTIONS = {
     outdoor: ["Walk", "Run", "Ride", "Hike"],
@@ -62,6 +69,10 @@
   let currentMarker = null;
   let routeLayer = null;
   let routeWeatherLayer = null;
+  let streetTiles = null;
+  let satelliteTiles = null;
+  let satelliteLabels = null;
+  let activeMapStyle = "street";
   let startPoint = null;
   let endPoint = null;
   let startLabel = "";
@@ -76,6 +87,10 @@
   let routeMode = "foot";
   let routeDepartureHours = 0;
   let trackerCategory = "outdoor";
+  let areaLookupQueue = Promise.resolve();
+  let lastAreaLookupAt = 0;
+  let areaLookupToken = 0;
+  const areaNameCache = new Map();
   const session = {
     active: false,
     paused: false,
@@ -114,33 +129,175 @@
   // MAP INITIALIZATION
   // ==========================================
   // Interactive Map Setup: loads the OpenStreetMap background and lets you click anywhere to pick Start and Destination pins
+  function setMapAreaName(name) {
+    const label = byId("map-area-name");
+    if (label && name) label.textContent = name;
+    areaLookupToken += 1;
+  }
+
+  function areaNameFromAddress(address, fallback = "Selected map area") {
+    if (!address) return fallback;
+    const locality =
+      address.neighbourhood ||
+      address.suburb ||
+      address.quarter ||
+      address.village ||
+      address.town ||
+      address.city ||
+      address.municipality ||
+      address.county ||
+      address.state_district ||
+      address.state ||
+      address.province ||
+      "";
+    const region = address.state_district || address.state || address.province || "";
+    const country = address.country || "";
+    const parts = [locality, region, country].filter(
+      (part, index, all) => part && all.indexOf(part) === index,
+    );
+    return parts.length ? parts.join(", ") : fallback;
+  }
+
+  async function reverseGeocodeArea(point) {
+    const cacheKey = `${Number(point[0]).toFixed(3)},${Number(point[1]).toFixed(3)}`;
+    if (areaNameCache.has(cacheKey)) return areaNameCache.get(cacheKey);
+
+    const request = async () => {
+      // Nominatim's public service asks clients to keep requests to about one per second.
+      const waitMs = Math.max(0, 1100 - (Date.now() - lastAreaLookupAt));
+      if (waitMs) await new Promise((resolve) => window.setTimeout(resolve, waitMs));
+      lastAreaLookupAt = Date.now();
+
+      const base = (CONFIG.geocodingUrl || "https://nominatim.openstreetmap.org/search")
+        .replace(/\/search\/?$/, "");
+      const endpoint = `${base}/reverse?format=jsonv2&lat=${encodeURIComponent(point[0])}&lon=${encodeURIComponent(point[1])}&zoom=14&addressdetails=1`;
+      const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Area lookup is unavailable.");
+      const result = await response.json();
+      const name = areaNameFromAddress(result.address, result.display_name || "Selected map area");
+      areaNameCache.set(cacheKey, name);
+      return name;
+    };
+
+    const next = areaLookupQueue.then(request, request);
+    areaLookupQueue = next.catch(() => undefined);
+    return next;
+  }
+
+  async function updateMapAreaName(point, fallback = "Selected map area") {
+    const token = ++areaLookupToken;
+    const label = byId("map-area-name");
+    if (label) label.textContent = fallback;
+    try {
+      const name = await reverseGeocodeArea(point);
+      if (token === areaLookupToken && label) label.textContent = name;
+    } catch (error) {
+      // The map tiles still show OSM place labels when reverse geocoding is unavailable.
+      if (token === areaLookupToken && label) label.textContent = fallback;
+    }
+  }
+
+  function setMapStyle(style) {
+    if (!map || !streetTiles || !satelliteTiles) return;
+    const useSatellite = style === "satellite";
+    activeMapStyle = useSatellite ? "satellite" : "street";
+    if (useSatellite) {
+      if (map.hasLayer(streetTiles)) map.removeLayer(streetTiles);
+      satelliteTiles.addTo(map);
+      satelliteLabels.addTo(map);
+    } else {
+      if (map.hasLayer(satelliteTiles)) map.removeLayer(satelliteTiles);
+      if (map.hasLayer(satelliteLabels)) map.removeLayer(satelliteLabels);
+      streetTiles.addTo(map);
+    }
+    document.querySelectorAll("[data-map-style]").forEach((button) => {
+      const active = button.dataset.mapStyle === activeMapStyle;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    const status = byId("map-connection-status");
+    if (status) status.textContent = useSatellite ? "Satellite imagery · Area labels on" : "OpenStreetMap street view · Area names on";
+    window.setTimeout(() => map && map.invalidateSize(), 80);
+  }
+
   function initMap() {
     const host = $("#tracker-map");
+    if (!host) return;
     if (!window.L) {
       host.innerHTML =
-        '<div class="empty-state"><strong>Map library unavailable</strong>Check your internet connection and refresh the page. The rest of Tracker remains available.</div>';
+        '<div class="empty-state map-load-message"><strong>Leaflet could not load</strong><p>Check your internet connection or CDN access, then refresh this page. The map needs Leaflet and OpenStreetMap tile access.</p></div>';
+      const status = byId("map-connection-status");
+      if (status) status.textContent = "Leaflet unavailable";
       return;
     }
-    map = L.map(host, { zoomControl: true, preferCanvas: true }).setView(
-      DEFAULT_CENTER,
-      CONFIG.defaultMapZoom || 12,
-    );
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>',
-    }).addTo(map);
-    routeLayer = L.layerGroup().addTo(map);
-    routeWeatherLayer = L.layerGroup().addTo(map);
-    map.on("click", (event) => {
-      const point = [event.latlng.lat, event.latlng.lng];
-      if (!startPoint) setStart(point, "Map selection");
-      else if (!endPoint) setEnd(point, "Map selection");
-      else setEnd(point, "Map selection");
-      selectWeatherLocation(point, "Selected map point");
-      showMapPopup(point, "Selected map point");
-    });
-    setTimeout(() => map.invalidateSize(), 200);
+
+    try {
+      map = L.map(host, { zoomControl: true, preferCanvas: true, scrollWheelZoom: true }).setView(
+        DEFAULT_CENTER,
+        CONFIG.defaultMapZoom || 12,
+      );
+      const status = byId("map-connection-status");
+      streetTiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        minZoom: 2,
+        maxZoom: 19,
+        updateWhenIdle: true,
+        keepBuffer: 3,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>',
+      });
+      // Esri World Imagery supplies satellite photography; the reference overlay keeps area/place labels visible.
+      satelliteTiles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        minZoom: 1,
+        maxZoom: 19,
+        attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Sources: Esri, Maxar, Earthstar Geographics',
+      });
+      satelliteLabels = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+        minZoom: 1,
+        maxZoom: 19,
+        pane: "overlayPane",
+        opacity: 0.95,
+        attribution: 'Place labels &copy; Esri',
+      });
+      streetTiles.addTo(map);
+      let tileLoaded = false;
+      streetTiles.on("tileload", () => {
+        tileLoaded = true;
+        if (status && activeMapStyle === "street") status.textContent = "Street map loaded · Area names visible";
+      });
+      streetTiles.on("tileerror", () => {
+        if (!tileLoaded && status) status.textContent = "Map tiles unavailable · Check internet access";
+      });
+      [satelliteTiles, satelliteLabels].forEach((layer) => layer.on("tileerror", () => {
+        if (status) status.textContent = "Some map imagery could not load · Check your connection";
+      }));
+      document.querySelectorAll("[data-map-style]").forEach((button) => {
+        button.addEventListener("click", () => setMapStyle(button.dataset.mapStyle));
+      });
+      L.control.scale({ metric: true, imperial: false, position: "bottomleft" }).addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
+      routeWeatherLayer = L.layerGroup().addTo(map);
+      map.on("click", (event) => {
+        const point = [event.latlng.lat, event.latlng.lng];
+        if (!startPoint) setStart(point, "Map selection");
+        else if (!endPoint) setEnd(point, "Map selection");
+        else setEnd(point, "Map selection");
+        selectWeatherLocation(point, "Selected map point");
+        updateMapAreaName(point, `${point[0].toFixed(4)}, ${point[1].toFixed(4)}`);
+        showMapPopup(point, "Selected map point");
+      });
+      updateMapAreaName(DEFAULT_CENTER, "Loading nearby area name…");
+      window.setTimeout(() => map && map.invalidateSize(), 250);
+      window.addEventListener("resize", () => map && map.invalidateSize());
+      window.setTimeout(() => {
+        if (!tileLoaded && status && status.textContent.includes("Loading"))
+          status.textContent = "Still loading map tiles…";
+      }, 7000);
+    } catch (error) {
+      console.error("ExerFit map initialization failed:", error);
+      host.innerHTML =
+        '<div class="empty-state map-load-message"><strong>Map could not be initialized</strong><p>Refresh the page. If the problem continues, check the browser console for a Leaflet error.</p></div>';
+      const status = byId("map-connection-status");
+      if (status) status.textContent = "Map initialization failed";
+    }
   }
 
   // Start & Destination Map Pins: draws colored circles on the map and updates the coordinates shown in the Route Planner card
@@ -234,7 +391,7 @@
     $("#search-place").disabled = true;
     $("#search-place").textContent = "Searching…";
     try {
-      const endpoint = `${CONFIG.geocodingUrl || "https://nominatim.openstreetmap.org/search"}?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`;
+      const endpoint = `${CONFIG.geocodingUrl || "https://nominatim.openstreetmap.org/search"}?format=jsonv2&addressdetails=1&limit=1&q=${encodeURIComponent(query)}`;
       const response = await fetch(endpoint, {
         headers: { Accept: "application/json" },
       });
@@ -245,7 +402,11 @@
         throw new Error("Place not found. Try a nearby town or landmark.");
       const place = results[0];
       const point = [Number(place.lat), Number(place.lon)];
-      const shortName = place.display_name.split(",").slice(0, 2).join(",");
+      const shortName = areaNameFromAddress(
+        place.address,
+        place.display_name.split(",").slice(0, 3).join(", "),
+      );
+      setMapAreaName(shortName);
       setEnd(point, shortName);
       selectWeatherLocation(point, shortName);
       map?.flyTo(point, 15, { duration: 1.1 });
@@ -271,6 +432,7 @@
         const point = [position.coords.latitude, position.coords.longitude];
         setStart(point, "My location");
         selectWeatherLocation(point, "My location");
+        updateMapAreaName(point, "My location");
         map?.flyTo(point, 16, { duration: 1.1 });
         showMapPopup(point, "My location");
         $("#my-location").disabled = false;
@@ -523,14 +685,15 @@
       renderRouteSummary(allRoutes[chosenRouteIndex], allRoutes, serviceLabel);
       loadRouteWeather(allRoutes[chosenRouteIndex]);
     });
-    $("#start-planned-route").addEventListener("click", () => {
+    bindIfPresent("#start-planned-route", "click", () => {
       if (trackerCategory !== "outdoor") setCategory("outdoor");
-      $("#simulation-mode").checked = false;
+      const simulation = $("#simulation-mode");
+      if (simulation) simulation.checked = false;
       const progress = document.getElementById("route-live-progress");
       if (progress) progress.hidden = false;
       startSession();
     });
-    $("#save-planned-route").addEventListener("click", saveCurrentRoute);
+    bindIfPresent("#save-planned-route", "click", saveCurrentRoute);
   }
 
   function drawRoute(route) {
@@ -609,7 +772,7 @@
       const straightKm = EF.Routing.distanceMeters(startPoint, endPoint) / 1000;
       $("#route-summary").innerHTML =
         `<div class="empty-state"><strong>Detailed routing unavailable</strong><p>${EF.Store.escapeHTML(error.message || "Public routing service is unavailable.")}</p><p>Straight-line fallback: ${displayDistance(straightKm)}. This is not a navigable route.</p><button class="btn secondary small-btn" id="retry-route" type="button">Retry route</button></div>`;
-      $("#retry-route").addEventListener("click", getRoute);
+      bindIfPresent("#retry-route", "click", getRoute);
       $("#route-instructions").innerHTML = "";
       routeWeatherData = [];
       await loadFallbackWeather(startPoint, endPoint);
@@ -767,7 +930,7 @@
       `<div class="between"><strong>${verdict}</strong><span class="pill ${worst === "good" ? "green" : ""}">${worst.toUpperCase()}</span></div>
       <div class="field" style="margin-top:10px"><label for="route-departure">Planned departure time</label><select id="route-departure"><option value="0" ${routeDepartureHours === 0 ? "selected" : ""}>Leave now</option><option value="3" ${routeDepartureHours === 3 ? "selected" : ""}>In 3 hours</option><option value="6" ${routeDepartureHours === 6 ? "selected" : ""}>In 6 hours</option></select></div>
       <div class="route-points" style="margin-top:10px">${routeItems}</div>`;
-    $("#route-departure").addEventListener("change", (event) =>
+    bindIfPresent("#route-departure", "change", (event) =>
       loadRouteWeather(route, Number(event.target.value)),
     );
   }
@@ -820,7 +983,8 @@
   }
 
   function renderSavedRoutes() {
-    const host = $("#saved-routes-list");
+    const host = $("#saved-routes-list") || $("#saved-routes");
+    if (!host) return;
     const saved = getData().routes || [];
     if (!saved.length) {
       host.innerHTML =
@@ -894,8 +1058,16 @@
       )
       .join("");
     const isOutdoor = category === "outdoor";
-    $("#outdoor-controls").hidden = !isOutdoor;
-    $("#indoor-controls").hidden = isOutdoor;
+    const outdoorControls = $("#outdoor-controls");
+    const indoorControls = $("#indoor-controls");
+    if (outdoorControls) outdoorControls.hidden = !isOutdoor;
+    if (indoorControls) indoorControls.hidden = isOutdoor;
+    const repsField = $("#rep-field");
+    const weightField = $("#weight-field");
+    const distanceField = $("#manual-distance-field");
+    if (repsField) repsField.hidden = !["bodyweight", "gym"].includes(category);
+    if (weightField) weightField.hidden = category !== "gym";
+    if (distanceField) distanceField.hidden = !["indoor", "outdoor"].includes(category);
     if (weatherBundle?.current) {
       $("#weather-advice").textContent = EF.Weather.adviceForActivity(
         category,
@@ -922,16 +1094,22 @@
     return Math.round(met * weightKg * (seconds / 3600));
   }
   function updateSessionReadout() {
-    $("#session-time").textContent = formatClock(session.elapsed);
-    $("#session-distance").textContent = displayDistance(session.distance);
+    const timeOutput = firstPresent("session-time", "track-time");
+    const distanceOutput = firstPresent("session-distance", "track-distance");
+    const caloriesOutput = firstPresent("session-calories", "track-calories");
+    if (timeOutput) timeOutput.textContent = formatClock(session.elapsed);
+    if (distanceOutput) distanceOutput.textContent = displayDistance(session.distance);
     const paceSeconds =
       session.distance > 0.02 ? session.elapsed / session.distance : 0;
-    $("#session-pace").textContent =
-      paceSeconds > 0
-        ? `${Math.floor(paceSeconds / 60)}:${String(Math.round(paceSeconds % 60)).padStart(2, "0")} /km`
-        : "—";
-    $("#session-calories").textContent =
-      `${estimateCalories($("#activity-type").value, session.elapsed)} kcal`;
+    const paceOutput = $("#session-pace");
+    if (paceOutput)
+      paceOutput.textContent =
+        paceSeconds > 0
+          ? `${Math.floor(paceSeconds / 60)}:${String(Math.round(paceSeconds % 60)).padStart(2, "0")} /km`
+          : "—";
+    if (caloriesOutput)
+      caloriesOutput.textContent =
+        `${estimateCalories($("#activity-type").value, session.elapsed)} kcal`;
 
     // Update remaining distance if the user is following a planned route
     const planned = routes[chosenRouteIndex];
@@ -979,10 +1157,14 @@
     session.lastPoint = null;
     session.simulation =
       trackerCategory === "outdoor" && $("#simulation-mode").checked;
-    $("#session-start").disabled = true;
-    $("#session-pause").disabled = false;
-    $("#session-finish").disabled = false;
-    $("#session-status").textContent = session.simulation
+    const startButton = firstPresent("session-start", "track-start");
+    const pauseButton = firstPresent("session-pause", "track-pause");
+    const finishButton = firstPresent("session-finish", "track-finish");
+    const statusOutput = firstPresent("session-status", "tracking-state");
+    if (startButton) startButton.disabled = true;
+    if (pauseButton) pauseButton.disabled = false;
+    if (finishButton) finishButton.disabled = false;
+    if (statusOutput) statusOutput.textContent = session.simulation
       ? "Running (simulation mode)"
       : "Session active";
 
@@ -997,8 +1179,8 @@
               recordPoint([pos.coords.latitude, pos.coords.longitude]);
           },
           () => {
-            $("#session-status").textContent =
-              "GPS signal weak — timer still running";
+            const status = firstPresent("session-status", "tracking-state");
+            if (status) status.textContent = "GPS signal weak — timer still running";
           },
           { enableHighAccuracy: true, maximumAge: 5000 },
         );
@@ -1023,10 +1205,10 @@
   function togglePauseSession() {
     if (!session.active) return;
     session.paused = !session.paused;
-    $("#session-pause").textContent = session.paused ? "Resume" : "Pause";
-    $("#session-status").textContent = session.paused
-      ? "Paused"
-      : "Session active";
+    const pauseButton = firstPresent("session-pause", "track-pause");
+    const statusOutput = firstPresent("session-status", "tracking-state");
+    if (pauseButton) pauseButton.textContent = session.paused ? "Resume" : "Pause";
+    if (statusOutput) statusOutput.textContent = session.paused ? "Paused" : "Session active";
   }
 
   function finishSession() {
@@ -1041,9 +1223,9 @@
 
     const type = $("#activity-type").value;
     const duration = Math.max(1, session.elapsed);
-    const reps = Number($("#session-reps")?.value || 0);
-    const sets = Number($("#session-sets")?.value || 0);
-    const notes = $("#session-notes").value.trim();
+    const reps = Number(firstPresent("session-reps", "rep-count")?.value || 0);
+    const sets = Number(firstPresent("session-sets", "set-count")?.value || 0);
+    const notes = $("#session-notes")?.value.trim() || "";
 
     EF.Store.updateData((data) => {
       data.activities.push({
@@ -1062,12 +1244,16 @@
       });
     });
 
-    $("#session-start").disabled = false;
-    $("#session-pause").disabled = true;
-    $("#session-pause").textContent = "Pause";
-    $("#session-finish").disabled = true;
-    $("#session-status").textContent = "Saved to History";
-    $("#session-notes").value = "";
+    const startButton = firstPresent("session-start", "track-start");
+    const pauseButton = firstPresent("session-pause", "track-pause");
+    const finishButton = firstPresent("session-finish", "track-finish");
+    const statusOutput = firstPresent("session-status", "tracking-state");
+    if (startButton) startButton.disabled = false;
+    if (pauseButton) { pauseButton.disabled = true; pauseButton.textContent = "Pause"; }
+    if (finishButton) finishButton.disabled = true;
+    if (statusOutput) statusOutput.textContent = "Saved to History";
+    const notesInput = $("#session-notes");
+    if (notesInput) notesInput.value = "";
     EF.ui.toast("Workout saved to your History!");
   }
 
@@ -1075,21 +1261,21 @@
   // EVENT LISTENERS AND INITIALIZATION
   // ==========================================
   // Connect All Buttons & Startup: wires up map search, route buttons, category tabs, and session controls on page load
-  $("#search-place").addEventListener("click", searchPlace);
-  $("#place-search").addEventListener("keydown", (event) => {
+  bindIfPresent("#search-place", "click", searchPlace);
+  bindIfPresent("#place-search", "keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       searchPlace();
     }
   });
-  $("#my-location").addEventListener("click", locateUser);
-  $("#get-route").addEventListener("click", getRoute);
-  $("#swap-points").addEventListener("click", () => {
+  bindIfPresent("#my-location", "click", locateUser);
+  bindIfPresent("#get-route", "click", getRoute);
+  bindIfPresent("#swap-points", "click", () => {
     [startPoint, endPoint] = [endPoint, startPoint];
     [startLabel, endLabel] = [endLabel, startLabel];
     updatePointMarkers();
   });
-  $("#clear-route").addEventListener("click", () => {
+  bindIfPresent("#clear-route", "click", () => {
     startPoint = null;
     endPoint = null;
     startLabel = "";
@@ -1099,25 +1285,29 @@
     routeWeatherData = [];
     updatePointMarkers();
     removeRouteLayers();
-    $("#route-summary").innerHTML =
-      '<p class="small muted">Select two points on the map and click Get route.</p>';
-    $("#route-instructions").innerHTML = "";
-    $("#route-weather").innerHTML =
-      '<p class="small muted">Plan a route to check forecast conditions along the path.</p>';
+    const summary = $("#route-summary");
+    const instructions = $("#route-instructions");
+    const weather = $("#route-weather");
+    if (summary) summary.innerHTML = '<p class="small muted">Select two points on the map and click Get route.</p>';
+    if (instructions) instructions.innerHTML = "";
+    if (weather) weather.innerHTML = '<p class="small muted">Plan a route to check forecast conditions along the path.</p>';
   });
 
-  document
-    .querySelectorAll("[data-category]")
-    .forEach((button) =>
-      button.addEventListener("click", () =>
-        setCategory(button.dataset.category),
-      ),
-    );
-  $("#session-start").addEventListener("click", startSession);
-  $("#session-pause").addEventListener("click", togglePauseSession);
-  $("#session-finish").addEventListener("click", finishSession);
+  document.querySelectorAll("[data-category]").forEach((button) =>
+    button.addEventListener("click", () => setCategory(button.dataset.category)),
+  );
+  bindIfPresent("#session-start", "click", startSession);
+  bindIfPresent("#track-start", "click", startSession);
+  bindIfPresent("#session-pause", "click", togglePauseSession);
+  bindIfPresent("#track-pause", "click", togglePauseSession);
+  bindIfPresent("#session-finish", "click", finishSession);
+  bindIfPresent("#track-finish", "click", finishSession);
+  bindIfPresent("#refresh-weather", "click", () => {
+    if (selectedLocation) loadWeather(selectedLocation[0], selectedLocation[1]);
+  });
 
-  // Startup sequence: build the map, load the user's preferred workout type, show saved routes, and load last location weather
+  // Startup sequence: initialize Leaflet before optional tracker controls. A missing optional
+  // control must never prevent the OpenStreetMap tiles from appearing.
   initMap();
   setCategory("outdoor");
   const defaultAct = getData().settings.defaultActivity;

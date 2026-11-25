@@ -39,6 +39,60 @@
   background: #d8eadb;
   z-index: 1;
 }
+.map-area-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  padding: 8px 10px;
+  margin: 0 0 9px;
+  border: 1px solid var(--line, rgba(100, 116, 139, .16));
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+.map-area-name-group {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.map-area-kicker {
+  color: var(--muted);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#map-area-name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: .86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.map-connection-status {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .68rem;
+  text-align: right;
+}
+.map-swap-button {
+  justify-self: start;
+  margin-top: 7px;
+}
+#tracker-map .leaflet-container,
+#tracker-map.leaflet-container {
+  font: inherit;
+}
+#tracker-map .leaflet-control-attribution {
+  font-size: 10px;
+}
+.map-load-message {
+  min-height: 220px;
+  display: grid;
+  align-content: center;
+  padding: 24px;
+}
 .map-legend {
   display: flex;
   flex-wrap: wrap;
@@ -203,6 +257,13 @@
   .map-toolbar {
     align-items: stretch;
   }
+  .map-area-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .map-connection-status {
+    text-align: left;
+  }
   .map-search {
     flex-basis: 100%;
   }
@@ -211,4 +272,82 @@
   .tracker-metric strong {
     font-size: 0.95rem;
   }
+}
+
+/* Map style selector: street / satellite */
+.map-view-switch {
+  display: inline-flex;
+  gap: 4px;
+  width: fit-content;
+  padding: 4px;
+  margin: 0 5px 10px;
+  border: 1px solid var(--line, rgba(100,116,139,.18));
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.map-view-btn {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.map-view-btn.active {
+  background: var(--surface);
+  color: var(--green-deep);
+  box-shadow: var(--shadow-soft);
+}
+#tracker-map { touch-action: pan-x pan-y; }
+#tracker-map .leaflet-control-zoom a {
+  width: 38px;
+  height: 38px;
+  line-height: 38px;
+}
+
+@media (max-width: 640px) {
+  .map-view-switch { width: 100%; margin-inline: 0; }
+  .map-view-btn { flex: 1; min-height: 42px; }
+  #tracker-map { height: min(62vh, 430px); min-height: 290px; }
+  .map-card { min-width: 0; }
+  .map-toolbar .btn, .map-toolbar .icon-btn { min-height: 42px; }
+}
+
+/* Small-screen fallback for Apple Watch and other very narrow web views.
+   This is a compact web view, not a native watchOS app or background GPS service. */
+@media (max-width: 240px) {
+  .app-shell { display: block !important; min-width: 0 !important; }
+  #sidebar-root, #topbar-root, #mobile-nav-root,
+  .page-title-row > .pill, .map-legend, .map-credits,
+  .stack > section:nth-child(2),
+  .page-content > .grid, .map-toolbar .map-search,
+  #clear-route, .map-connection-status { display: none !important; }
+  .page-content { padding: 6px !important; }
+  .page-title-row { margin-bottom: 8px !important; }
+  .page-title-row h1 { font-size: 1.15rem !important; }
+  .page-title-row p { font-size: .68rem !important; }
+  .tracker-layout { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .map-card { padding: 6px !important; }
+  .map-toolbar { padding: 0 0 6px !important; }
+  .map-toolbar #my-location { width: 100%; font-size: .7rem; }
+  .map-view-switch { margin: 0 0 6px; padding: 2px; }
+  .map-view-btn { min-height: 32px; padding: 5px 4px; font-size: .65rem; }
+  .map-area-bar { min-height: 0; padding: 5px; margin-bottom: 5px; }
+  #map-area-name { font-size: .7rem; }
+  #tracker-map { height: 145px; min-height: 145px; border-radius: 9px; }
+  .stack > section:first-child { padding: 8px !important; }
+  .stack .card-head h3 { font-size: .85rem; }
+  .activity-tabs, #rep-field, #weight-field, #manual-distance-field,
+  .check-row, .small.muted { display: none !important; }
+  .tracker-metrics { grid-template-columns: 1fr !important; gap: 4px; margin: 6px 0 !important; }
+  .tracker-metric { padding: 5px 7px; display: flex; align-items: center; justify-content: space-between; }
+  .tracker-metric strong { font-size: .85rem !important; margin: 0; }
+  .tracker-actions { grid-template-columns: 1fr 1fr !important; }
+  .tracker-actions .btn:first-child { grid-column: span 2; }
+  .tracker-actions .btn { min-height: 34px; padding: 5px; font-size: .7rem; }
 }

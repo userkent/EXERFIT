@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f5f8f5">
   <title>Tracker — ExerFit</title>
   <link rel="stylesheet" href="MystylesCSS/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body data-app-page="tracker">
   <div class="app-shell">
@@ -35,9 +35,20 @@
               <button class="btn secondary small-btn" id="my-location" type="button"><img class="asset-icon" src="images/input/icons/icon-gps.svg" alt="" aria-hidden="true">My location</button>
               <button class="icon-btn" id="clear-route" type="button" aria-label="Clear selected route"><img class="asset-icon" src="images/input/icons/icon-close.svg" alt="" aria-hidden="true"></button>
             </div>
-            <div id="tracker-map" role="application" aria-label="Interactive OpenStreetMap. Click once for a start point and again for a destination."></div>
+            <div class="map-view-switch" role="group" aria-label="Map display style">
+              <button class="map-view-btn active" type="button" data-map-style="street" aria-pressed="true">Street map</button>
+              <button class="map-view-btn" type="button" data-map-style="satellite" aria-pressed="false">Satellite</button>
+            </div>
+            <div class="map-area-bar" aria-live="polite">
+              <div class="map-area-name-group">
+                <span class="map-area-kicker">Viewing area</span>
+                <strong id="map-area-name">Loading nearby area name…</strong>
+              </div>
+              <span class="map-connection-status" id="map-connection-status">Loading OpenStreetMap tiles…</span>
+            </div>
+            <div id="tracker-map" role="application" aria-label="Interactive Leaflet map using OpenStreetMap. Place names are shown on the map. Click once for a start point and again for a destination."></div>
             <div class="map-legend"><span>Click map to set start and destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
-            <div class="map-credits">Map data © OpenStreetMap contributors · Routing by OSRM (FOSSGIS)</div>
+            <div class="map-credits">Street map © OpenStreetMap contributors · Satellite imagery © Esri, Maxar, Earthstar Geographics · Routing by OSRM (FOSSGIS)</div>
           </section>
 
           <!-- Right Side — Workout Controls & Route Planner Stack -->
@@ -86,6 +97,7 @@
               <div class="card-head"><div><span class="eyebrow">Route planner</span><h3>Plan a route</h3></div></div>
               <div class="field"><label for="travel-mode">Travel mode</label><select id="travel-mode"><option value="foot">Walk / Run / Hike</option><option value="ride">Ride</option><option value="drive">Drive</option></select></div>
               <div class="route-points" id="route-point-labels"><div class="route-point">Start point <small>Choose on the map or use My Location</small></div><div class="route-point">Destination <small>Choose another point on the map</small></div></div>
+              <button class="text-button map-swap-button" id="swap-points" type="button">Swap start and destination</button>
               <button class="btn full" id="get-route" type="button" style="margin-top:14px">Get route</button>
               <div id="route-summary" style="margin-top:14px"><p class="small muted">Your route distance and estimated travel time will appear here.</p></div>
               <div id="route-instructions" class="stack" style="margin-top:10px"></div>
@@ -124,7 +136,7 @@
         </section>
 
         <!-- Data Attribution Footer: credits OpenWeather, OpenStreetMap, and OSRM for map and weather data -->
-        <p class="map-credits" style="margin-top:18px">Weather data by OpenWeather. Map data by OpenStreetMap contributors. Routing by OSRM (FOSSGIS) using OpenStreetMap data.</p>
+        <p class="map-credits" style="margin-top:18px">Weather data by OpenWeather. Street map © OpenStreetMap contributors. Satellite imagery © Esri, Maxar, Earthstar Geographics. Routing by OSRM (FOSSGIS) using OpenStreetMap data.</p>
       </main>
     </div>
   </div>
@@ -134,7 +146,7 @@
 
   <!-- JavaScript Libraries & App Scripts: loads Chart.js for weather graphs, Leaflet for maps, plus routing, weather, and workout timer logic -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="JS/config.ex.js"></script>
   <script src="JS/config.js"></script>
   <script src="JS/storage.js"></script>
