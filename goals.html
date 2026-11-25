@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Page setup: sets the page title ("Goals — ExerFit"), mobile screen sizing, and connects the main CSS file -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f8f5">
+  <title>Goals — ExerFit</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-app-page="goals">
+  <div class="app-shell">
+    <!-- Left Navigation Menu: JavaScript automatically fills this empty box with the sidebar menu -->
+    <div id="sidebar-root"></div>
+
+    <div class="app-main">
+      <!-- Top Header Bar: JavaScript automatically fills this with the user profile and top controls -->
+      <div id="topbar-root"></div>
+
+      <main class="page-content">
+        <!-- Page Title Row: displays the "Goals" heading and the "+ Create goal" button -->
+        <div class="page-title-row">
+          <div><span class="eyebrow">Your own milestones</span><h1>Goals</h1><p>Choose a target that feels useful and flexible for you.</p></div>
+          <button class="btn" id="create-goal-open" type="button">+ Create goal</button>
+        </div>
+
+        <!-- 3 Quick Summary Cards: shows how many goals are active, how many are finished, and your current active day streak -->
+        <section class="grid three" id="goal-summary">
+          <article class="card"><span class="eyebrow">In progress</span><div class="kpi-value" id="goal-active-count">0</div><p class="muted small">Goals currently active</p></article>
+          <article class="card"><span class="eyebrow">Completed</span><div class="kpi-value" id="goal-complete-count">0</div><p class="muted small">Personal milestones reached</p></article>
+          <article class="card"><span class="eyebrow">Activity dates</span><div class="kpi-value" id="goal-streak-count">0 days</div><p class="muted small">Current activity streak</p></article>
+        </section>
+
+        <!-- Active Goals Section: displays goals you are currently working on (automatically updates as you log workouts) -->
+        <section style="margin-top:22px">
+          <div class="section-heading"><div><span class="eyebrow">Keep a steady rhythm</span><h2>Active goals</h2></div><span class="pill green">Updates from saved activities</span></div>
+          <div class="grid two" id="active-goals"><div class="empty-state"><strong>No active goals yet</strong>Create one small target to get started.</div></div>
+        </section>
+
+        <!-- Completed Goals Section: moves finished goals here so you can see what you've achieved -->
+        <section style="margin-top:28px">
+          <div class="section-heading"><div><span class="eyebrow">Your milestones</span><h2>Completed goals</h2></div></div>
+          <div class="grid two" id="completed-goals"><div class="empty-state">Completed goals will appear here.</div></div>
+        </section>
+
+        <!-- Milestone Badges Section: displays reward badges earned from saving workouts and hitting milestones -->
+        <section class="card" style="margin-top:22px">
+          <div class="card-head"><div><span class="eyebrow">Consistency, not comparison</span><h3>Milestone badges</h3></div></div>
+          <div class="badge-grid" id="earned-badges"></div>
+          <p class="small muted" style="margin-top:14px">Badges are simple markers of activity saved in this browser. They are not rankings or health assessments.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation: JavaScript fills this with a bottom menu bar when viewed on phones -->
+  <div id="mobile-nav-root"></div>
+
+  <!-- JavaScript Files: loads saved data, animations, menus, and the logic for creating and tracking goals -->
+  <script src="js/storage.js"></script>
+  <script src="js/motion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/goals.js"></script>
+</body>
+</html>
