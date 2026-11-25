@@ -59,8 +59,19 @@
             <!-- Tab 3 — Weather: explains the built-in weather source and how to use it -->
             <section class="settings-section" data-settings-section="weather">
               <span class="eyebrow">Outdoor planning</span><h2>Weather forecast</h2>
-              <p class="muted">ExerFit uses Open-Meteo for current conditions and the upcoming forecast. No API key is required.</p>
-              <div class="weather-settings-note"><span class="weather-settings-icon" aria-hidden="true">☀</span><div><strong>Ready to check the weather</strong><p class="muted">Open Tracker, choose “Use my location” or search for a place, and check the weather panel before planning an outdoor activity.</p><a class="btn" href="tracker.html">Open Tracker</a></div></div>
+              <p class="muted">ExerFit uses OpenWeather for live conditions and its five-day forecast. Add your own API key to enable weather panels, rain advice, and route weather.</p>
+              <div class="field">
+                <label for="setting-openweather-key">OpenWeather API key</label>
+                <input id="setting-openweather-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your OpenWeather API key" aria-describedby="weather-key-help">
+                <small id="weather-key-help" class="muted">The key is saved in this browser's local app data and sent to OpenWeather when weather is requested. Do not use a private production key in a public deployment without a server-side proxy.</small>
+              </div>
+              <div class="row wrap" style="margin-top:12px">
+                <button class="btn" id="save-weather-key" type="button">Save API key</button>
+                <button class="btn secondary" id="test-weather-key" type="button">Test connection</button>
+                <button class="btn secondary" id="remove-weather-key" type="button">Remove key</button>
+              </div>
+              <p id="weather-api-status" class="small muted" role="status" aria-live="polite" style="margin-top:12px">No API key saved yet.</p>
+              <div class="weather-settings-note"><span class="weather-settings-icon" aria-hidden="true">☀</span><div><strong>Check your local forecast</strong><p class="muted">After saving the key, open Tracker, use your location or search for a place, and the current weather and five-day forecast will load.</p><a class="btn" href="tracker.html">Open Tracker</a> <a class="text-button" href="https://openweathermap.org/appid" target="_blank" rel="noopener noreferrer">OpenWeather API key guide ↗</a></div></div>
             </section>
 
             <!-- Tab 4 — Reminders: turns browser workout reminders on/off and sets your preferred reminder time -->

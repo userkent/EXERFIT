@@ -44,6 +44,21 @@
     );
 
   // Fill Saved Settings: loads your current saved preferences into every dropdown, toggle switch, and input box on the page
+  function updateWeatherKeyStatus(message) {
+    const status = $("#weather-api-status");
+    if (!status) return;
+    status.textContent = message || (EF.Weather?.apiKey() ? "An OpenWeather API key is saved in this browser." : "No API key saved yet.");
+  }
+  function clearWeatherCache() {
+    try {
+      for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+        const key = sessionStorage.key(index);
+        if (key && key.startsWith("exerfit_openweather_")) sessionStorage.removeItem(key);
+      }
+    } catch (error) {
+      console.warn("Weather cache could not be cleared:", error);
+    }
+  }
   function populate() {
     const settings = getData().settings;
     $("#setting-theme").value = settings.theme || "system";
@@ -59,7 +74,67 @@
     $("#weekly-summary").checked = Boolean(settings.weeklySummary);
     $("#profile-visibility").value = settings.profileVisibility || "private";
     $("#show-routes").checked = Boolean(settings.showRoutes);
+    $("#setting-openweather-key").value = "";
+    $("#setting-openweather-key").placeholder = settings.apiKey || window.ExerFitLocalConfig?.openWeatherApiKey
+      ? "A key is already saved. Paste a new key to replace it."
+      : "Paste your OpenWeather API key";
+    updateWeatherKeyStatus();
   }
+
+  // OpenWeather API Key: save, remove, and verify the key without exposing it in the page after saving.
+  $("#save-weather-key").addEventListener("click", () => {
+    const value = $("#setting-openweather-key").value.trim();
+    if (!value) {
+      updateWeatherKeyStatus("Paste your OpenWeather API key before saving.");
+      return;
+    }
+    saveSettings({ apiKey: value });
+    clearWeatherCache();
+    $("#setting-openweather-key").value = "";
+    $("#setting-openweather-key").placeholder = "A key is saved. Paste a new key to replace it.";
+    updateWeatherKeyStatus("OpenWeather API key saved in this browser. Select Test connection to check it.");
+    EF.ui.toast("OpenWeather API key saved.");
+  });
+  $("#remove-weather-key").addEventListener("click", () => {
+    saveSettings({ apiKey: "" });
+    clearWeatherCache();
+    $("#setting-openweather-key").value = "";
+    $("#setting-openweather-key").placeholder = "Paste your OpenWeather API key";
+    updateWeatherKeyStatus("Saved OpenWeather API key removed from this browser account.");
+    EF.ui.toast("OpenWeather API key removed.");
+  });
+  $("#test-weather-key").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    if (!EF.Weather?.apiKey()) {
+      updateWeatherKeyStatus("Save an OpenWeather API key first.");
+      return;
+    }
+    const savedCoords = getData().settings.lastCoords;
+    const fallbackCenter = window.ExerFitConfig?.defaultMapCenter || [14.5995, 120.9842];
+    const latitude = savedCoords?.lat ?? fallbackCenter[0];
+    const longitude = savedCoords?.lon ?? fallbackCenter[1];
+    button.disabled = true;
+    button.textContent = "Testing…";
+    updateWeatherKeyStatus("Checking the OpenWeather current conditions and five-day forecast endpoints…");
+    try {
+      clearWeatherCache();
+      const result = await EF.Weather.fetchBundle(latitude, longitude, { force: true });
+      if (result.current && result.forecast) {
+        updateWeatherKeyStatus("Connection successful. Current conditions and five-day forecast are available.");
+        EF.ui.toast("OpenWeather connection successful.");
+      } else if (result.current || result.forecast) {
+        const issue = result.errors?.current || result.errors?.forecast || "One weather endpoint did not respond.";
+        updateWeatherKeyStatus(`Partially connected. ${issue}`);
+      } else {
+        updateWeatherKeyStatus(result.errors?.current || result.errors?.forecast || "Could not connect to OpenWeather.");
+      }
+    } catch (error) {
+      updateWeatherKeyStatus(error.message || "Could not connect to OpenWeather.");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Test connection";
+    }
+  });
 
   // Appearance & Workout Defaults: saves theme, accent color, motion, units, daily goal, and default workout immediately on change
   $("#setting-theme").addEventListener("change", (event) => {

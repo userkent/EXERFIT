@@ -21,6 +21,7 @@
 @import url('./pages/history.css');
 @import url('./pages/settings.css');
 @import url('./pages/profile.css');
+@import url('./pages/about.css');
 
 /* 4. Animations, Interactive Motion & Reduced-Motion Overrides */
 @import url('./enhancements.css');

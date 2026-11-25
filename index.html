@@ -16,6 +16,7 @@
   <nav class="landing-nav" id="landing-nav" aria-label="Main navigation">
     <a href="index.html" aria-label="ExerFit home"><img class="brand-logo" src="images/input/logo/exerfit-logo-dark-mode.png" alt="ExerFit"></a>
     <div class="nav-actions">
+      <a class="landing-about-link" href="#about">About</a>
       <a class="btn secondary" href="auth.html?mode=login">Log in</a>
       <a class="btn" href="auth.html?mode=signup">Get started</a>
     </div>
@@ -113,6 +114,18 @@
     </div>
   </section>
 
+  <!-- About ExerFit: introduces the student-built project and explains its purpose -->
+  <section class="section" id="about">
+    <div class="section-inner about-landing-grid">
+      <div class="section-copy reveal"><span class="eyebrow">About ExerFit</span><h2>Movement, made easier to understand.</h2><p>ExerFit is a student-built activity tracking demonstration that brings activity planning, session records, personal goals, and progress history into one clear space.</p><a class="text-button" href="auth.html?mode=signup">Explore ExerFit →</a></div>
+      <div class="about-landing-points reveal">
+        <div><strong>Plan</strong><span>Explore maps and check OpenWeather conditions before an outdoor activity.</span></div>
+        <div><strong>Record</strong><span>Track outdoor sessions or log indoor, strength, and mind-and-body activities.</span></div>
+        <div><strong>Review</strong><span>Bring saved sessions, activity goals, and progress into view.</span></div>
+      </div>
+    </div>
+  </section>
+
   <!-- Photo Gallery: displays pictures of different workouts like running, cycling, hiking, gym, and yoga -->
   <section class="section alt" id="gallery">
     <div class="section-inner">
@@ -134,7 +147,7 @@
       <div class="section-copy reveal"><span class="eyebrow">Good to know</span><h2>Frequently asked questions.</h2></div>
       <div class="reveal">
         <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does ExerFit track more than running?<span>+</span></button><div class="faq-a">Yes. The demo supports outdoor activities, indoor cardio, bodyweight exercises, gym and strength sessions, and mind-and-body activities.</div></div>
-        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does weather work immediately?<span>+</span></button><div class="faq-a">Yes. ExerFit uses a key-free weather forecast service. Allow location access in Tracker to check conditions near you.</div></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does weather work immediately?<span>+</span></button><div class="faq-a">Weather uses OpenWeather. Add your API key in Settings → Weather, then choose or share a location in Tracker to load conditions and the forecast.</div></div>
         <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Is this secure production authentication?<span>+</span></button><div class="faq-a">No. ExerFit is a classroom front-end demonstration. Accounts are stored locally in your browser, and passwords are not protected by a server-side authentication system.</div></div>
       </div>
     </div>
@@ -151,7 +164,7 @@
   </section>
 
   <!-- Bottom Footer: shows the logo, student project credit, and a login link -->
-  <footer class="footer"><div class="footer-inner"><a href="index.html"><img class="brand-logo" src="images/input/logo/exerfit-logo-dark-mode.png" alt="ExerFit"></a><span class="small">A student-built activity tracking demonstration · IT24</span><a class="small" href="auth.html">Log in / Sign up</a></div></footer>
+  <footer class="footer"><div class="footer-inner"><a href="index.html"><img class="brand-logo" src="images/input/logo/exerfit-logo-dark-mode.png" alt="ExerFit"></a><span class="small">A student-built activity tracking demonstration · IT24</span><div class="footer-links"><a class="small" href="#about">About</a><a class="small" href="auth.html">Log in / Sign up</a></div></div></footer>
 
   <!-- JavaScript File: makes the fake tracker buttons, FAQ dropdowns, and scroll animations work -->
   <script src="JS/index.js"></script>

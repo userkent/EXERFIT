@@ -17,14 +17,15 @@
     ["tracker", "Tracker", "tracker.html", "tracker"],
     ["goals", "Goals", "goals.html", "goals"],
     ["history", "History", "history.html", "history"],
+    ["about", "About", "about.html", "about"],
     ["settings", "Settings", "settings.html", "settings"],
-    ["profile", "Profile", "profile.html", "profile"],
   ];
   const TITLES = {
     home: "Your activity overview",
     tracker: "Plan and track your session",
     goals: "Build consistency at your pace",
     history: "Your activity timeline",
+    about: "The idea behind ExerFit",
     settings: "Make ExerFit yours",
     profile: "Your profile",
   };
@@ -55,8 +56,8 @@
     return NAV_ITEMS.map(([id, label, href, icon]) => {
       const iconState = active === id ? "-active" : "";
       return `
-      <a class="nav-link ${active === id ? "active" : ""}" href="${href}" ${active === id ? 'aria-current="page"' : ""}>
-        <img class="nav-icon" src="images/input/icons/nav-${icon}${iconState}.svg" alt="" aria-hidden="true"><span>${label}</span>
+      <a class="nav-link ${active === id ? "active" : ""}" href="${href}" aria-label="${label}" data-tooltip="${label}" ${active === id ? 'aria-current="page"' : ""}>
+        <img class="nav-icon" src="images/input/icons/nav-${icon}${iconState}.svg" alt="" aria-hidden="true"><span class="nav-link-label">${label}</span>
       </a>`;
     }).join("");
   }
@@ -120,7 +121,7 @@
       <aside class="sidebar" aria-label="Main application navigation">
         <a href="home.html"><img class="sidebar-logo" data-exerfit-logo data-logo-light="images/input/logo/exerfit-logo-light-mode.png" data-logo-dark="images/input/logo/exerfit-logo-dark-mode.png" src="images/input/logo/exerfit-logo-light-mode.png" alt="ExerFit"></a>
         <p class="sidebar-label">Workspace</p><nav class="nav-list">${navMarkup(page)}</nav>
-        <div class="sidebar-bottom"><div class="user-mini"><div class="avatar">${avatarHTML}</div><div><strong>${EF.Store.escapeHTML(displayName)}</strong><small>Local demo account</small></div></div><button class="btn ghost full small-btn" id="logout-button" type="button">Log out</button></div>
+        <div class="sidebar-bottom"><a class="user-mini-link icon-action" href="profile.html" aria-label="Open profile" data-tooltip="Profile"><div class="avatar">${avatarHTML}</div></a><button class="icon-action logout-icon" id="logout-button" type="button" aria-label="Log out" data-tooltip="Log out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3m9-9h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
       </aside>`;
     document.getElementById("topbar-root").innerHTML = `
       <header class="topbar"><img class="mobile-brand" data-exerfit-logo data-logo-light="images/input/logo/exerfit-logo-light-mode.png" data-logo-dark="images/input/logo/exerfit-logo-dark-mode.png" src="images/input/logo/exerfit-logo-light-mode.png" alt="ExerFit"><div class="topbar-title">${TITLES[page] || "ExerFit"}</div><div class="topbar-right"><span class="topbar-greeting">Hello, ${EF.Store.escapeHTML(firstName)}</span><a class="avatar" href="profile.html" aria-label="Open profile">${avatarHTML}</a></div></header>`;
