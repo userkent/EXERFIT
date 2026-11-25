@@ -13,42 +13,12 @@
   // Setup & Navigation Links: stores the list of sidebar/bottom menu pages, their icons, and top bar titles
   const EF = (window.ExerFit = window.ExerFit || {});
   const NAV_ITEMS = [
-    [
-      "home",
-      "Home",
-      "home.html",
-      '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
-    ],
-    [
-      "tracker",
-      "Tracker",
-      "tracker.html",
-      '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>',
-    ],
-    [
-      "goals",
-      "Goals",
-      "goals.html",
-      '<path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/>',
-    ],
-    [
-      "history",
-      "History",
-      "history.html",
-      '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5m4-1v5l3 2"/>',
-    ],
-    [
-      "settings",
-      "Settings",
-      "settings.html",
-      '<circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2L5.9 12l1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2z"/>',
-    ],
-    [
-      "profile",
-      "Profile",
-      "profile.html",
-      '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-    ],
+    ["home", "Home", "home.html", "home"],
+    ["tracker", "Tracker", "tracker.html", "tracker"],
+    ["goals", "Goals", "goals.html", "goals"],
+    ["history", "History", "history.html", "history"],
+    ["settings", "Settings", "settings.html", "settings"],
+    ["profile", "Profile", "profile.html", "profile"],
   ];
   const TITLES = {
     home: "Your activity overview",
@@ -75,20 +45,20 @@
       "--green",
       settings.accent || "#16a34a",
     );
-    const logoName = dark ? "exerfit-logo-light.svg" : "exerfit-logo-dark.svg";
     document.querySelectorAll("[data-exerfit-logo]").forEach((image) => {
-      image.src = `input/logo/${logoName}`;
+      image.src = dark ? image.dataset.logoDark : image.dataset.logoLight;
     });
   }
 
   // Menu Link Builder: turns the list of pages above into clickable HTML links and highlights the active page
   function navMarkup(active, mobile = false) {
-    return NAV_ITEMS.map(
-      ([id, label, href, icon]) => `
+    return NAV_ITEMS.map(([id, label, href, icon]) => {
+      const iconState = active === id ? "-active" : "";
+      return `
       <a class="nav-link ${active === id ? "active" : ""}" href="${href}" ${active === id ? 'aria-current="page"' : ""}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg><span>${label}</span>
-      </a>`,
-    ).join("");
+        <img class="nav-icon" src="images/input/icons/nav-${icon}${iconState}.svg" alt="" aria-hidden="true"><span>${label}</span>
+      </a>`;
+    }).join("");
   }
 
   // Workout Reminder Checker: pops up a browser notification at your chosen reminder time if the page is open
@@ -148,12 +118,12 @@
     // Fill in the Left Sidebar, Top Header Bar, and Mobile Bottom Menu
     document.getElementById("sidebar-root").innerHTML = `
       <aside class="sidebar" aria-label="Main application navigation">
-        <a href="home.html"><img class="sidebar-logo" data-exerfit-logo src="input/logo/exerfit-logo-dark.svg" alt="ExerFit"></a>
+        <a href="home.html"><img class="sidebar-logo" data-exerfit-logo data-logo-light="images/input/logo/exerfit-logo-light-mode.png" data-logo-dark="images/input/logo/exerfit-logo-dark-mode.png" src="images/input/logo/exerfit-logo-light-mode.png" alt="ExerFit"></a>
         <p class="sidebar-label">Workspace</p><nav class="nav-list">${navMarkup(page)}</nav>
         <div class="sidebar-bottom"><div class="user-mini"><div class="avatar">${avatarHTML}</div><div><strong>${EF.Store.escapeHTML(displayName)}</strong><small>Local demo account</small></div></div><button class="btn ghost full small-btn" id="logout-button" type="button">Log out</button></div>
       </aside>`;
     document.getElementById("topbar-root").innerHTML = `
-      <header class="topbar"><img class="mobile-brand" data-exerfit-logo src="input/logo/exerfit-logo-dark.svg" alt="ExerFit"><div class="topbar-title">${TITLES[page] || "ExerFit"}</div><div class="topbar-right"><span class="topbar-greeting">Hello, ${EF.Store.escapeHTML(firstName)}</span><a class="avatar" href="profile.html" aria-label="Open profile">${avatarHTML}</a></div></header>`;
+      <header class="topbar"><img class="mobile-brand" data-exerfit-logo data-logo-light="images/input/logo/exerfit-logo-light-mode.png" data-logo-dark="images/input/logo/exerfit-logo-dark-mode.png" src="images/input/logo/exerfit-logo-light-mode.png" alt="ExerFit"><div class="topbar-title">${TITLES[page] || "ExerFit"}</div><div class="topbar-right"><span class="topbar-greeting">Hello, ${EF.Store.escapeHTML(firstName)}</span><a class="avatar" href="profile.html" aria-label="Open profile">${avatarHTML}</a></div></header>`;
     document.getElementById("mobile-nav-root").innerHTML =
       `<nav class="mobile-bottom-nav" aria-label="Mobile navigation">${navMarkup(page, true)}</nav>`;
 

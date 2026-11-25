@@ -10,7 +10,7 @@
 // LOCAL CONFIGURATION OVERRIDES
 // ==========================================
 // HOW TO EDIT THIS SECTION:
-// Add only the settings you need to override from config.example.js.
+// Add only the settings you need to override from config.ex.js.
 // Keep real API keys out of this file when sharing the project.
 window.ExerFitLocalConfig = {
   // Example: openWeatherApiKey: "your-local-key-here",

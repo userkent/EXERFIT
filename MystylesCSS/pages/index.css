@@ -62,7 +62,7 @@
       rgba(5, 20, 11, 0.22)
     ),
     linear-gradient(0deg, rgba(5, 20, 11, 0.3), transparent),
-    url("https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=2200&q=85")
+    url("../../images/index/hero.jpg")
       center/cover;
 }
 .hero::after {

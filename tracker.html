@@ -31,9 +31,9 @@
           <!-- Left Side — Interactive Map Card: lets you search locations, find your current GPS spot, and click to set start/end points -->
           <section class="card map-card">
             <div class="map-toolbar">
-              <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button">Search</button></div>
-              <button class="btn secondary small-btn" id="my-location" type="button">My location</button>
-              <button class="icon-btn" id="clear-route" type="button" aria-label="Clear selected route">×</button>
+              <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button"><img class="asset-icon" src="images/input/icons/icon-search.svg" alt="" aria-hidden="true">Search</button></div>
+              <button class="btn secondary small-btn" id="my-location" type="button"><img class="asset-icon" src="images/input/icons/icon-gps.svg" alt="" aria-hidden="true">My location</button>
+              <button class="icon-btn" id="clear-route" type="button" aria-label="Clear selected route"><img class="asset-icon" src="images/input/icons/icon-close.svg" alt="" aria-hidden="true"></button>
             </div>
             <div id="tracker-map" role="application" aria-label="Interactive OpenStreetMap. Click once for a start point and again for a destination."></div>
             <div class="map-legend"><span>Click map to set start and destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
@@ -135,13 +135,13 @@
   <!-- JavaScript Libraries & App Scripts: loads Chart.js for weather graphs, Leaflet for maps, plus routing, weather, and workout timer logic -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/config.example.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/motion.js"></script>
-  <script src="js/layout.js"></script>
-  <script src="js/weather.js"></script>
-  <script src="js/routing.js"></script>
-  <script src="js/tracker.js"></script>
+  <script src="JS/config.ex.js"></script>
+  <script src="JS/config.js"></script>
+  <script src="JS/storage.js"></script>
+  <script src="JS/motion.js"></script>
+  <script src="JS/layout.js"></script>
+  <script src="JS/weather.js"></script>
+  <script src="JS/routing.js"></script>
+  <script src="JS/tracker.js"></script>
 </body>
 </html>
