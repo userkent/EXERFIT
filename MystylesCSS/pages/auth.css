@@ -1,0 +1,234 @@
+/* ==========================================================================
+   EXERFIT — AUTHENTICATION PAGE STYLES (pages/auth.css)
+   Used by: auth.html (and password strength widgets on settings.html)
+   ========================================================================== */
+
+/* Main Page Split Layout: divides the screen into two side-by-side columns (picture on the left, form on the right) */
+.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.94fr) minmax(400px, 1.06fr);
+  background: var(--surface);
+}
+
+/* Left Side Visual Banner: styles the full-height dark green gym photo background, white logo, and welcome text */
+.auth-visual {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: #fff;
+  padding: calc(35px + env(safe-area-inset-top))
+    calc(35px + env(safe-area-inset-right))
+    calc(35px + env(safe-area-inset-bottom))
+    calc(35px + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    linear-gradient(160deg, rgba(5, 25, 12, 0.9), rgba(4, 30, 13, 0.45)),
+    url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=85")
+      center/cover;
+}
+.auth-visual .brand-logo {
+  filter: brightness(0) invert(1);
+}
+
+.auth-visual h1 {
+  max-width: 490px;
+  font-size: clamp(2.8rem, 4.8vw, 5rem);
+}
+
+.auth-visual p {
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 420px;
+}
+.auth-visual-foot {
+  color: #a9cdb3;
+  font-size: 0.8rem;
+}
+
+/* Right Side Form Container: centers the login/sign-up box on the right half of the screen */
+.auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(38px + env(safe-area-inset-top))
+    calc(24px + env(safe-area-inset-right))
+    calc(38px + env(safe-area-inset-bottom))
+    calc(24px + env(safe-area-inset-left));
+}
+.auth-card {
+  width: min(480px, 100%);
+}
+
+/* Card Top Bar & Switcher Tabs: styles the "Back" link, the Log in / Sign up toggle buttons, and smooth form fade-in */
+.auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  gap: 12px;
+}
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.auth-tabs {
+  display: flex;
+  gap: 5px;
+  background: var(--surface-2);
+  padding: 5px;
+  border-radius: 14px;
+  margin: 25px 0;
+}
+.auth-tab {
+  flex: 1;
+  border: 0;
+  min-height: 42px;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 800;
+}
+.auth-tab.active {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.auth-form {
+  display: none;
+  animation: fade-up 0.35s ease both;
+}
+.auth-form.active {
+  display: block;
+}
+.auth-error {
+  min-height: 21px;
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin: 5px 0 12px;
+}
+
+/* Password Input & Eye Button: places the show/hide eye icon inside the right edge of the password box */
+.password-wrap {
+  position: relative;
+}
+.password-wrap input {
+  padding-right: 54px;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+.password-toggle:hover {
+  color: var(--green);
+  background: var(--surface-2);
+}
+.password-toggle svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Password Strength Meter & Rule Badges: styles the progress bar, rule pills (8+ chars, uppercase, etc.), and warning pop-up */
+.password-meter {
+  margin: 8px 0 5px;
+}
+.password-meter .progress {
+  height: 6px;
+}
+.password-hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+  min-height: 19px;
+}
+.password-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 9px 0 14px;
+}
+.password-check {
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.password-check.good {
+  color: var(--green-deep);
+  background: var(--mint);
+}
+.password-pop {
+  display: none;
+  padding: 8px 11px;
+  margin-top: 8px;
+  background: #fff7e8;
+  color: #8a5a16;
+  font-size: 0.76rem;
+  border-radius: 10px;
+}
+body[data-theme="dark"] .password-pop {
+  background: #3b2a12;
+  color: #ffd28b;
+}
+
+/* Tablet & Small Screen Layout: stacks the picture on top and the form underneath when the screen is narrower than 820px */
+@media (max-width: 820px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+  .auth-visual {
+    min-height: 300px;
+    padding: calc(22px + env(safe-area-inset-top))
+      calc(22px + env(safe-area-inset-right))
+      calc(22px + env(safe-area-inset-bottom))
+      calc(22px + env(safe-area-inset-left));
+  }
+  .auth-visual h1 {
+    font-size: 2.6rem;
+    margin-bottom: 8px;
+  }
+  .auth-visual-foot {
+    display: none;
+  }
+  .auth-main {
+    padding: calc(25px + env(safe-area-inset-top))
+      calc(18px + env(safe-area-inset-right))
+      calc(45px + env(safe-area-inset-bottom))
+      calc(18px + env(safe-area-inset-left));
+  }
+  .auth-visual .brand-logo {
+    width: 125px;
+  }
+}
+
+/* Mobile Phone Layout: shrinks the top banner height and headline text even further on small phone screens */
+@media (max-width: 640px) {
+  .auth-visual {
+    min-height: 250px;
+  }
+  .auth-visual h1 {
+    font-size: 2.2rem;
+  }
+}
