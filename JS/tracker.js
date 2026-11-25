@@ -49,6 +49,7 @@
   let endPoint = null;
   let startLabel = "";
   let endLabel = "";
+  let startPointManual = false;
   let selectedLocation = null;
   let selectedLabel = "";
   let weatherBundle = null;
@@ -75,7 +76,7 @@
     simulation: true,
     lastGeoUpdate: 0,
     setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0,
-    holdElapsed: 0, totalVolumeKg: 0,
+    holdElapsed: 0, totalVolumeKg: 0, simulationPath: [], simulationCumulative: [], simulationProgressMeters: 0,
   };
 
   // Unit & Coordinate Helpers: converts kilometers to miles if preferred and checks that GPS coordinates are valid numbers
@@ -298,9 +299,10 @@
     $("#route-point-labels").innerHTML =
       `<div class="route-point">Start point <small>${startPoint ? `${startLabel || "Selected"} · ${startPoint[0].toFixed(5)}, ${startPoint[1].toFixed(5)}` : "Choose on the map or use My Location"}</small></div><div class="route-point">Destination <small>${endPoint ? `${endLabel || "Selected"} · ${endPoint[0].toFixed(5)}, ${endPoint[1].toFixed(5)}` : "Choose another point on the map"}</small></div>`;
   }
-  function setStart(point, label = "Selected point") {
+  function setStart(point, label = "Selected point", manual = true) {
     startPoint = point;
     startLabel = label;
+    startPointManual = Boolean(manual);
     updatePointMarkers();
   }
   function setEnd(point, label = "Selected point") {
@@ -324,7 +326,7 @@
         .forEach((button) =>
           button.addEventListener("click", () => {
             const action = button.dataset.mapAction;
-            if (action === "start") setStart(point, label);
+            if (action === "start") setStart(point, label, true);
             if (action === "end") setEnd(point, label);
             if (action === "weather") selectWeatherLocation(point, label);
             if (action === "route") {
@@ -337,6 +339,29 @@
         );
     });
     popup.openOn(map);
+  }
+
+  async function setManualRoutePoint(kind) {
+    const input = byId(kind === "start" ? "manual-start-location" : "manual-destination-location");
+    const query = input?.value.trim();
+    if (!query) { EF.ui.toast("Enter a place name first.", "error"); return; }
+    const button = byId(kind === "start" ? "set-manual-start" : "set-manual-destination");
+    if (button) { button.disabled = true; button.textContent = "Searching…"; }
+    try {
+      const endpoint = `${CONFIG.geocodingUrl || "https://nominatim.openstreetmap.org/search"}?format=jsonv2&addressdetails=1&limit=1&q=${encodeURIComponent(query)}`;
+      const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Place search is temporarily unavailable.");
+      const results = await response.json();
+      if (!results.length) throw new Error("Place not found. Try a nearby landmark or street.");
+      const place = results[0], point = [Number(place.lat), Number(place.lon)];
+      const label = areaNameFromAddress(place.address, place.display_name.split(",").slice(0, 3).join(", "));
+      if (kind === "start") setStart(point, label, true); else setEnd(point, label);
+      map?.flyTo(point, 16, { duration: 1.1 });
+      selectWeatherLocation(point, label);
+      updateMapAreaName(point, label);
+      EF.ui.toast(`${kind === "start" ? "Start" : "Destination"} set: ${label}`);
+    } catch (error) { EF.ui.toast(error.message || "Could not find that place.", "error"); }
+    finally { if (button) { button.disabled = false; button.textContent = kind === "start" ? "Set start" : "Set destination"; } }
   }
 
   // Remember Location & Fetch Weather: saves your chosen spot for the Home dashboard and loads its local weather
@@ -408,7 +433,7 @@
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const point = [position.coords.latitude, position.coords.longitude];
-        setStart(point, "My location");
+        setStart(point, "My location", false);
         selectWeatherLocation(point, "My location");
         updateMapAreaName(point, "My location");
         map?.flyTo(point, 16, { duration: 1.1 });
@@ -739,17 +764,12 @@
       EF.ui.toast(result.cached ? "Loaded a saved route." : "Route planned.");
     } catch (error) {
       if (error.name === "AbortError") return;
-      const line = [startPoint, endPoint];
       removeRouteLayers();
-      if (map)
-        L.polyline(line, {
-          color: "#d18a22",
-          weight: 4,
-          dashArray: "8 8",
-        }).addTo(routeLayer);
+      routes = [];
+      chosenRouteIndex = 0;
       const straightKm = EF.Routing.distanceMeters(startPoint, endPoint) / 1000;
       $("#route-summary").innerHTML =
-        `<div class="empty-state"><strong>Detailed routing unavailable</strong><p>${EF.Store.escapeHTML(error.message || "Public routing service is unavailable.")}</p><p>Straight-line fallback: ${displayDistance(straightKm)}. This is not a navigable route.</p><button class="btn secondary small-btn" id="retry-route" type="button">Retry route</button></div>`;
+        `<div class="empty-state"><strong>Street routing unavailable</strong><p>${EF.Store.escapeHTML(error.message || "The routing service is unavailable right now.")}</p><p>Only a straight-line estimate (${displayDistance(straightKm)}) is available. No fake road route will be drawn. Retry when the routing service is online.</p><button class="btn secondary small-btn" id="retry-route" type="button">Retry route</button></div>`;
       bindIfPresent("#retry-route", "click", getRoute);
       $("#route-instructions").innerHTML = "";
       routeWeatherData = [];
@@ -1173,26 +1193,102 @@
     }
   }
 
-  function startSession() {
+  function prepareSimulationPath() {
+    const coordinates = routes[chosenRouteIndex]?.geometry?.coordinates || [];
+    session.simulationPath = coordinates.map(([lon, lat]) => [lat, lon]);
+    session.simulationCumulative = [0];
+    for (let i = 1; i < session.simulationPath.length; i++) {
+      session.simulationCumulative[i] = session.simulationCumulative[i - 1] + EF.Routing.distanceMeters(session.simulationPath[i - 1], session.simulationPath[i]);
+    }
+    session.simulationProgressMeters = 0;
+    return session.simulationPath.length > 1;
+  }
+
+  function advanceSimulationAlongRoute() {
+    if (session.simulationPath.length < 2) return;
+    session.simulationProgressMeters = Math.min(session.simulationCumulative.at(-1), session.simulationProgressMeters + 1.5);
+    const target = session.simulationProgressMeters;
+    let index = session.simulationCumulative.findIndex((distance) => distance >= target);
+    if (index <= 0) index = 1;
+    const previousDistance = session.simulationCumulative[index - 1], segmentDistance = session.simulationCumulative[index] - previousDistance;
+    const fraction = segmentDistance > 0 ? (target - previousDistance) / segmentDistance : 0;
+    const a = session.simulationPath[index - 1], b = session.simulationPath[index];
+    recordPoint([a[0] + (b[0] - a[0]) * fraction, a[1] + (b[1] - a[1]) * fraction]);
+  }
+
+  async function startSession() {
     if (session.active) return;
-    Object.assign(session, { active: true, paused: false, elapsed: 0, distance: 0, points: [], lastPoint: null, setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0, holdElapsed: 0, totalVolumeKg: 0 });
+    const outdoor = trackerCategory === "outdoor";
+    const wantsSimulation = outdoor && Boolean($("#simulation-mode")?.checked);
+    if (outdoor && wantsSimulation && !prepareSimulationPath()) {
+      EF.ui.toast("Plan a route first to simulate movement along real streets. Choose a start and destination, then tap Get route.", "error");
+      return;
+    }
+
+    let initialGpsPoint = null;
+    if (outdoor && !wantsSimulation && navigator.geolocation) {
+      const startButton = $("#track-start");
+      if (startButton) { startButton.disabled = true; startButton.textContent = "Getting GPS…"; }
+      try {
+        const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }));
+        initialGpsPoint = [position.coords.latitude, position.coords.longitude];
+        if (!startPointManual) {
+          setStart(initialGpsPoint, "Live GPS location", false);
+          if (endPoint) {
+            try {
+              routeMode = $("#travel-mode").value;
+              const refreshed = await EF.Routing.requestRoute(initialGpsPoint, endPoint, routeMode);
+              routes = refreshed.routes; chosenRouteIndex = 0; drawRoute(routes[0]);
+              renderRouteSummary(routes[0], routes, refreshed.service);
+            } catch (routeError) { console.warn("Could not refresh route from current GPS position:", routeError); }
+          }
+        }
+        map?.flyTo(initialGpsPoint, Math.max(map.getZoom(), 16), { duration: 0.8 });
+        updateMapAreaName(initialGpsPoint, "Your current GPS position");
+      } catch (error) {
+        if (startButton) { startButton.disabled = false; startButton.textContent = "Start session"; }
+        EF.ui.toast(error.code === 1 ? "Location permission is needed for GPS tracking. Enable Simulation mode or allow location access." : "Could not get a GPS fix. Try again or enable Simulation mode.", "error");
+        return;
+      }
+    } else if (outdoor && !wantsSimulation && !navigator.geolocation) {
+      EF.ui.toast("This browser does not support GPS. Enable Simulation mode after planning a route.", "error");
+      return;
+    }
+
+    Object.assign(session, { active: true, paused: false, elapsed: 0, distance: 0, points: [], lastPoint: null, setLogs: [], totalReps: 0, restRemaining: 0, restElapsed: 0, holdElapsed: 0, totalVolumeKg: 0, simulationProgressMeters: 0 });
     if (currentMarker && map) { map.removeLayer(currentMarker); currentMarker = null; }
     if (sessionTrailLayer) sessionTrailLayer.clearLayers();
-    session.simulation = trackerCategory === "outdoor" && Boolean($("#simulation-mode")?.checked);
+    session.simulation = wantsSimulation;
+    if (session.simulation && session.simulationPath.length) recordPoint(session.simulationPath[0]);
+    else if (initialGpsPoint) recordPoint(initialGpsPoint);
     if ($("#session-finish-summary")) $("#session-finish-summary").hidden = true;
-    $("#track-start").disabled = true; $("#track-pause").disabled = false; $("#track-finish").disabled = false;
+    $("#track-start").disabled = true; $("#track-start").textContent = "Start session";
+    $("#track-pause").disabled = false; $("#track-finish").disabled = false;
     $("#activity-type").disabled = true;
     if ($("#simulation-mode")) $("#simulation-mode").disabled = true;
-    if ($("#tracking-state")) $("#tracking-state").textContent = session.simulation ? "Simulation active" : "Session active";
-    if (trackerCategory === "outdoor") {
-      if (session.simulation) recordPoint(startPoint || selectedLocation || DEFAULT_CENTER);
-      else if (navigator.geolocation) session.watchId = navigator.geolocation.watchPosition((pos) => { if (!session.paused) recordPoint([pos.coords.latitude,pos.coords.longitude]); }, () => { if ($("#tracking-state")) $("#tracking-state").textContent = "GPS signal weak — timer still running"; }, { enableHighAccuracy: true, maximumAge: 5000 });
+    if ($("#tracking-state")) $("#tracking-state").textContent = session.simulation ? "Route simulation active" : "GPS tracking active";
+    if (outdoor && !session.simulation && navigator.geolocation) {
+      session.watchId = navigator.geolocation.watchPosition((pos) => {
+        if (session.paused) return;
+        if (pos.coords.accuracy && pos.coords.accuracy > 60) return;
+        const point = [pos.coords.latitude, pos.coords.longitude];
+        const now = Date.now();
+        if (session.lastPoint && session.lastGeoUpdate) {
+          const seconds = Math.max(1, (now - session.lastGeoUpdate) / 1000);
+          const speed = EF.Routing.distanceMeters(session.lastPoint, point) / seconds;
+          const maxPlausibleSpeed = $("#activity-type").value === "Cycling" ? 35 : 12;
+          if (speed > maxPlausibleSpeed) return; // Reject obvious GPS jumps instead of drawing a diagonal spike.
+        }
+        session.lastGeoUpdate = now;
+        recordPoint(point);
+        if (map && session.points.length % 3 === 0) map.panTo(point, { animate: true, duration: 0.35 });
+      }, () => { if ($("#tracking-state")) $("#tracking-state").textContent = "GPS signal weak — waiting for location"; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 });
     }
     session.timer = window.setInterval(() => {
       if (session.paused) return;
       session.elapsed++;
       if (session.restRemaining > 0) { session.restRemaining--; session.restElapsed++; if (!session.restRemaining) EF.ui.toast("Rest complete. Ready for the next set."); }
-      if (session.simulation && session.lastPoint && trackerCategory === "outdoor") recordPoint([session.lastPoint[0] + 0.00003, session.lastPoint[1] + 0.000035]);
+      if (session.simulation && trackerCategory === "outdoor") advanceSimulationAlongRoute();
       if (trackerCategory === "bodyweight" && $("#activity-type").value === "Planks" && session.restRemaining === 0) session.holdElapsed++;
       updateSessionReadout();
       if (trackerCategory === "mind" && $("#mind-duration-mode").value === "target" && session.elapsed >= (Number($("#mind-target-minutes").value) || 10) * 60) {
@@ -1293,6 +1389,8 @@
     }
   });
   bindIfPresent("#my-location", "click", locateUser);
+  bindIfPresent("#set-manual-start", "click", () => setManualRoutePoint("start"));
+  bindIfPresent("#set-manual-destination", "click", () => setManualRoutePoint("destination"));
   bindIfPresent("#get-route", "click", getRoute);
   bindIfPresent("#swap-points", "click", () => {
     [startPoint, endPoint] = [endPoint, startPoint];
@@ -1302,6 +1400,7 @@
   bindIfPresent("#clear-route", "click", () => {
     startPoint = null;
     endPoint = null;
+    startPointManual = false;
     startLabel = "";
     endLabel = "";
     routes = [];

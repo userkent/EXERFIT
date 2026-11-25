@@ -50,6 +50,11 @@
             <section class="card route-planner-card" id="route-planner-panel">
               <div class="card-head"><div><span class="eyebrow">Outdoor route</span><h3>Plan a route</h3></div></div>
               <div class="field"><label for="travel-mode">Travel mode</label><select id="travel-mode"><option value="foot">Walk / Run / Hike</option><option value="ride">Ride</option><option value="drive">Drive</option></select></div>
+              <div class="route-manual-fields">
+                <div class="field"><label for="manual-start-location">Start location (optional manual selection)</label><div class="route-manual-input"><input class="input" id="manual-start-location" type="search" placeholder="Use My GPS or enter a place"><button class="btn secondary small-btn" id="set-manual-start" type="button">Set start</button></div></div>
+                <div class="field"><label for="manual-destination-location">Destination (manual selection)</label><div class="route-manual-input"><input class="input" id="manual-destination-location" type="search" placeholder="Search destination or click map"><button class="btn secondary small-btn" id="set-manual-destination" type="button">Set destination</button></div></div>
+              </div>
+              <p class="small muted route-help">Default start: your live GPS position when you begin. To choose a different start, enter a place above or select a point on the map.</p>
               <div class="route-points" id="route-point-labels"><div class="route-point">Start point <small>Choose on the map or use My Location</small></div><div class="route-point">Destination <small>Choose another point on the map</small></div></div>
               <button class="text-button map-swap-button" id="swap-points" type="button">Swap start and destination</button>
               <button class="btn full" id="get-route" type="button" style="margin-top:14px">Get route</button>
@@ -72,14 +77,14 @@
               <div class="field activity-picker"><label for="activity-type">Activity</label><select id="activity-type"></select></div>
 
               <div class="category-panel" id="outdoor-controls">
-                <label class="check-row"><input type="checkbox" id="simulation-mode" checked><span>Simulation mode (demonstration only; not real GPS)</span></label>
+                <label class="check-row"><input type="checkbox" id="simulation-mode" checked><span>Simulation mode (follows the planned street route; not real GPS)</span></label>
                 <div class="tracker-metrics">
                   <div class="tracker-metric"><small>Time</small><strong id="track-time">00:00</strong></div>
                   <div class="tracker-metric"><small>Distance</small><strong id="track-distance">0.00 km</strong></div>
                   <div class="tracker-metric"><small>Pace / Speed</small><strong id="track-pace">—</strong></div>
                   <div class="tracker-metric"><small>Calories</small><strong id="track-calories">—</strong></div>
                 </div>
-                <p class="small muted">GPS route recording is available when Simulation mode is off and location permission is granted.</p>
+                <p class="small muted">With Simulation mode off, the session starts at your live GPS position and records your actual movement. With it on, the marker follows the planned street route.</p>
               </div>
 
               <div class="category-panel" id="indoor-controls" hidden>
