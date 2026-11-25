@@ -1,0 +1,238 @@
+/* ==========================================================================
+   EXERFIT — HOME DASHBOARD STYLES (pages/home.css)
+   Used by: home.html (and welcome-banner CTA on index.html)
+   ========================================================================== */
+
+/* Welcome & CTA Banner */
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  border-radius: 26px;
+  color: #fff;
+  background:
+    linear-gradient(105deg, rgba(5, 27, 13, 0.96), rgba(7, 44, 19, 0.78)),
+    url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1500&q=80")
+      center/cover;
+  margin-bottom: 20px;
+}
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  right: 5%;
+  top: -100px;
+  width: 290px;
+  height: 290px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 35px rgba(255, 255, 255, 0.04),
+    0 0 0 70px rgba(255, 255, 255, 0.025);
+}
+.welcome-banner > * {
+  position: relative;
+  z-index: 1;
+}
+.welcome-banner h2 {
+  margin: 8px 0;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+}
+.welcome-banner p {
+  color: #bcd5c2;
+  margin-bottom: 18px;
+}
+.welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+/* KPI Statistics Row */
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+}
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.kpi-value {
+  font: 700 clamp(1.6rem, 2.3vw, 2.15rem) var(--font-display);
+  margin: 13px 0 2px;
+  letter-spacing: -0.05em;
+}
+.kpi-foot {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.kpi-icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--mint);
+  color: var(--green);
+}
+.kpi-trend {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+.kpi-trend.positive {
+  color: var(--green);
+}
+.kpi-trend.negative {
+  color: var(--danger);
+}
+.kpi-trend.flat {
+  color: var(--muted);
+}
+
+/* Weekly Activity Progress Ring */
+.ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.activity-ring {
+  width: 135px;
+  height: 135px;
+  flex: 0 0 135px;
+  transform: rotate(-90deg);
+}
+.activity-ring circle {
+  fill: none;
+  stroke-width: 11;
+}
+.activity-ring .track {
+  stroke: var(--surface-2);
+}
+.activity-ring .value {
+  stroke: var(--green);
+  stroke-linecap: round;
+  stroke-dasharray: 326.7;
+  stroke-dashoffset: 326.7;
+  transition: stroke-dashoffset 0.7s;
+}
+
+/* Recent Activity Feed & Today's Plan */
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.feed-item:last-child {
+  border-bottom: 0;
+}
+.feed-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--surface-2);
+  color: var(--green);
+}
+.feed-item strong {
+  display: block;
+  font-size: 0.88rem;
+}
+.feed-item small {
+  color: var(--muted);
+}
+.feed-item .feed-metric {
+  margin-left: auto;
+  text-align: right;
+  font-weight: 800;
+  font-size: 0.83rem;
+}
+
+.plan-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+}
+.plan-item input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+.plan-item.done span {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.plan-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.plan-add input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Dashboard Widget Customization Modal */
+.dashboard-widget-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+.dashboard-widget-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+.dashboard-widget-row label {
+  min-width: 0;
+  font-size: 0.88rem;
+}
+.dashboard-widget-row label span {
+  line-height: 1.35;
+}
+.dashboard-widget-row input {
+  accent-color: var(--green);
+  width: 17px;
+  height: 17px;
+}
+
+@media (max-width: 640px) {
+  .welcome-banner {
+    padding: 23px;
+  }
+  .welcome-banner::after {
+    opacity: 0.5;
+    right: -130px;
+  }
+  .ring-wrap {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .activity-ring {
+    width: 115px;
+    height: 115px;
+  }
+}
+@media (max-width: 520px) {
+  .dashboard-widget-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .dashboard-widget-row > .row {
+    align-self: flex-end;
+  }
+}
