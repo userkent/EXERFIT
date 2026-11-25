@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Page setup: sets the page title, browser tab icon, mobile screen sizing, and connects the CSS design file -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07140d">
+  <meta name="description" content="ExerFit helps you track movement, plan routes, and build a consistent activity habit.">
+  <title>ExerFit — Move with purpose</title>
+  <link rel="icon" href="input/logo/exerfit-logo-dark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-page">
+
+  <!-- Top Menu Bar: holds the ExerFit logo and the Log in / Get started buttons -->
+  <nav class="landing-nav" id="landing-nav" aria-label="Main navigation">
+    <a href="index.html" aria-label="ExerFit home"><img class="brand-logo" src="input/logo/exerfit-logo-light.svg" alt="ExerFit"></a>
+    <div class="nav-actions">
+      <a class="btn secondary" href="auth.html?mode=login">Log in</a>
+      <a class="btn" href="auth.html?mode=signup">Get started</a>
+    </div>
+  </nav>
+
+  <!-- Main Welcome Banner: the first big section visitors see with the main headline and action buttons -->
+  <header class="hero">
+    <div class="hero-content">
+      <span class="eyebrow" style="color:#8befa8">A smarter way to move</span>
+      <h1>Make every move <em>count.</em></h1>
+      <p>One calm, connected space for your walks, runs, rides, workouts, and recovery days. Plan your route, understand the conditions, and keep your progress together.</p>
+      <div class="hero-actions">
+        <a class="btn" href="auth.html?mode=signup">Create your free account</a>
+        <a class="btn secondary" href="#see-it">Explore the tracker</a>
+      </div>
+      <div class="hero-meta" aria-label="ExerFit highlights">
+        <div><strong>05</strong>Activity categories</div>
+        <div><strong>01</strong>Connected activity space</div>
+        <div><strong>100%</strong>Your pace, your way</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Moving Text Strip: a scrolling bar showing different exercises like Walk, Run, Ride, and Yoga -->
+  <div class="marquee" aria-hidden="true"><div class="marquee-track">
+    <span>Walk</span><span>Run</span><span>Ride</span><span>Hike</span><span>Strength</span><span>Yoga</span><span>Stretch</span><span>Move well</span>
+    <span>Walk</span><span>Run</span><span>Ride</span><span>Hike</span><span>Strength</span><span>Yoga</span><span>Stretch</span><span>Move well</span>
+  </div></div>
+
+  <!-- App Features: 6 cards explaining what the app can do (tracking, maps, weather, progress, etc.) -->
+  <section class="section" id="features">
+    <div class="section-inner">
+      <div class="section-copy reveal">
+        <span class="eyebrow">Everything in one place</span>
+        <h2>Built around the way you move.</h2>
+        <p>ExerFit brings planning, activity records, and personal goals into one simple dashboard. Outdoor routes and indoor sessions both belong here.</p>
+      </div>
+      <div class="grid three">
+        <article class="card feature-card reveal"><div class="feature-number">01</div><h3>Track your activity</h3><p>Record outdoor GPS sessions, indoor cardio, strength sets, repetitions, and mind-and-body activities.</p><div class="feature-art"></div></article>
+        <article class="card feature-card reveal"><div class="feature-number">02</div><h3>Plan with context</h3><p>Explore an OpenStreetMap, plan a route, and check available local weather before heading out.</p><div class="feature-art"></div></article>
+        <article class="card feature-card reveal"><div class="feature-number">03</div><h3>See your progress</h3><p>Bring your activity history, personal goals, streaks, and weekly patterns together.</p><div class="feature-art"></div></article>
+        <article class="card feature-card reveal"><div class="feature-number">04</div><h3>Indoor and outdoor</h3><p>Switch between walking, running, cycling, gym training, bodyweight workouts, and more.</p><div class="feature-art"></div></article>
+        <article class="card feature-card reveal"><div class="feature-number">05</div><h3>Weather-aware planning</h3><p>Use current conditions and the available five-day, three-hour forecast to plan outdoor sessions.</p><div class="feature-art"></div></article>
+        <article class="card feature-card reveal"><div class="feature-number">06</div><h3>Your data, your account</h3><p>Each local demo account keeps its own profile, activities, goals, preferences, and saved routes.</p><div class="feature-art"></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fake Tracker Demo: lets visitors test a pretend workout with a sample map, timer, and Start/Pause/Finish buttons -->
+  <section class="section alt" id="see-it">
+    <div class="section-inner action-preview">
+      <div class="reveal">
+        <span class="eyebrow">See it in action</span>
+        <h2>A preview of the ExerFit Tracker.</h2>
+        <p class="muted">Try this small simulated session. Start it, pause or resume it, then finish or reset it. The timer and sample values respond to your actions. This demonstration does not request GPS permission or save anything to your account.</p>
+        <div class="row wrap" style="margin:22px 0"><span class="pill green">Simulated session</span><span class="pill">No GPS access</span><span class="pill">Not saved to History</span></div>
+        <a class="btn" href="auth.html?mode=signup">Open the full tracker</a>
+      </div>
+      <div class="demo-window reveal" aria-label="Interactive simulated tracker demonstration">
+        <div class="demo-top"><strong>EXERFIT / TRACKER</strong><span class="demo-status" id="demo-status">Ready to start</span></div>
+        <div class="demo-map">
+          <svg viewBox="0 0 520 280" role="img" aria-label="Illustrative route line on a sample map">
+            <path d="M35 221 C95 210 91 164 143 170 S214 201 245 142 S319 103 345 127 S401 89 478 52" fill="none" stroke="#63836a" stroke-width="3" stroke-dasharray="7 10" opacity=".7"/>
+            <path class="demo-route" d="M35 221 C95 210 91 164 143 170 S214 201 245 142 S319 103 345 127 S401 89 478 52" fill="none" stroke="#4ade80" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="35" cy="221" r="10" fill="#4ade80" stroke="#fff" stroke-width="4"/><circle cx="478" cy="52" r="10" fill="#fff" stroke="#4ade80" stroke-width="4"/>
+          </svg>
+        </div>
+        <div class="demo-stats">
+          <div class="demo-stat">TIME<strong id="demo-time">00:00</strong></div>
+          <div class="demo-stat">DISTANCE<strong id="demo-distance">0.00 km</strong></div>
+          <div class="demo-stat">PACE<strong id="demo-pace">—</strong></div>
+        </div>
+        <div class="demo-controls">
+          <button class="btn" id="demo-start" type="button">Start</button>
+          <button class="btn secondary" id="demo-pause" type="button" disabled>Pause</button>
+          <button class="btn secondary" id="demo-finish" type="button" disabled>Finish</button>
+        </div>
+        <p class="demo-note" id="demo-note">Illustrative route and weather only. No live location is used.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works: shows the 3 easy steps to use the app (Choose -> Record -> Review) -->
+  <section class="section" id="how-it-works">
+    <div class="section-inner">
+      <div class="section-copy reveal"><span class="eyebrow">Simple by design</span><h2>Start small. Keep showing up.</h2><p>Move from a quick activity log to a connected view of your progress.</p></div>
+      <div class="grid three">
+        <article class="card reveal"><span class="pill green">Step 01</span><h3 style="margin-top:18px">Choose an activity</h3><p class="muted">Pick an outdoor, indoor, strength, or mind-and-body activity.</p></article>
+        <article class="card reveal"><span class="pill green">Step 02</span><h3 style="margin-top:18px">Record your session</h3><p class="muted">Use GPS tracking when available, a timer, or a quick manual log.</p></article>
+        <article class="card reveal"><span class="pill green">Step 03</span><h3 style="margin-top:18px">Review your progress</h3><p class="muted">See your saved sessions in the dashboard, goals, and activity history.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Photo Gallery: displays pictures of different workouts like running, cycling, hiking, gym, and yoga -->
+  <section class="section alt" id="gallery">
+    <div class="section-inner">
+      <div class="section-copy reveal"><span class="eyebrow">Move your way</span><h2>Different ways to feel active.</h2><p>Outdoor movement, gym sessions, and slower practices all have a place.</p></div>
+      <div class="gallery-grid">
+        <div class="gallery-tile reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80" alt="Runner moving along a green outdoor trail"><strong>Outdoor running</strong></div>
+        <div class="gallery-tile reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1541625602330-2277fd9bdf20?auto=format&fit=crop&w=700&q=80" alt="Cyclist riding outdoors"><strong>Cycling</strong></div>
+        <div class="gallery-tile reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1533561052604-c3beb6d55b8d?auto=format&fit=crop&w=700&q=80" alt="Hiking route through nature"><strong>Hiking</strong></div>
+        <div class="gallery-tile reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=700&q=80" alt="Gym training space"><strong>Gym training</strong></div>
+        <div class="gallery-tile reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=700&q=80" alt="Person practicing yoga and stretching"><strong>Mind and body</strong></div>
+      </div>
+      <p class="small muted" style="margin-top:12px">Photography shown from Unsplash; see README.md for image credits and replacement instructions.</p>
+    </div>
+  </section>
+
+  <!-- Common Questions (FAQ): clickable questions that open up to show answers about the app -->
+  <section class="section" id="faq">
+    <div class="section-inner" style="max-width:860px">
+      <div class="section-copy reveal"><span class="eyebrow">Good to know</span><h2>Frequently asked questions.</h2></div>
+      <div class="reveal">
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does ExerFit track more than running?<span>+</span></button><div class="faq-a">Yes. The demo supports outdoor activities, indoor cardio, bodyweight exercises, gym and strength sessions, and mind-and-body activities.</div></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does weather work immediately?<span>+</span></button><div class="faq-a">You need to add an OpenWeather API key in Settings. Without a key, the application explains how to configure it and keeps the rest of the app usable.</div></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Is this secure production authentication?<span>+</span></button><div class="faq-a">No. ExerFit is a classroom front-end demonstration. Accounts are stored locally in your browser, and passwords are not protected by a server-side authentication system.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final Sign-Up Box: one last prompt at the bottom of the page encouraging users to create an account -->
+  <section class="section" style="padding-top:10px">
+    <div class="section-inner welcome-banner reveal">
+      <span class="eyebrow" style="color:#a6f3bb">Your next session starts here</span>
+      <h2>Make room for movement.</h2>
+      <p>Set up your local ExerFit account and bring your activities together.</p>
+      <a class="btn" href="auth.html?mode=signup">Create an account</a>
+    </div>
+  </section>
+
+  <!-- Bottom Footer: shows the logo, student project credit, and a login link -->
+  <footer class="footer"><div class="footer-inner"><a href="index.html"><img src="input/logo/exerfit-logo-light.svg" alt="ExerFit" style="width:130px"></a><span class="small">A student-built activity tracking demonstration · IT24</span><a class="small" href="auth.html">Log in / Sign up</a></div></footer>
+
+  <!-- JavaScript File: makes the fake tracker buttons, FAQ dropdowns, and scroll animations work -->
+  <script src="js/index.js"></script>
+</body>
+</html>
