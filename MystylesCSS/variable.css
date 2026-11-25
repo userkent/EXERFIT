@@ -1,0 +1,42 @@
+/* ==========================================================================
+   EXERFIT — DESIGN TOKENS & THEME VARIABLES (variable.css)
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+  --green: #16a34a;
+  --green-2: #22c55e;
+  --green-deep: #08743a;
+  --mint: #dcfce7;
+  --bg: #f5f8f5;
+  --surface: #ffffff;
+  --surface-2: #f0f5f1;
+  --ink: #12251a;
+  --muted: #718078;
+  --line: #e3ebe5;
+  --danger: #dc4545;
+  --amber: #d18a22;
+  --shadow: 0 18px 55px rgba(19, 55, 31, .09);
+  --shadow-soft: 0 8px 25px rgba(19, 55, 31, .06);
+  --radius: 22px;
+  --sidebar: 248px;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'DM Sans', sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #07140d;
+  --surface: #0d1e14;
+  --surface-2: #14281b;
+  --ink: #effaf1;
+  --muted: #a0b5a5;
+  --line: #203a2a;
+  --mint: #143c25;
+  --shadow: 0 18px 55px rgba(0, 0, 0, .25);
+  --shadow-soft: 0 8px 25px rgba(0, 0, 0, .18);
+}
+
+@media (max-width: 1100px) {
+  :root { --sidebar: 218px; }
+}
