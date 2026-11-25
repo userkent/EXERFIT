@@ -28,7 +28,7 @@
           <nav class="settings-menu" aria-label="Settings sections">
             <button class="active" type="button" data-settings-tab="appearance">Appearance</button>
             <button type="button" data-settings-tab="preferences">Preferences</button>
-            <button type="button" data-settings-tab="weather">Weather API</button>
+            <button type="button" data-settings-tab="weather">Weather</button>
             <button type="button" data-settings-tab="notifications">Reminders</button>
             <button type="button" data-settings-tab="privacy">Privacy</button>
             <button type="button" data-settings-tab="security">Change password</button>
@@ -56,11 +56,11 @@
               <div class="setting-row"><div><strong>Running pace estimate</strong><small>Used to estimate route time for Run. Example: 420 seconds = 7 minutes per km.</small></div><input id="setting-running-pace" type="number" min="180" max="1800" step="15" value="420" style="width:110px"></div>
             </section>
 
-            <!-- Tab 3 — Weather API: lets you paste, save, test, or clear your OpenWeather API key for live weather -->
+            <!-- Tab 3 — Weather: explains the built-in weather source and how to use it -->
             <section class="settings-section" data-settings-section="weather">
-              <span class="eyebrow">Live weather integration</span><h2>OpenWeather API key</h2><p class="muted">A key is required for live weather. It is stored in this browser for this local demo. Do not paste a private or paid key into a public computer.</p>
-              <div class="field"><label for="weather-api-key">API key</label><input id="weather-api-key" type="password" autocomplete="off" placeholder="Paste your OpenWeather API key"><span class="field-help">Create a free key on the OpenWeather website. New keys may need time to activate.</span></div>
-              <div class="row wrap"><button class="btn" id="save-api-key" type="button">Save key</button><button class="btn secondary" id="test-api-key" type="button">Test key</button><button class="btn ghost" id="clear-api-key" type="button">Clear</button></div><p id="api-key-status" class="small muted" style="margin-top:13px" role="status">No key saved yet.</p>
+              <span class="eyebrow">Outdoor planning</span><h2>Weather forecast</h2>
+              <p class="muted">ExerFit uses Open-Meteo for current conditions and the upcoming forecast. No API key is required.</p>
+              <div class="weather-settings-note"><span class="weather-settings-icon" aria-hidden="true">☀</span><div><strong>Ready to check the weather</strong><p class="muted">Open Tracker, choose “Use my location” or search for a place, and check the weather panel before planning an outdoor activity.</p><a class="btn" href="tracker.html">Open Tracker</a></div></div>
             </section>
 
             <!-- Tab 4 — Reminders: turns browser workout reminders on/off and sets your preferred reminder time -->
@@ -93,11 +93,11 @@
             <section class="settings-section" data-settings-section="data">
               <span class="eyebrow">Your browser data</span><h2>Data management</h2>
               <p class="muted">Export a backup before importing or deleting data. Imported data is validated before it replaces the current account data.</p>
-              <div class="row wrap"><button class="btn secondary" id="export-json" type="button">Export JSON</button><button class="btn secondary" id="export-settings-csv" type="button">Export activities CSV</button><label class="btn secondary" for="import-json-file">Import JSON</label><input id="import-json-file" type="file" accept="application/json,.json" hidden></div>
+              <div class="row wrap"><button class="btn secondary" id="export-json" type="button">Download backup (JSON)</button><button class="btn secondary" id="export-settings-csv" type="button">Download activity CSV</button><label class="btn secondary" for="import-json-file">Restore backup</label><input id="import-json-file" type="file" accept="application/json,.json" hidden></div>
               <div class="divider"></div>
-              <div class="row between"><div><strong>Delete all activities</strong><small class="muted" style="display:block">Removes saved activity records for this account.</small></div><button class="btn danger small-btn" id="delete-activities" type="button">Delete activities</button></div>
+              <div class="row between"><div><strong>Delete all activities</strong><small class="muted" style="display:block">Removes saved activity records for this account.</small></div><button class="btn danger small-btn" id="delete-activities" type="button">Delete all activities</button></div>
               <div class="divider"></div>
-              <div class="row between"><div><strong>Delete this local account</strong><small class="muted" style="display:block">Requires typing DELETE. This cannot be undone.</small></div><button class="btn danger small-btn" id="delete-account" type="button">Delete account</button></div>
+              <div class="row between"><div><strong>Delete this local account</strong><small class="muted" style="display:block">Requires typing DELETE. This cannot be undone.</small></div><button class="btn danger small-btn" id="delete-account" type="button">Delete local account</button></div>
             </section>
 
           </div>

@@ -1,6 +1,6 @@
 /*
 - PURPOSE:
-- Account preferences, theme and motion controls, OpenWeather key testing,
+- Account preferences, theme and motion controls, weather preferences,
 - password updates, reminders, privacy preferences, and data import/export.
  */
 (function () {
@@ -54,10 +54,6 @@
     $("#setting-active-goal").value = settings.activeGoalMinutes || 30;
     $("#setting-default-activity").value = settings.defaultActivity || "Walk";
     $("#setting-running-pace").value = settings.runningPaceSecondsPerKm || 420;
-    $("#weather-api-key").value = settings.apiKey || "";
-    $("#api-key-status").textContent = settings.apiKey
-      ? "A key is saved in this browser."
-      : "No key saved yet.";
     $("#daily-reminder").checked = Boolean(settings.dailyReminder);
     $("#reminder-time").value = settings.reminderTime || "18:00";
     $("#weekly-summary").checked = Boolean(settings.weeklySummary);
@@ -105,40 +101,6 @@
       ),
     }),
   );
-
-  // Weather API Key Controls: saves, clears, or tests your OpenWeather key using Manila coordinates as a sample check
-  $("#save-api-key").addEventListener("click", () => {
-    const key = $("#weather-api-key").value.trim();
-    saveSettings({ apiKey: key });
-    $("#api-key-status").textContent = key
-      ? "Key saved. Use Test key to verify it."
-      : "No key saved.";
-    EF.ui.toast(
-      key ? "Weather key saved in this browser." : "Weather key cleared.",
-    );
-  });
-  $("#clear-api-key").addEventListener("click", () => {
-    $("#weather-api-key").value = "";
-    saveSettings({ apiKey: "" });
-    $("#api-key-status").textContent = "No key saved.";
-    EF.ui.toast("Weather key cleared.");
-  });
-  $("#test-api-key").addEventListener("click", async () => {
-    const key = $("#weather-api-key").value.trim();
-    if (!key) {
-      $("#api-key-status").textContent = "Paste an API key first.";
-      return;
-    }
-    $("#api-key-status").textContent = "Testing key with a sample location…";
-    const result = await EF.Weather.fetchBundle(14.5995, 120.9842, key);
-    const ok = Boolean(result.current || result.forecast);
-    $("#api-key-status").textContent = ok
-      ? "The key returned weather data successfully."
-      : result.errors.current ||
-        result.errors.forecast ||
-        "The key could not be verified.";
-    $("#api-key-status").style.color = ok ? "var(--green)" : "var(--danger)";
-  });
 
   // Reminders & Privacy Switches: asks browser notification permission when daily reminders turn on and saves toggle states
   $("#daily-reminder").addEventListener("change", async (event) => {

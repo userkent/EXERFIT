@@ -24,3 +24,9 @@
 
 /* 4. Animations, Interactive Motion & Reduced-Motion Overrides */
 @import url('./enhancements.css');
+
+/* 5. ExerFit Motion Studio visual refresh */
+@import url('./premium-motion.css');
+
+/* 6. Clean athletic visual system */
+@import url('./cool-clean.css');

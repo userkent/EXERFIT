@@ -127,6 +127,17 @@
     document.getElementById("mobile-nav-root").innerHTML =
       `<nav class="mobile-bottom-nav" aria-label="Mobile navigation">${navMarkup(page, true)}</nav>`;
 
+    // Add a compact 3D activity orb to signed-in page headings.
+    // Its layered rings suggest movement, progress, and connected activity without a mascot.
+    const pageHeading = document.querySelector(".page-title-row");
+    if (pageHeading && !pageHeading.querySelector(".activity-orbit-stage")) {
+      const activityOrb = document.createElement("div");
+      activityOrb.className = "activity-orbit-stage";
+      activityOrb.setAttribute("aria-hidden", "true");
+      activityOrb.innerHTML = '<span class="activity-orbit-glow"></span><span class="activity-orbit-core"></span><span class="activity-orbit activity-orbit-a"></span><span class="activity-orbit activity-orbit-b"></span><span class="activity-orbit activity-orbit-c"></span>';
+      pageHeading.appendChild(activityOrb);
+    }
+
     // Connect the "Log out" button and watch for device Light/Dark mode changes
     document.getElementById("logout-button")?.addEventListener("click", () => {
       EF.Store.setSession(null);

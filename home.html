@@ -29,7 +29,7 @@
           <span class="eyebrow" style="color:#a6f3bb">A fresh day to move</span>
           <h2 id="welcome-title">Good day.</h2>
           <p><span id="today-date"></span> · <span id="live-clock"></span></p>
-          <div class="welcome-actions"><a class="btn" href="tracker.html">Open Tracker</a><button class="btn secondary" id="quick-log-open" type="button">Quick log</button></div>
+          <div class="welcome-actions"><a class="btn" href="tracker.html">Open Tracker</a><button class="btn secondary" id="quick-log-open" type="button">Log an activity</button></div>
         </section>
 
         <!-- 5 Quick Stats Cards (KPIs): shows total activities, active minutes, distance, calories, and current streak -->
@@ -52,8 +52,8 @@
 
           <!-- Row 2 — Recent Activity & Today's Checklist: lists your latest saved workouts alongside an interactive to-do list for today -->
           <section class="grid two" id="widget-activity-plan" data-dashboard-widget="activity-plan" style="margin-top:18px">
-            <article class="card"><div class="card-head"><div><span class="eyebrow">Latest sessions</span><h3>Recent activity</h3></div><div class="row"><button class="btn ghost small-btn" id="refresh-activity" type="button">Refresh</button><a class="text-button" href="history.html">View all →</a></div></div><div id="activity-feed"><div class="empty-state"><strong>No activity yet</strong>Your saved sessions will appear here.</div></div></article>
-            <article class="card"><div class="card-head"><div><span class="eyebrow">Small steps</span><h3>Today's plan</h3></div><span class="pill" id="plan-count">0 / 0 done</span></div><div class="progress"><span id="plan-progress"></span></div><div id="daily-plan-list" style="margin-top:10px"></div><form id="plan-add-form" class="plan-add"><input class="input" id="plan-new-item" type="text" maxlength="70" placeholder="Add a small plan item" aria-label="New plan item"><button class="btn small-btn" type="submit">Add</button></form></article>
+            <article class="card"><div class="card-head"><div><span class="eyebrow">Latest sessions</span><h3>Recent activity</h3></div><div class="row"><button class="btn ghost small-btn" id="refresh-activity" type="button">Refresh activity</button><a class="text-button" href="history.html">View all →</a></div></div><div id="activity-feed"><div class="empty-state"><strong>No activity yet</strong>Your saved sessions will appear here.</div></div></article>
+            <article class="card"><div class="card-head"><div><span class="eyebrow">Small steps</span><h3>Today's plan</h3></div><span class="pill" id="plan-count">0 / 0 done</span></div><div class="progress"><span id="plan-progress"></span></div><div id="daily-plan-list" style="margin-top:10px"></div><form id="plan-add-form" class="plan-add"><input class="input" id="plan-new-item" type="text" maxlength="70" placeholder="Add a small plan item" aria-label="New plan item"><button class="btn small-btn" type="submit">Add item</button></form></article>
           </section>
 
           <!-- Row 3 — Weather & Goals Preview: shows local weather conditions (if an API key is set) and a summary of your personal goals -->
