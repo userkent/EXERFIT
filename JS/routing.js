@@ -54,7 +54,7 @@
     const modeKey = mode === "ride" ? "bike" : mode === "drive" ? "car" : "foot";
     const service = ROUTES[modeKey] || fallback[modeKey];
     const coordText = `${Number(start[1])},${Number(start[0])};${Number(end[1])},${Number(end[0])}`;
-    const routeUrl = (config) => `${config.baseUrl}/route/v1/${config.profile || "driving"}/${coordText}?overview=full&geometries=geojson&steps=true&alternatives=true`;
+    const routeUrl = (config) => `${config.baseUrl}/route/v1/${config.profile || "driving"}/${coordText}?overview=full&geometries=geojson&steps=true&alternatives=false`;
     const configs = [service];
     if (mode === "drive") configs.push(ROUTES.backupCar || fallback.backupCar);
     let lastError = null;

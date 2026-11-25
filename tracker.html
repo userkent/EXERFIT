@@ -29,20 +29,20 @@
         <div class="tracker-workspace">
           <section class="card map-card" id="tracker-map-panel">
             <div class="map-toolbar">
-              <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button"><img class="asset-icon" src="images/input/icons/icon-search.svg" alt="" aria-hidden="true">Search</button></div>
-              <button class="btn secondary small-btn" id="my-location" type="button"><img class="asset-icon" src="images/input/icons/icon-gps.svg" alt="" aria-hidden="true">My location</button>
+              <div class="map-search"><input class="input" id="place-search" type="search" placeholder="Search a place or landmark" aria-label="Search for a place"><button class="btn small-btn" id="search-place" type="button"><img class="asset-icon" src="images/input/icons/icon-search.svg" alt="" aria-hidden="true">Find place</button></div>
+              <button class="btn secondary small-btn" id="my-location" type="button"><img class="asset-icon" src="images/input/icons/icon-gps.svg" alt="" aria-hidden="true">Use my location</button>
               <button class="icon-btn" id="clear-route" type="button" aria-label="Clear selected route"><img class="asset-icon" src="images/input/icons/icon-close.svg" alt="" aria-hidden="true"></button>
             </div>
             <div class="map-view-switch" role="group" aria-label="Map display style">
-              <button class="map-view-btn active" type="button" data-map-style="street" aria-pressed="true">Street map</button>
+              <button class="map-view-btn active" type="button" data-map-style="street" aria-pressed="true">Street</button>
               <button class="map-view-btn" type="button" data-map-style="satellite" aria-pressed="false">Satellite</button>
             </div>
             <div class="map-area-bar" aria-live="polite">
               <div class="map-area-name-group"><span class="map-area-kicker">Viewing area</span><strong id="map-area-name">Loading nearby area name…</strong></div>
               <span class="map-connection-status" id="map-connection-status">Loading OpenStreetMap tiles…</span>
             </div>
-            <div id="tracker-map" role="application" aria-label="Interactive Leaflet map using OpenStreetMap. Click once for a start point and again for a destination."></div>
-            <div class="map-legend"><span>Click map to set start and destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
+            <div class="map-canvas-wrap"><div id="tracker-map" role="application" aria-label="Interactive Leaflet map using OpenStreetMap. Click once for a start point and again for a destination."></div><div id="map-weather-chip" class="map-weather-chip" aria-live="polite"><span>Weather</span><strong>Loading forecast…</strong></div></div>
+            <div class="map-legend"><span>Tap map to choose start, then destination</span><span>● Start</span><span>● Destination</span><span>— Planned route</span></div>
             <div class="map-credits">Street map © OpenStreetMap contributors · Satellite imagery © Esri, Maxar, Earthstar Geographics · Routing by OSRM (FOSSGIS)</div>
           </section>
 
@@ -57,7 +57,7 @@
               <p class="small muted route-help">Default start: your live GPS position when you begin. To choose a different start, enter a place above or select a point on the map.</p>
               <div class="route-points" id="route-point-labels"><div class="route-point">Start point <small>Choose on the map or use My Location</small></div><div class="route-point">Destination <small>Choose another point on the map</small></div></div>
               <button class="text-button map-swap-button" id="swap-points" type="button">Swap start and destination</button>
-              <button class="btn full" id="get-route" type="button" style="margin-top:14px">Get route</button>
+              <button class="btn full" id="get-route" type="button" style="margin-top:14px">Plan my route</button>
               <div id="route-summary" style="margin-top:14px"><p class="small muted">Your route distance and estimated travel time will appear here.</p></div>
               <div id="route-instructions" class="stack" style="margin-top:10px"></div>
               <div id="route-weather" style="margin-top:12px"></div>
@@ -188,7 +188,7 @@
               <button class="activity-tab" type="button" data-weather-tab="hourly">Hourly</button>
               <button class="activity-tab" type="button" data-weather-tab="five-day">5-Day</button>
             </div>
-            <div id="weather-now" style="margin-top:15px"><div class="empty-state"><strong>Weather has not been loaded</strong>Choose a map location and add your API key in Settings to load conditions.</div></div>
+            <div id="weather-now" style="margin-top:15px"><div class="empty-state"><strong>Weather has not been loaded</strong>Choose a map location to load the live forecast.</div></div>
             <div id="weather-hourly" style="display:none;margin-top:15px"><canvas id="weather-chart" height="120" aria-label="Temperature and rain chance trend"></canvas><div id="weather-forecast-strip" class="forecast-strip" style="margin-top:12px"></div></div>
             <div id="weather-five-day" style="display:none;margin-top:15px"></div>
           </article>

@@ -566,3 +566,41 @@
   .route-manual-input { flex-wrap: wrap; }
   .route-manual-input .btn { min-height: 42px; }
 }
+
+
+/* ExerFit Tracker refresh: calm hierarchy, clear primary actions and subtle motion */
+.tracker-workspace { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; }
+#tracker-map { height:clamp(340px,55vh,620px); border-radius:20px; box-shadow:0 16px 40px rgba(15,23,42,.12); }
+.map-card,.route-planner-card,.activity-tracker-card,.weather-card { border-radius:22px; transition:transform .22s ease, box-shadow .22s ease; }
+.map-card:hover,.route-planner-card:hover,.activity-tracker-card:hover { box-shadow:0 18px 44px rgba(15,23,42,.10); }
+.map-toolbar { gap:10px; }
+.map-toolbar .btn,.map-view-btn,.map-swap-button { min-height:42px; border-radius:13px; font-weight:700; }
+.map-view-switch { display:inline-flex; gap:5px; padding:5px; border-radius:14px; background:var(--surface-2); margin:0 0 10px 5px; }
+.map-view-btn { padding:8px 15px; border:0; cursor:pointer; background:transparent; color:var(--muted); }
+.map-view-btn.active { background:var(--surface); color:var(--ink); box-shadow:0 2px 9px rgba(15,23,42,.12); }
+#route-planner-panel .card-head h3,.activity-tracker-card .card-head h3 { letter-spacing:-.025em; }
+#route-planner-panel #get-route { min-height:48px; border-radius:15px; font-size:1rem; font-weight:800; box-shadow:0 8px 20px rgba(16,185,129,.18); }
+#route-planner-panel #saved-routes { display:none; }
+#route-planner-panel .map-swap-button { margin-top:8px; }
+.category-tabs { display:flex; flex-wrap:wrap; overflow:visible; gap:7px; }
+.category-tabs .activity-tab { flex:1 1 auto; min-width:max-content; border-radius:12px; }
+.map-area-bar { border-radius:15px; }
+.map-legend { font-size:.75rem; }
+@keyframes tracker-rise { from { opacity:0; transform:translateY(9px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes tracker-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,.20); } 50% { box-shadow:0 0 0 8px rgba(16,185,129,0); } }
+#route-summary,#weather-advice,.weather-now,.forecast-strip { animation:tracker-rise .35s ease both; }
+#my-location { animation:tracker-pulse 3s ease-in-out infinite; }
+.leaflet-marker-icon { transition:filter .2s ease; }
+@media (max-width:720px) {
+  #tracker-map { height:52vh; min-height:330px; }
+  .map-area-bar { align-items:flex-start; flex-direction:column; }
+  .map-toolbar .map-search { flex-basis:100%; }
+  .map-toolbar #my-location { flex:1; }
+  .category-tabs .activity-tab { flex:1 1 calc(50% - 8px); }
+  .map-view-switch { margin-left:0; }
+}
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; } }
+.map-canvas-wrap { position:relative; }
+.map-weather-chip { position:absolute; z-index:500; left:14px; bottom:14px; display:grid; gap:3px; max-width:min(290px,calc(100% - 28px)); padding:11px 14px; border:1px solid rgba(255,255,255,.45); border-radius:15px; background:rgba(15,23,42,.84); color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.22); backdrop-filter:blur(12px); pointer-events:none; animation:tracker-rise .4s ease both; }
+.map-weather-chip span { font-size:.72rem; opacity:.85; text-transform:capitalize; }
+.map-weather-chip strong { font-size:.88rem; }

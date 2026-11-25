@@ -99,143 +99,57 @@
   }
 
   // Main Weather Fetcher: downloads both "Current Weather" and "5-Day Forecast" at once, falling back to saved data if offline
-  async function fetchBundle(lat, lon, customKey) {
-    const latitude = Number(lat);
-    const longitude = Number(lon);
-    const key = (customKey || apiKey()).trim();
-    if (
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude) ||
-      Math.abs(latitude) > 90 ||
-      Math.abs(longitude) > 180
-    ) {
-      return {
-        current: null,
-        forecast: null,
-        errors: {
-          current: "Selected coordinates are not valid.",
-          forecast: "Selected coordinates are not valid.",
-        },
-      };
-    }
-    if (!key) {
-      const cached = readCache(latitude, longitude, true);
-      if (cached)
-        return {
-          ...cached,
-          savedData: true,
-          savedDataCurrent: true,
-          savedDataForecast: true,
-          errors: {
-            current:
-              "No API key is saved. Showing the most recent cached weather.",
-            forecast:
-              "No API key is saved. Showing the most recent cached forecast.",
-          },
-        };
-      return {
-        current: null,
-        forecast: null,
-        errors: {
-          current:
-            "Add an OpenWeather API key in Settings to load live weather.",
-          forecast:
-            "Add an OpenWeather API key in Settings to load the forecast.",
-        },
-      };
-    }
-
-    // Request current weather and forecast together with an 8-second timeout limit
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    const params = `lat=${latitude}&lon=${longitude}&units=${units()}&appid=${encodeURIComponent(key)}`;
-    const [currentResult, forecastResult] = await Promise.all([
-      safeRequest(`${BASE}/weather?${params}`, key, controller.signal),
-      safeRequest(`${BASE}/forecast?${params}`, key, controller.signal),
-    ]);
-    clearTimeout(timer);
-
-    const result = {
-      current: currentResult.ok ? currentResult.data : null,
-      forecast: forecastResult.ok ? forecastResult.data : null,
-      errors: {
-        current: currentResult.ok ? "" : currentResult.error,
-        forecast: forecastResult.ok ? "" : forecastResult.error,
-      },
+  function weatherDescription(code) {
+    if (code === 0) return "Clear sky";
+    if ([1,2,3].includes(code)) return "Partly cloudy";
+    if ([45,48].includes(code)) return "Fog";
+    if ([51,53,55,56,57].includes(code)) return "Drizzle";
+    if ([61,63,65,66,67,80,81,82].includes(code)) return "Rain";
+    if ([71,73,75,77,85,86].includes(code)) return "Snow";
+    if ([95,96,99].includes(code)) return "Thunderstorm";
+    return "Variable conditions";
+  }
+  function toEpoch(iso) { return Math.floor(new Date(iso).getTime() / 1000); }
+  function normalizeOpenMeteo(raw) {
+    const c = raw.current || {}, h = raw.hourly || {}, d = raw.daily || {};
+    const current = {
+      name: "Selected location", dt: toEpoch(c.time), timezone: raw.timezone, timezone_offset: raw.utc_offset_seconds || 0,
+      main: { temp: c.temperature_2m, feels_like: c.apparent_temperature, humidity: c.relative_humidity_2m },
+      wind: { speed: (c.wind_speed_10m || 0) / 3.6 }, clouds: { all: c.cloud_cover },
+      rain: { "1h": (c.precipitation || 0) }, weather: [{ main: weatherDescription(c.weather_code), description: weatherDescription(c.weather_code).toLowerCase() }],
+      sys: { sunrise: d.sunrise?.[0] ? toEpoch(d.sunrise[0]) : 0, sunset: d.sunset?.[0] ? toEpoch(d.sunset[0]) : 0 }
     };
-
-    // Save fresh results to cache, or fill in any missing piece with older cached data
-    if (result.current || result.forecast) {
-      const previous = readCache(latitude, longitude, true) || {};
-      const savedDataCurrent = !result.current && Boolean(previous.current);
-      const savedDataForecast = !result.forecast && Boolean(previous.forecast);
-      const merged = {
-        ...previous,
-        ...result,
-        cachedAt: Date.now(),
-        savedDataCurrent,
-        savedDataForecast,
-        savedData: savedDataCurrent || savedDataForecast,
-      };
-      if (savedDataCurrent) merged.current = previous.current;
-      if (savedDataForecast) merged.forecast = previous.forecast;
-      writeCache(latitude, longitude, merged);
-      return merged;
+    const list = [];
+    for (let i = 0; i < (h.time || []).length; i += 3) {
+      list.push({ dt: toEpoch(h.time[i]), main: { temp: h.temperature_2m?.[i], feels_like: h.apparent_temperature?.[i], humidity: h.relative_humidity_2m?.[i] },
+        wind: { speed: (h.wind_speed_10m?.[i] || 0) / 3.6 }, clouds: { all: h.cloud_cover?.[i] }, pop: (h.precipitation_probability?.[i] || 0) / 100,
+        rain: { "3h": h.precipitation?.[i] || 0 }, weather: [{ main: weatherDescription(h.weather_code?.[i]), description: weatherDescription(h.weather_code?.[i]).toLowerCase() }] });
     }
-    const cached = readCache(latitude, longitude, true);
-    return cached
-      ? {
-          ...cached,
-          savedData: true,
-          savedDataCurrent: Boolean(cached.current),
-          savedDataForecast: Boolean(cached.forecast),
-          errors: result.errors,
-        }
-      : result;
+    const daily = (d.time || []).map((day, i) => ({ dt: toEpoch(day), temp: { min: d.temperature_2m_min?.[i], max: d.temperature_2m_max?.[i] },
+      pop: (d.precipitation_probability_max?.[i] || 0) / 100, weather: [{ main: weatherDescription(d.weather_code?.[i]) }] }));
+    return { current, forecast: { list, daily }, timezoneOffset: raw.utc_offset_seconds || 0 };
   }
-
-  // Forecast-Only Fetcher: checks the weather forecast for a single checkpoint along a planned route
+  async function fetchOpenMeteo(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${Number(lat)}&longitude=${Number(lon)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,relative_humidity_2m,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=5&timezone=auto`;
+    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 10000);
+    try { const response = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } }); if (!response.ok) throw new Error(`Weather service returned ${response.status}`); return normalizeOpenMeteo(await response.json()); }
+    finally { clearTimeout(timer); }
+  }
+  async function fetchBundle(lat, lon) {
+    const latitude = Number(lat), longitude = Number(lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180)
+      return { current:null, forecast:null, errors:{ current:"Selected coordinates are not valid.", forecast:"Selected coordinates are not valid." } };
+    try {
+      const data = await fetchOpenMeteo(latitude, longitude);
+      return { ...data, errors:{ current:"", forecast:"" }, fetchedAt:Date.now(), source:"Open-Meteo forecast" };
+    } catch (error) {
+      return { current:null, forecast:null, errors:{ current:"Weather is temporarily unavailable. Check your connection and refresh.", forecast:error.message || "Forecast unavailable." } };
+    }
+  }
   async function fetchForecast(lat, lon) {
-    const latitude = Number(lat);
-    const longitude = Number(lon);
-    const key = apiKey();
-    const cached = readCache(latitude, longitude);
-    if (cached?.forecast)
-      return { ok: true, data: cached.forecast, cached: true };
-    const stale = readCache(latitude, longitude, true);
-    if (!key)
-      return stale?.forecast
-        ? { ok: true, data: stale.forecast, cached: true, savedData: true }
-        : { ok: false, error: "Weather key not set", data: null };
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    const result = await safeRequest(
-      `${BASE}/forecast?lat=${latitude}&lon=${longitude}&units=${units()}&appid=${encodeURIComponent(key)}`,
-      key,
-      controller.signal,
-    );
-    clearTimeout(timer);
-    if (result.ok) {
-      const previous = readCache(latitude, longitude, true) || {};
-      writeCache(latitude, longitude, {
-        ...previous,
-        forecast: result.data,
-        cachedAt: Date.now(),
-      });
-      return { ok: true, data: result.data, cached: false };
-    }
-    if (stale?.forecast)
-      return {
-        ok: true,
-        data: stale.forecast,
-        cached: true,
-        savedData: true,
-        warning: result.error,
-      };
-    return { ok: false, error: result.error, data: null };
+    const result = await fetchBundle(lat, lon);
+    return result.forecast ? { ok:true, data:result.forecast, cached:false } : { ok:false, error:result.errors?.forecast || "Forecast unavailable", data:null };
   }
-
-  // Local Time & Unit Converters: adjusts timestamps to the chosen city's local timezone and converts °F/mph to °C/m/s for safety checks
   function localDate(epoch, offset = 0) {
     return new Date((Number(epoch) + Number(offset || 0)) * 1000);
   }
@@ -289,18 +203,15 @@
       }) || null
     );
   }
-  function adviceForActivity(category, weather) {
+  function adviceForActivity(category, weather, forecast) {
     const condition = (weather?.weather?.[0]?.main || "").toLowerCase();
     const temp = temperatureCelsius(weather?.main?.temp);
     const wind = windMetersPerSecond(weather?.wind?.speed || 0);
     if (["indoor", "bodyweight", "gym", "mind"].includes(category))
       return "Indoor activity: choose a comfortable space, keep water nearby, and adjust the session to how you feel.";
-    if (
-      condition.includes("thunder") ||
-      (weather?.rain?.["1h"] || 0) > 0 ||
-      condition.includes("rain")
-    )
-      return "Rain is possible. Consider a covered route or an indoor session.";
+    const nextRain = Math.max(0, ...(forecast?.list || []).slice(0, 4).map((slot) => (slot.pop || 0) * 100));
+    if (condition.includes("thunder") || (weather?.rain?.["1h"] || 0) > 0 || condition.includes("rain") || nextRain >= 50)
+      return `Rain risk is elevated${nextRain ? ` (up to ${Math.round(nextRain)}% in the next hours)` : ""}. Consider delaying your run, choosing a covered route, or switching indoors.`;
     if (wind > 8)
       return "Wind is elevated. Choose a sheltered route and allow extra time.";
     if (temp > 32)

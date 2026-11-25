@@ -225,13 +225,16 @@
         maxZoom: 19,
         attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Sources: Esri, Maxar, Earthstar Geographics',
       });
-      satelliteLabels = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+      satelliteLabels = L.layerGroup([
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
         minZoom: 1,
         maxZoom: 19,
         pane: "overlayPane",
         opacity: 0.95,
         attribution: 'Place labels &copy; Esri',
-      });
+        }),
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}", { minZoom: 1, maxZoom: 19, opacity: 0.95, attribution: 'Road labels &copy; Esri' })
+      ]);
       streetTiles.addTo(map);
       let tileLoaded = false;
       streetTiles.on("tileload", () => {
@@ -473,18 +476,19 @@
   function renderWeather(result) {
     const current = result.current;
     const forecast = result.forecast;
-    const offset = current?.timezone ?? forecast?.city?.timezone ?? 0;
-    if (!current)
+    const offset = current?.timezone_offset ?? current?.timezone ?? forecast?.city?.timezone ?? 0;
+    if (!current) {
+      if (byId("map-weather-chip")) byId("map-weather-chip").innerHTML = "<span>Weather</span><strong>Forecast unavailable</strong>";
       $("#weather-now").innerHTML = weatherMessage(
         result.errors?.current,
         result.errors?.forecast,
       );
-    else {
+    } else {
       const condition = current.weather?.[0]?.description || "Conditions";
       const updated = EF.Weather.formatLocal(current.dt, offset);
-      const weatherSource = result.savedDataCurrent
-        ? `Showing saved data from ${updated} local time`
-        : "OpenWeather live data";
+      const weatherSource = result.source || "Live forecast";
+      const rainChance = Math.round(Math.max(0, ...(forecast?.list || []).slice(0, 4).map((slot) => (slot.pop || 0) * 100)));
+      if (byId("map-weather-chip")) byId("map-weather-chip").innerHTML = `<span>${EF.Store.escapeHTML(condition)}</span><strong>${Math.round(current.main.temp)}°C · ${rainChance}% rain soon</strong>`;
       $("#weather-now").innerHTML =
         `<div class="weather-now"><div><div class="weather-temp">${Math.round(current.main.temp)}°${getData().settings.temperatureUnit || "C"}</div><strong>${EF.Store.escapeHTML(condition)}</strong><div class="muted small">${EF.Store.escapeHTML(current.name || selectedLabel || "Selected location")}</div></div><div class="pill green">Feels like ${Math.round(current.main.feels_like)}°${getData().settings.temperatureUnit || "C"}</div></div><div class="weather-details"><div class="weather-detail">Humidity<strong>${current.main.humidity}%</strong></div><div class="weather-detail">Wind<strong>${Number(current.wind.speed).toFixed(1)} ${getData().settings.temperatureUnit === "F" ? "mph" : "m/s"}</strong></div><div class="weather-detail">Cloudiness<strong>${current.clouds?.all ?? "—"}%</strong></div><div class="weather-detail">Rain<strong>${current.rain?.["1h"] ?? 0} mm</strong></div><div class="weather-detail">Sunrise<strong>${current.sys?.sunrise ? EF.Weather.formatLocal(current.sys.sunrise, offset) : "—"}</strong></div><div class="weather-detail">Sunset<strong>${current.sys?.sunset ? EF.Weather.formatLocal(current.sys.sunset, offset) : "—"}</strong></div></div><p class="small muted" style="margin:10px 0 0">${weatherSource}</p>`;
     }
@@ -498,7 +502,7 @@
       $("#weather-five-day").innerHTML =
         '<p class="small muted">Five-day forecast unavailable.</p>';
       $("#best-time").textContent =
-        "Forecast unavailable. Add or test your API key in Settings.";
+        "Forecast unavailable. Check your connection and refresh.";
     } else {
       renderHourly(forecast, offset);
       renderFiveDay(forecast, offset);
@@ -509,7 +513,7 @@
         : "Conditions are poor for outdoor activity, so try an indoor workout.";
     }
     $("#weather-advice").textContent = current
-      ? EF.Weather.adviceForActivity(trackerCategory, current)
+      ? EF.Weather.adviceForActivity(trackerCategory, current, forecast)
       : result.errors?.current ||
         "Weather advice is unavailable until current conditions load.";
     $("#advice-category").textContent = trackerCategory
@@ -752,10 +756,10 @@
         endPoint,
         routeMode,
       );
-      routes = result.routes;
+      routes = result.routes.slice().sort((a, b) => Number(a.distance || Infinity) - Number(b.distance || Infinity));
       chosenRouteIndex = 0;
       drawRoute(routes[0]);
-      renderRouteSummary(routes[0], routes, result.service);
+      renderRouteSummary(routes[0], [routes[0]], result.service);
       const instructions = EF.Routing.routeInstructions(routes[0]).slice(0, 12);
       $("#route-instructions").innerHTML = instructions.length
         ? `<h4 style="margin:4px 0">Turn-by-turn preview</h4>${instructions.map((step, index) => `<div class="route-point"><strong>${index + 1}. ${EF.Store.escapeHTML(step.instruction)}</strong><small>${(step.distance / 1000).toFixed(2)} km ${step.name ? `· ${EF.Store.escapeHTML(step.name)}` : ""}</small></div>`).join("")}`
@@ -1354,6 +1358,18 @@
       Object.assign(record, { focus: $("#mind-focus").value || "", mood: $("#mind-mood").value || "", durationMode: $("#mind-duration-mode").value, targetDuration: $("#mind-duration-mode").value === "target" ? (Number($("#mind-target-minutes").value) || 0) * 60 : 0, cycles: Number($("#mind-cycles-input").value) || 0 });
     }
     EF.Store.updateData((data) => data.activities.push(record));
+    // A completed session should leave a clean map for the next activity.
+    removeRouteLayers();
+    sessionTrailLayer?.clearLayers();
+    if (startMarker) { map?.removeLayer(startMarker); startMarker = null; }
+    if (endMarker) { map?.removeLayer(endMarker); endMarker = null; }
+    if (currentMarker) { map?.removeLayer(currentMarker); currentMarker = null; }
+    startPoint = null; endPoint = null; startLabel = ""; endLabel = "";
+    routes = []; routeWeatherData = []; chosenRouteIndex = 0;
+    updatePointMarkers();
+    if (byId("route-summary")) byId("route-summary").innerHTML = '<p class="small muted">Session finished. Plan a new route when you are ready.</p>';
+    if (byId("route-instructions")) byId("route-instructions").innerHTML = "";
+    if (byId("route-weather")) byId("route-weather").innerHTML = "";
     let summary = `${fmtSummaryDuration(duration)} · ${record.calories} kcal estimated`;
     if (trackerCategory === "outdoor") summary = `${Number(record.distance).toFixed(2)} km · ${type === "Cycling" && record.speedKph ? `${record.speedKph} km/h` : record.paceSecondsPerKm ? `${Math.floor(record.paceSecondsPerKm / 60)}:${String(Math.round(record.paceSecondsPerKm % 60)).padStart(2, "0")} /km` : "Pace not recorded"} · ${summary}`;
     else if (trackerCategory === "indoor") {
