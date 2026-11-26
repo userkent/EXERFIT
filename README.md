@@ -1,4 +1,5 @@
 # ExerFit
+ExerFit: A Smart Fitness Monitoring and Physical Activity Tracking System
 
 ## Problem
 
