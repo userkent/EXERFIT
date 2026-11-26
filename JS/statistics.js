@@ -4,18 +4,42 @@
    PURPOSE: Calculates dashboard and profile numbers from saved records.
    No sample distance, activity, or workout statistics are hardcoded.
 ========================================================= */
-import { getUserData } from './storage.js';
-import { formatDistance, formatDuration } from './ui.js';
+import { getUserData } from "./storage.js";
+import { formatDistance, formatDuration } from "./ui.js";
 
 export function calculateStatistics() {
   const data = getUserData();
   const activities = data.activities || [];
   const workouts = data.workouts || [];
-  const distance = activities.reduce((sum, item) => sum + Number(item.distanceMeters || 0), 0);
-  const outdoorTime = activities.reduce((sum, item) => sum + Number(item.durationMs || 0), 0);
-  const completedWorkouts = workouts.filter(item => item.status === 'completed');
-  const workoutMinutes = completedWorkouts.reduce((sum, item) => sum + (item.exercises || []).reduce((exerciseSum, exercise) => exerciseSum + Number(exercise.duration || 0), 0), 0);
-  return { distance, activities: activities.length, outdoorTime, workouts: workouts.length, completedWorkouts: completedWorkouts.length, workoutTime: workoutMinutes * 60000, totalRecords: activities.length + completedWorkouts.length };
+  const distance = activities.reduce(
+    (sum, item) => sum + Number(item.distanceMeters || 0),
+    0,
+  );
+  const outdoorTime = activities.reduce(
+    (sum, item) => sum + Number(item.durationMs || 0),
+    0,
+  );
+  const completedWorkouts = workouts.filter(
+    (item) => item.status === "completed",
+  );
+  const workoutMinutes = completedWorkouts.reduce(
+    (sum, item) =>
+      sum +
+      (item.exercises || []).reduce(
+        (exerciseSum, exercise) => exerciseSum + Number(exercise.duration || 0),
+        0,
+      ),
+    0,
+  );
+  return {
+    distance,
+    activities: activities.length,
+    outdoorTime,
+    workouts: workouts.length,
+    completedWorkouts: completedWorkouts.length,
+    workoutTime: workoutMinutes * 60000,
+    totalRecords: activities.length + completedWorkouts.length,
+  };
 }
 export function profileStatisticsMarkup() {
   const stats = calculateStatistics();
@@ -23,9 +47,9 @@ export function profileStatisticsMarkup() {
 }
 export function refreshDashboardStats() {
   const stats = calculateStatistics();
-  const distance = document.getElementById('dashboard-total-distance');
-  const activityCount = document.getElementById('dashboard-activity-count');
-  const workoutCount = document.getElementById('dashboard-workout-count');
+  const distance = document.getElementById("dashboard-total-distance");
+  const activityCount = document.getElementById("dashboard-activity-count");
+  const workoutCount = document.getElementById("dashboard-workout-count");
   if (distance) distance.textContent = formatDistance(stats.distance);
   if (activityCount) activityCount.textContent = String(stats.activities);
   if (workoutCount) workoutCount.textContent = String(stats.completedWorkouts);
