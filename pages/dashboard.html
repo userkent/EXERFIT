@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- FILE PURPOSE: Dashboard page: provides the map workspace and interactive fitness panels. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f4f7f3">
@@ -10,7 +11,7 @@
 </head>
 <body class="dashboard-page">
   <header class="app-header">
-    <a class="brand" href="../index.html" aria-label="ExerFit home"><img class="brand-symbol" data-theme-logo data-light-src="../assets/logo/exerfit-mark-light.svg" data-dark-src="../assets/logo/exerfit-mark-dark.svg" src="../assets/logo/exerfit-mark-light.svg" alt="" aria-hidden="true"><span>exer<span>fit</span></span></a>
+    <a class="brand" href="../index.html" aria-label="ExerFit home"><img class="brand-symbol" data-theme-logo data-light-src="../assets/logo/exerfit-logo-dark.png" data-dark-src="../assets/logo/exerfit-logo-light.png" src="../assets/logo/exerfit-logo-dark.png" alt="" aria-hidden="true"></a>
     <nav class="app-nav" aria-label="Dashboard navigation">
       <button class="nav-item active" type="button" data-open-panel="overview" title="Map dashboard"><i data-lucide="map"></i><span>Explore</span></button>
       <button class="nav-item" type="button" data-open-panel="activity"><i data-lucide="footprints"></i><span>Activity</span></button>
@@ -51,11 +52,18 @@
       <p class="route-disclaimer">Route estimates are based on OpenStreetMap data and may differ from real conditions.</p>
     </div>
 
+    <!-- MAIN PANEL: Activity, routes, workouts, history, and settings are rendered here. -->
     <section class="floating-panel is-hidden" id="main-panel" data-draggable-card data-drag-handle=".floating-panel-header" aria-label="Dashboard panel" aria-live="polite">
       <div class="floating-panel-header"><div><span class="eyebrow" id="panel-eyebrow">YOUR SPACE</span><h2 id="panel-title">Activity</h2></div><div class="panel-header-actions"><button class="icon-button icon-button-light panel-collapse-button" id="collapse-panel" type="button" aria-label="Collapse panel" aria-expanded="true" title="Hide panel contents"><i data-lucide="chevron-down"></i></button><button class="icon-button icon-button-light" id="close-panel" type="button" aria-label="Close panel"><i data-lucide="x"></i></button></div></div>
       <div class="floating-panel-body" id="panel-content"></div>
     </section>
 
+    <!-- SIDE HIDE BUTTON: This sibling stays visible even when the activity panel slides off-screen. -->
+    <button class="panel-side-toggle" id="panel-side-toggle" type="button" aria-label="Hide activity panel" aria-expanded="true" title="Hide panel">
+      <i data-lucide="chevron-left"></i>
+    </button>
+
+    <!-- MAP SETTINGS PANEL: Controls map style, layers, and heatmap preferences. -->
     <section class="floating-panel map-settings-panel is-hidden" id="map-settings-panel" data-draggable-card data-drag-handle=".floating-panel-header" aria-label="Map settings">
       <div class="floating-panel-header"><div><span class="eyebrow">PERSONALIZE YOUR VIEW</span><h2>Map settings</h2></div><div class="panel-header-actions"><button class="icon-button icon-button-light panel-collapse-button" id="collapse-map-settings" type="button" aria-label="Collapse map settings" aria-expanded="true" title="Hide panel contents"><i data-lucide="chevron-down"></i></button><button class="icon-button icon-button-light" id="close-map-settings" type="button" aria-label="Close map settings"><i data-lucide="x"></i></button></div></div>
       <div class="floating-panel-body">
@@ -73,6 +81,11 @@
         <p class="map-attribution-note"><i data-lucide="info"></i> Map providers and their attribution are shown on the map. Provider availability and terms can change.</p>
       </div>
     </section>
+
+    <!-- SIDE HIDE BUTTON: This sibling stays visible when map settings are hidden. -->
+    <button class="panel-side-toggle" id="map-settings-side-toggle" type="button" aria-label="Hide map settings" aria-expanded="true" title="Hide map settings">
+      <i data-lucide="chevron-left"></i>
+    </button>
 
     <div class="map-status-pill" id="map-status"><span class="status-dot"></span><span>Map ready</span></div>
     <div class="dashboard-overview-card" id="dashboard-overview-card" data-draggable-card data-drag-handle=".overview-drag-grip"><span class="overview-drag-grip" title="Drag statistics card" aria-label="Drag statistics card"><i data-lucide="grip-horizontal"></i></span><div><strong id="dashboard-total-distance">0.00 km</strong><small>Total distance</small></div><div><strong id="dashboard-activity-count">0</strong><small>Outdoor activities</small></div><div><strong id="dashboard-workout-count">0</strong><small>Workouts done</small></div></div>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- FILE PURPOSE: Login page: authenticates an existing local prototype account. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f4f7f3">
@@ -7,16 +8,18 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/auth.css"><link rel="stylesheet" href="../css/theme.css">
 </head>
+<!-- PAGE STRUCTURE: The body contains the visible layout for this ExerFit page. -->
 <body class="auth-page">
+  <!-- MAIN CONTENT: Primary page content begins here. -->
   <main class="auth-layout">
-    <section class="auth-aside"><a class="brand brand-light" href="../index.html"><img class="brand-symbol brand-symbol-contrast" src="../assets/logo/exerfit-mark-dark.svg" alt="" aria-hidden="true"><span>exer<span>fit</span></span></a><div class="auth-aside-content"><span class="eyebrow eyebrow-light">YOUR SPACE TO MOVE</span><h1>Make room<br>for <span>progress.</span></h1><p>Every route tells a story. Every session brings you forward.</p><div class="auth-aside-art"><div class="auth-art-line"></div><span class="auth-art-point point-one"></span><span class="auth-art-point point-two"></span><span class="auth-art-point point-three"></span><div class="auth-art-note"><i data-lucide="route"></i><span>Find your next path</span></div></div></div><div class="auth-aside-footer">Move with purpose. Progress at your pace.</div></section>
+    <section class="auth-aside"><a class="brand brand-light" href="../index.html"><img class="brand-symbol brand-symbol-contrast" src="../assets/logo/exerfit-logo-light.png" alt="" aria-hidden="true"></a><div class="auth-aside-content"><span class="eyebrow eyebrow-light">YOUR SPACE TO MOVE</span><h1>Make room<br>for <span>progress.</span></h1><p>Every route tells a story. Every session brings you forward.</p><div class="auth-aside-art"><div class="auth-art-line"></div><span class="auth-art-point point-one"></span><span class="auth-art-point point-two"></span><span class="auth-art-point point-three"></span><div class="auth-art-note"><i data-lucide="route"></i><span>Find your next path</span></div></div></div><div class="auth-aside-footer">Move with purpose. Progress at your pace.</div></section>
     <section class="auth-main"><a class="back-link" href="../index.html"><i data-lucide="arrow-left"></i> Back to home</a><button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch theme"><i data-lucide="moon"></i></button><div class="auth-form-wrap"><div class="auth-form-heading"><span class="eyebrow">WELCOME BACK</span><h2>Log in to ExerFit</h2><p>Pick up where you left off.</p></div>
       <form id="login-form" class="auth-form" novalidate>
         <label for="login-identity">Email or nickname</label><div class="input-wrap"><i data-lucide="user"></i><input id="login-identity" name="identity" type="text" autocomplete="username" placeholder="Enter your email or nickname" required></div>
         <label for="login-password">Password</label><div class="input-wrap"><i data-lucide="lock-keyhole"></i><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="password-toggle" type="button" data-toggle-password="login-password" aria-label="Show password"><i data-lucide="eye"></i></button></div>
         <p class="form-message" id="login-message" aria-live="polite"></p>
         <button class="button button-primary button-full button-large" type="submit">Log in <i data-lucide="arrow-right"></i></button>
-      </form><p class="auth-switch">New to ExerFit? <a href="signup.html">Create an account</a></p><p class="prototype-note"><i data-lucide="info"></i> Prototype account data is stored in this browser only.</p></div><div class="auth-mobile-brand"><a class="brand" href="../index.html"><img class="brand-symbol" data-theme-logo data-light-src="../assets/logo/exerfit-mark-light.svg" data-dark-src="../assets/logo/exerfit-mark-dark.svg" src="../assets/logo/exerfit-mark-light.svg" alt="" aria-hidden="true"><span>exer<span>fit</span></span></a></div></section>
+      </form><p class="auth-switch">New to ExerFit? <a href="signup.html">Create an account</a></p><p class="prototype-note"><i data-lucide="info"></i> Prototype account data is stored in this browser only.</p></div><div class="auth-mobile-brand"><a class="brand" href="../index.html"><img class="brand-symbol" data-theme-logo data-light-src="../assets/logo/exerfit-logo-dark.png" data-dark-src="../assets/logo/exerfit-logo-light.png" src="../assets/logo/exerfit-logo-dark.png" alt="" aria-hidden="true"><span>exer<span>fit</span></span></a></div></section>
   </main>
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@latest"></script><script type="module" src="../js/auth.js"></script>

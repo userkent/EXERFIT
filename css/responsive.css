@@ -1,422 +1,105 @@
+/* FILE PURPOSE: Responsive layout rules for tablet and mobile screen sizes. */
 /* Responsive adjustments for tablet and phone screens. */
 @media (max-width: 1050px) {
-  .app-header {
-    padding: 0 15px;
-  }
-  .app-header .brand {
-    flex-basis: 115px;
-    font-size: 19px;
-  }
-  .nav-item {
-    min-width: 66px;
-    padding: 0 7px;
-  }
-  .header-actions {
-    min-width: 220px;
-    gap: 7px;
-  }
-  .header-weather {
-    display: none;
-  }
-  .hero-section {
-    gap: 20px;
-    padding-right: 35px;
-    padding-left: 35px;
-  }
-  .workflow-section {
-    gap: 5%;
-  }
+  .app-header { padding: 0 15px; }
+  .app-header .brand { flex-basis: 115px; font-size: 19px; }
+  .nav-item { min-width: 66px; padding: 0 7px; }
+  .header-actions { min-width: 220px; gap: 7px; }
+  .header-weather { display: none; }
+  .hero-section { gap: 20px; padding-right: 35px; padding-left: 35px; }
+  .workflow-section { gap: 5%; }
 }
 @media (max-width: 760px) {
-  .landing-header {
-    padding: 16px 20px;
-  }
-  .landing-nav {
-    display: none;
-  }
-  .landing-actions {
-    gap: 3px;
-  }
-  .landing-actions .button {
-    min-height: 37px;
-    padding: 0 11px;
-    font-size: 11px;
-  }
-  .hero-section {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    min-height: 0;
-    padding: 47px 24px 62px;
-  }
-  .hero-copy h1 {
-    font-size: clamp(43px, 11vw, 62px);
-    letter-spacing: -2.8px;
-  }
-  .hero-copy > p {
-    font-size: 14px;
-  }
-  .hero-visual {
-    height: 390px;
-    margin-top: 13px;
-  }
-  .hero-photo-main {
-    right: 6%;
-    width: 69%;
-    height: 320px;
-  }
-  .hero-map-card {
-    bottom: 7px;
-    height: 150px;
-  }
-  .hero-stat-card {
-    top: 45px;
-    left: -1%;
-  }
-  .hero-weather-card {
-    right: -2%;
-    bottom: 14px;
-  }
-  .feature-strip {
-    padding: 52px 23px 60px;
-  }
-  .feature-strip-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .feature-strip-heading h2,
-  .workflow-copy h2 {
-    font-size: 30px;
-  }
-  .feature-grid {
-    grid-template-columns: 1fr;
-    gap: 11px;
-  }
-  .feature-card {
-    min-height: 0;
-    padding: 21px;
-  }
-  .feature-card p {
-    min-height: 0;
-  }
-  .workflow-section {
-    grid-template-columns: 1fr;
-    gap: 31px;
-    padding: 6px 23px 70px;
-  }
-  .workflow-image {
-    height: 300px;
-  }
-  .landing-footer {
-    flex-wrap: wrap;
-    gap: 8px 18px;
-    padding: 22px 23px;
-  }
-  .landing-footer p {
-    order: 3;
-    flex-basis: 100%;
-    margin: 0;
-  }
-  .auth-layout {
-    grid-template-columns: 1fr;
-  }
-  .auth-aside {
-    display: none;
-  }
-  .auth-main {
-    min-height: 100vh;
-    padding: 84px 24px 55px;
-  }
-  .back-link {
-    top: 25px;
-    left: 24px;
-  }
-  .auth-mobile-brand {
-    display: flex;
-    justify-content: center;
-    margin-top: 32px;
-  }
-  .auth-main-signup {
-    padding-top: 75px;
-  }
-  .auth-main-signup .auth-form-wrap {
-    max-width: 465px;
-  }
-  .form-two-columns {
-    gap: 8px;
-  }
-  .dashboard-page {
-    min-height: 500px;
-  }
-  .app-header {
-    height: 62px;
-    padding: 0 12px;
-  }
-  .app-header .brand {
-    flex: 0 0 auto;
-    gap: 7px;
-    font-size: 18px;
-  }
-  .brand-mark {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-  }
-  .app-nav {
-    position: fixed;
-    z-index: 700;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    justify-content: space-around;
-    height: 62px;
-    gap: 0;
-    background: rgba(255, 255, 255, 0.97);
-    border-top: 1px solid #e5ece6;
-    box-shadow: 0 -4px 18px rgba(25, 50, 35, 0.07);
-    backdrop-filter: blur(12px);
-  }
-  .nav-item {
-    flex: 1;
-    min-width: 0;
-    height: 62px;
-    gap: 3px;
-    padding: 0 2px;
-    font-size: 8px;
-  }
-  .nav-item svg {
-    width: 17px;
-    height: 17px;
-  }
-  .nav-item.active:after {
-    right: 25%;
-    left: 25%;
-    top: 0;
-    bottom: auto;
-  }
-  .header-actions {
-    flex: 0 0 auto;
-    min-width: 0;
-    gap: 5px;
-  }
-  #open-settings {
-    width: 35px;
-    height: 35px;
-  }
-  .profile-trigger {
-    gap: 5px;
-  }
-  .profile-trigger-name,
-  .profile-trigger > svg {
-    display: none;
-  }
-  .avatar-small {
-    width: 31px;
-    height: 31px;
-  }
-  .map-workspace {
-    height: calc(100vh - 62px - 62px);
-    min-height: 430px;
-  }
-  .map-top-left {
-    top: 11px;
-    left: 10px;
-    width: min(340px, calc(100vw - 20px));
-  }
-  .map-search {
-    height: 46px;
-    border-radius: 13px;
-  }
-  .map-search input {
-    height: 42px;
-    font-size: 11px;
-  }
-  .map-hint {
-    display: none;
-  }
-  .map-top-right {
-    top: 69px;
-    right: 10px;
-    gap: 5px;
-  }
-  .map-control-button {
-    min-width: 38px;
-    height: 38px;
-    padding: 0 10px;
-    border-radius: 11px;
-  }
-  .map-control-button svg {
-    width: 15px;
-    height: 15px;
-  }
-  .map-control-button span {
-    display: none;
-  }
-  .zoom-control button {
-    width: 36px;
-    height: 34px;
-  }
-  .floating-panel {
-    top: auto;
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
-    width: auto;
-    max-height: min(73%, 560px);
-    border-radius: 19px;
-  }
-  .floating-panel-header {
-    min-height: 65px;
-    padding: 13px 15px 11px 18px;
-  }
-  .floating-panel-header h2 {
-    font-size: 17px;
-  }
-  .floating-panel-body {
-    padding: 14px 16px 18px;
-  }
-  .map-settings-panel {
-    top: auto;
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
-    width: auto;
-    max-height: 76%;
-  }
-  .map-bottom-left {
-    right: 10px;
-    bottom: 10px;
-    left: 10px;
-    width: auto;
-    padding: 13px;
-  }
-  .map-status-pill {
-    right: 10px;
-    bottom: 10px;
-    padding: 7px 9px;
-    font-size: 8px;
-  }
-  .map-weather-card {
-    right: 10px;
-    bottom: 45px;
-    padding: 8px 10px;
-  }
-  .map-weather-card strong {
-    font-size: 14px;
-  }
-  .route-summary-header h3 {
-    font-size: 14px;
-  }
-  .route-metrics strong {
-    font-size: 14px;
-  }
-  .route-actions .button {
-    font-size: 9px;
-  }
-  .app-modal-backdrop {
-    align-items: end;
-    padding: 8px;
-  }
-  .app-modal {
-    width: 100%;
-    max-height: 82vh;
-    border-radius: 18px 18px 14px 14px;
-  }
-  .modal-content {
-    max-height: calc(82vh - 130px);
-  }
+  .landing-header { padding: 16px 20px; }
+  .landing-nav { display: none; }
+  .landing-actions { gap: 3px; }
+  .landing-actions .button { min-height: 37px; padding: 0 11px; font-size: 11px; }
+  .hero-section { grid-template-columns: 1fr; gap: 10px; min-height: 0; padding: 47px 24px 62px; }
+  .hero-copy h1 { font-size: clamp(43px,11vw,62px); letter-spacing: -2.8px; }
+  .hero-copy > p { font-size: 14px; }
+  .hero-visual { height: 390px; margin-top: 13px; }
+  .hero-photo-main { right: 6%; width: 69%; height: 320px; }
+  .hero-map-card { bottom: 7px; height: 150px; }
+  .hero-stat-card { top: 45px; left: -1%; }.hero-weather-card { right: -2%; bottom: 14px; }
+  .feature-strip { padding: 52px 23px 60px; }
+  .feature-strip-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .feature-strip-heading h2, .workflow-copy h2 { font-size: 30px; }
+  .feature-grid { grid-template-columns: 1fr; gap: 11px; }
+  .feature-card { min-height: 0; padding: 21px; }
+  .feature-card p { min-height: 0; }
+  .workflow-section { grid-template-columns: 1fr; gap: 31px; padding: 6px 23px 70px; }
+  .workflow-image { height: 300px; }
+  .landing-footer { flex-wrap: wrap; gap: 8px 18px; padding: 22px 23px; }
+  .landing-footer p { order: 3; flex-basis: 100%; margin: 0; }
+  .auth-layout { grid-template-columns: 1fr; }
+  .auth-aside { display: none; }
+  .auth-main { min-height: 100vh; padding: 84px 24px 55px; }
+  .back-link { top: 25px; left: 24px; }
+  .auth-mobile-brand { display: flex; justify-content: center; margin-top: 32px; }
+  .auth-main-signup { padding-top: 75px; }
+  .auth-main-signup .auth-form-wrap { max-width: 465px; }
+  .form-two-columns { gap: 8px; }
+  .dashboard-page { min-height: 500px; }
+  .app-header { height: 62px; padding: 0 12px; }
+  .app-header .brand { flex: 0 0 auto; gap: 7px; font-size: 18px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 9px; }
+  .app-nav { position: fixed; z-index: 700; right: 0; bottom: 0; left: 0; justify-content: space-around; height: 62px; gap: 0; background: rgba(255,255,255,.97); border-top: 1px solid #e5ece6; box-shadow: 0 -4px 18px rgba(25,50,35,.07); backdrop-filter: blur(12px); }
+  .nav-item { flex: 1; min-width: 0; height: 62px; gap: 3px; padding: 0 2px; font-size: 8px; }
+  .nav-item svg { width: 17px; height: 17px; }
+  .nav-item.active:after { right: 25%; left: 25%; top: 0; bottom: auto; }
+  .header-actions { flex: 0 0 auto; min-width: 0; gap: 5px; }
+  #open-settings { width: 35px; height: 35px; }
+  .profile-trigger { gap: 5px; }.profile-trigger-name, .profile-trigger > svg { display: none; }
+  .avatar-small { width: 31px; height: 31px; }
+  .map-workspace { height: calc(100vh - 62px - 62px); min-height: 430px; }
+  .map-top-left { top: 11px; left: 10px; width: min(340px,calc(100vw - 20px)); }
+  .map-search { height: 46px; border-radius: 13px; }.map-search input { height: 42px; font-size: 11px; }
+  .map-hint { display: none; }
+  .map-top-right { top: 69px; right: 10px; gap: 5px; }
+  .map-control-button { min-width: 38px; height: 38px; padding: 0 10px; border-radius: 11px; }.map-control-button svg { width: 15px; height: 15px; }.map-control-button span { display: none; }
+  .zoom-control button { width: 36px; height: 34px; }
+  .floating-panel { top: auto; right: 8px; bottom: 8px; left: 8px; width: auto; max-height: min(73%,560px); border-radius: 19px; }
+  .floating-panel-header { min-height: 65px; padding: 13px 15px 11px 18px; }.floating-panel-header h2 { font-size: 17px; }
+  .floating-panel-body { padding: 14px 16px 18px; }
+  .map-settings-panel { top: auto; right: 8px; bottom: 8px; left: 8px; width: auto; max-height: 76%; }
+  .map-bottom-left { right: 10px; bottom: 10px; left: 10px; width: auto; padding: 13px; }
+  .map-status-pill { right: 10px; bottom: 10px; padding: 7px 9px; font-size: 8px; }
+  .map-weather-card { right: 10px; bottom: 45px; padding: 8px 10px; }
+  .map-weather-card strong { font-size: 14px; }
+  .route-summary-header h3 { font-size: 14px; }
+  .route-metrics strong { font-size: 14px; }
+  .route-actions .button { font-size: 9px; }
+  .app-modal-backdrop { align-items: end; padding: 8px; }
+  .app-modal { width: 100%; max-height: 82vh; border-radius: 18px 18px 14px 14px; }
+  .modal-content { max-height: calc(82vh - 130px); }
 }
 @media (max-width: 420px) {
-  .landing-actions .button-quiet {
-    display: none;
-  }
-  .hero-actions {
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  .hero-visual {
-    height: 330px;
-  }
-  .hero-photo-main {
-    height: 275px;
-  }
-  .hero-stat-card,
-  .hero-weather-card {
-    padding: 10px;
-    gap: 7px;
-  }
-  .hero-stat-card strong,
-  .hero-weather-card strong {
-    font-size: 9px;
-  }
-  .hero-stat-card small,
-  .hero-weather-card small {
-    font-size: 8px;
-  }
-  .stat-icon,
-  .weather-sun {
-    width: 29px;
-    height: 29px;
-  }
-  .auth-main {
-    padding-right: 18px;
-    padding-left: 18px;
-  }
-  .auth-form-heading h2 {
-    font-size: 27px;
-  }
-  .form-two-columns {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  .form-two-columns > div {
-    gap: 7px;
-  }
-  .form-two-columns > div + div {
-    margin-top: 5px;
-  }
-  .app-header .brand > span:last-child {
-    display: none;
-  }
-  .app-header .brand {
-    width: 34px;
-  }
-  .map-top-right {
-    top: 65px;
-  }
-  .route-metrics {
-    gap: 3px;
-  }
-  .route-metrics > div + div {
-    padding-left: 6px;
-  }
-  .activity-controls .button {
-    flex-basis: calc(50% - 7px);
-  }
+  .landing-actions .button-quiet { display: none; }
+  .hero-actions { flex-wrap: wrap; gap: 15px; }
+  .hero-visual { height: 330px; }
+  .hero-photo-main { height: 275px; }
+  .hero-stat-card, .hero-weather-card { padding: 10px; gap: 7px; }
+  .hero-stat-card strong, .hero-weather-card strong { font-size: 9px; }
+  .hero-stat-card small, .hero-weather-card small { font-size: 8px; }
+  .stat-icon, .weather-sun { width: 29px; height: 29px; }
+  .auth-main { padding-right: 18px; padding-left: 18px; }
+  .auth-form-heading h2 { font-size: 27px; }
+  .form-two-columns { grid-template-columns: 1fr; gap: 0; }
+  .form-two-columns > div { gap: 7px; }
+  .form-two-columns > div + div { margin-top: 5px; }
+  .app-header .brand > span:last-child { display: none; }
+  .app-header .brand { width: 34px; }
+  .map-top-right { top: 65px; }
+  .route-metrics { gap: 3px; }
+  .route-metrics > div + div { padding-left: 6px; }
+  .activity-controls .button { flex-basis: calc(50% - 7px); }
 }
 
 @media (max-width: 760px) {
-  .dashboard-overview-card {
-    right: 10px;
-    bottom: 49px;
-    padding: 8px 1px;
-  }
-  .dashboard-overview-card > div {
-    min-width: 77px;
-    padding: 0 8px;
-  }
-  .dashboard-overview-card strong {
-    font-size: 12px;
-  }
-  .dashboard-overview-card small {
-    font-size: 7px;
-  }
-  .map-weather-card {
-    bottom: 103px;
-  }
-  .map-hint {
-    max-width: 100%;
-    gap: 5px;
-    font-size: 8px;
-  }
+  .dashboard-overview-card { right: 10px; bottom: 49px; padding: 8px 1px; }
+  .dashboard-overview-card > div { min-width: 77px; padding: 0 8px; }
+  .dashboard-overview-card strong { font-size: 12px; }
+  .dashboard-overview-card small { font-size: 7px; }
+  .map-weather-card { bottom: 103px; }
+  .map-hint { max-width: 100%; gap: 5px; font-size: 8px; }
 }
