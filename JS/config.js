@@ -1,30 +1,34 @@
-/*
- * WHO BUILT WHAT:
- * Developer 1: [Name and contribution]
- * Developer 2: [Name and contribution]
- *
- * PURPOSE:
- * Local developer-only overrides. This file is ignored by Git.
- */
-// ==========================================
-// LOCAL CONFIGURATION OVERRIDES
-// ==========================================
-// HOW TO EDIT THIS SECTION:
-// Add only the settings you need to override from config.ex.js.
-// Keep real API keys out of this file when sharing the project.
-window.ExerFitLocalConfig = {
-  // Example: openWeatherApiKey: "your-local-key-here",
-  // Example: defaultMapZoom: 13
+/* =========================================================
+   FILE: config.js
+   PURPOSE: Central place for application names and service URLs.
+   MODIFY HERE: Change tile or API endpoints in one place.
+========================================================= */
+export const APP_NAME = 'ExerFit';
+export const STORAGE_PREFIX = 'exerfit';
+export const DEFAULT_MAP_CENTER = [12.8797, 121.7740]; // Philippines overview; use Locate Me for your live position.
+export const DEFAULT_MAP_ZOOM = 6;
+export const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+export const ROUTING_HOSTS = {
+  walking: 'https://routing.openstreetmap.de/routed-foot',
+  cycling: 'https://routing.openstreetmap.de/routed-bike',
+  driving: 'https://routing.openstreetmap.de/routed-car'
 };
-
-// Merge local overrides into the shared defaults before page modules load.
-// The routing object is merged separately so one custom route profile does not
-// accidentally remove the other default route services.
-window.ExerFitConfig = {
-  ...(window.ExerFitConfig || {}),
-  ...window.ExerFitLocalConfig,
-  routing: {
-    ...(window.ExerFitConfig?.routing || {}),
-    ...(window.ExerFitLocalConfig.routing || {}),
+export const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather';
+export const TILE_PROVIDERS = {
+  standard: {
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>'
   },
+  dark: {
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a> &mdash; Sources: Esri, HERE, Garmin, USGS, EPA, NPS'
+  },
+  satellite: {
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Sources: <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community'
+  },
+  hybridLabels: {
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Labels &copy; Esri'
+  }
 };
