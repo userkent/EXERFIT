@@ -3,7 +3,7 @@
    PURPOSE: Centralizes localStorage access for users and app data.
    IMPORTANT: localStorage is a prototype store, not a secure database.
 ========================================================= */
-import { STORAGE_PREFIX } from './config.js';
+import { STORAGE_PREFIX } from "./config.js";
 
 const USERS_KEY = `${STORAGE_PREFIX}.users`;
 const SESSION_KEY = `${STORAGE_PREFIX}.session`;
@@ -29,46 +29,88 @@ function writeJSON(key, value) {
   }
 }
 
-export function getUsers() { return readJSON(USERS_KEY, []); }
-export function saveUsers(users) { return writeJSON(USERS_KEY, users); }
-export function getSession() { return readJSON(SESSION_KEY, null); }
-export function setSession(userId) { return writeJSON(SESSION_KEY, { userId, signedInAt: new Date().toISOString() }); }
-export function clearSession() { localStorage.removeItem(SESSION_KEY); }
+export function getUsers() {
+  return readJSON(USERS_KEY, []);
+}
+export function saveUsers(users) {
+  return writeJSON(USERS_KEY, users);
+}
+export function getSession() {
+  return readJSON(SESSION_KEY, null);
+}
+export function setSession(userId) {
+  return writeJSON(SESSION_KEY, {
+    userId,
+    signedInAt: new Date().toISOString(),
+  });
+}
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
 export function getCurrentUser() {
   const session = getSession();
   if (!session?.userId) return null;
-  return getUsers().find(user => user.id === session.userId) || null;
+  return getUsers().find((user) => user.id === session.userId) || null;
 }
 export function findUser(identity) {
-  const normalized = String(identity || '').trim().toLowerCase();
-  return getUsers().find(user => user.email.toLowerCase() === normalized || user.nickname.toLowerCase() === normalized) || null;
+  const normalized = String(identity || "")
+    .trim()
+    .toLowerCase();
+  return (
+    getUsers().find(
+      (user) =>
+        user.email.toLowerCase() === normalized ||
+        user.nickname.toLowerCase() === normalized,
+    ) || null
+  );
 }
 export function createUser(user) {
   const users = getUsers();
   users.push(user);
-  if (!saveUsers(users)) throw new Error('Your browser storage is full or unavailable.');
-  writeJSON(`${DATA_KEY}.${user.id}`, { routes: [], activities: [], workouts: [], preferences: { mapType: 'standard', savedLayer: true, activityLayer: true, heatmap: 'off' } });
+  if (!saveUsers(users))
+    throw new Error("Your browser storage is full or unavailable.");
+  writeJSON(`${DATA_KEY}.${user.id}`, {
+    routes: [],
+    activities: [],
+    workouts: [],
+    preferences: {
+      mapType: "standard",
+      savedLayer: true,
+      activityLayer: true,
+      heatmap: "off",
+    },
+  });
   return user;
 }
 export function updateUser(userId, changes) {
   const users = getUsers();
-  const index = users.findIndex(user => user.id === userId);
-  if (index < 0) throw new Error('Account could not be found.');
+  const index = users.findIndex((user) => user.id === userId);
+  if (index < 0) throw new Error("Account could not be found.");
   users[index] = { ...users[index], ...changes };
-  if (!saveUsers(users)) throw new Error('Your browser storage is full or unavailable.');
+  if (!saveUsers(users))
+    throw new Error("Your browser storage is full or unavailable.");
   return users[index];
 }
 export function getUserData(userId = getCurrentUser()?.id) {
-  if (!userId) return { routes: [], activities: [], workouts: [], preferences: {} };
+  if (!userId)
+    return { routes: [], activities: [], workouts: [], preferences: {} };
   const key = `${DATA_KEY}.${userId}`;
-  const data = readJSON(key, null) || { routes: [], activities: [], workouts: [], preferences: {} };
-  data.routes ||= []; data.activities ||= []; data.workouts ||= []; data.preferences ||= {};
+  const data = readJSON(key, null) || {
+    routes: [],
+    activities: [],
+    workouts: [],
+    preferences: {},
+  };
+  data.routes ||= [];
+  data.activities ||= [];
+  data.workouts ||= [];
+  data.preferences ||= {};
   return data;
 }
 export function saveUserData(data, userId = getCurrentUser()?.id) {
   if (!userId) return false;
   const saved = writeJSON(`${DATA_KEY}.${userId}`, data);
-  if (saved) window.dispatchEvent(new CustomEvent('exerfit:data-changed'));
+  if (saved) window.dispatchEvent(new CustomEvent("exerfit:data-changed"));
   return saved;
 }
 export function updatePreferences(changes, userId = getCurrentUser()?.id) {
@@ -77,11 +119,13 @@ export function updatePreferences(changes, userId = getCurrentUser()?.id) {
   saveUserData(data, userId);
   return data.preferences;
 }
-export function createId(prefix = 'item') {
+export function createId(prefix = "item") {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 export function getWeatherKey(userId = getCurrentUser()?.id) {
-  return userId ? localStorage.getItem(`${STORAGE_PREFIX}.weather.${userId}`) || '' : '';
+  return userId
+    ? localStorage.getItem(`${STORAGE_PREFIX}.weather.${userId}`) || ""
+    : "";
 }
 export function saveWeatherKey(key, userId = getCurrentUser()?.id) {
   if (!userId) return;
