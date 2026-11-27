@@ -41,16 +41,7 @@
     <div class="map-top-right">
       <button class="map-control-button" id="locate-me" type="button" title="Show my location"><i data-lucide="locate-fixed"></i></button>
       <button class="map-control-button" id="open-map-settings" type="button" title="Map settings"><i data-lucide="layers-3"></i><span>Map</span></button>
-      <div class="map-route-control-stack">
-        <div class="zoom-control">
-          <button id="zoom-in" type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button>
-          <button id="zoom-out" type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button>
-        </div>
-        <!-- Icon-only destination mode control; clicking it enables map picking. -->
-        <button class="map-control-button destination-pick-button" id="set-destination-map" type="button" aria-label="Set destination on map" title="Set destination on map">
-          <i data-lucide="map-pin-plus"></i>
-        </button>
-      </div>
+      <div class="zoom-control"><button id="zoom-in" type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button><button id="zoom-out" type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button></div>
     </div>
 
     <div class="map-bottom-left" id="route-summary" data-draggable-card data-drag-handle=".route-summary-header" hidden>
@@ -105,5 +96,5 @@
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
 
   <script src="https://unpkg.com/lucide@latest"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script type="module" src="../js/dashboard.js"></script>
+  <script type="module" src="../JS/dashboard.js"></script>
 </body></html>

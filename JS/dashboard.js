@@ -61,7 +61,6 @@ let currentRoute = null;
 let selectedDestination = null;
 let lastKnownPosition = null;
 let currentPanel = "overview";
-let destinationPickMode = false;
 
 function initializeDashboard() {
   try {
@@ -296,7 +295,6 @@ function openPanel(panel) {
 }
 
 function bindMapControls() {
-  // Standard map controls remain independent from route planning.
   document
     .getElementById("zoom-in")
     ?.addEventListener("click", () => getMap()?.zoomIn());
@@ -304,47 +302,9 @@ function bindMapControls() {
     .getElementById("zoom-out")
     ?.addEventListener("click", () => getMap()?.zoomOut());
   document.getElementById("locate-me")?.addEventListener("click", locateUser);
-
-  // Route planning is opt-in: the map does nothing special until this button is clicked.
-  document
-    .getElementById("set-destination-map")
-    ?.addEventListener("click", () =>
-      setDestinationPickMode(!destinationPickMode),
-    );
-
-  // Only clicks made while destination-picking mode is active create a route destination.
-  getMap()?.on("click", (event) => {
-    if (!destinationPickMode) return;
-    const { lat, lng } = event.latlng;
-    selectMapDestination(lat, lng);
-  });
-
   document
     .getElementById("header-weather")
     ?.addEventListener("click", () => openPanel("settings"));
-}
-
-function setDestinationPickMode(enabled) {
-  destinationPickMode = enabled;
-  const button = document.getElementById("set-destination-map");
-  const mapElement = document.getElementById("map");
-  if (!button || !mapElement) return;
-
-  button.classList.toggle("is-active", enabled);
-  button.setAttribute("aria-pressed", String(enabled));
-  button.title = enabled
-    ? "Click the map to set your destination"
-    : "Set destination on map";
-  mapElement.classList.toggle("is-picking-destination", enabled);
-  setMapStatus(
-    enabled ? "Click the map to choose your destination" : "Map ready",
-  );
-  showToast(
-    enabled
-      ? "Destination mode is on. Click anywhere on the map."
-      : "Destination mode cancelled.",
-    enabled ? "info" : "warning",
-  );
 }
 function locateUser() {
   if (!navigator.geolocation) {
@@ -468,19 +428,6 @@ function bindDestinationSearch() {
     if (!event.target.closest(".map-top-left"))
       resultsContainer?.classList.add("is-hidden");
   });
-}
-
-async function selectMapDestination(lat, lon) {
-  // A map-picked destination uses coordinates directly; no place search is required.
-  const place = {
-    id: `map-${Date.now()}`,
-    name: "Pinned destination",
-    address: "Selected on map",
-    lat,
-    lon,
-  };
-  setDestinationPickMode(false);
-  await selectDestination(place, document.getElementById("search-results"));
 }
 
 async function selectDestination(place, resultsContainer) {

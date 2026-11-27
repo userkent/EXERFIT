@@ -135,27 +135,17 @@ export function setMapStatus(message) {
 export function locateOnMap(lat, lon, accuracy = 0) {
   if (!map) return;
   const latLng = [lat, lon];
-
-  // Use a real PNG asset for the user's GPS position instead of CSS geometry.
-  // This keeps the marker visually consistent and prevents the oval/distorted
-  // marker that can occur when a span is used as a Leaflet divIcon.
-  const userLocationIcon = L.icon({
-    iconUrl: new URL("../assets/icons/map-pin.png", import.meta.url).href,
-    iconSize: [34, 42],
-    iconAnchor: [17, 42],
-    popupAnchor: [0, -38],
-  });
-
   if (!userMarker) {
     userMarker = L.marker(latLng, {
-      icon: userLocationIcon,
+      icon: L.divIcon({
+        className: "",
+        html: '<span class="exerfit-location-marker"></span>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      }),
       zIndexOffset: 1000,
     }).addTo(map);
-  } else {
-    // Reuse the same PNG icon while only moving the marker to the latest GPS position.
-    userMarker.setLatLng(latLng);
-    userMarker.setIcon(userLocationIcon);
-  }
+  } else userMarker.setLatLng(latLng);
   userMarker.bindPopup(
     `<strong>Your location</strong><br><small>GPS accuracy: ${Math.round(accuracy)} m</small>`,
   );

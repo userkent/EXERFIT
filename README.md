@@ -1,5 +1,4 @@
 # ExerFit
-ExerFit: A Smart Fitness Monitoring and Physical Activity Tracking System
 
 ## Problem
 
@@ -43,7 +42,7 @@ The dashboard also includes a Strava-style side hide/reveal control for the floa
 - `pages/signup.html` — Sign-up page.
 - `pages/dashboard.html` — Main application dashboard.
 - `css/` — Stylesheets for the landing page, dashboard, authentication screens, responsive layout, and themes.
-- `js/` — JavaScript modules for authentication, maps, GPS tracking, routing, activities, workouts, history, weather, storage, and UI.
+- `JS/` — JavaScript modules for authentication, maps, GPS tracking, routing, activities, workouts, history, weather, storage, and UI.
 - `assets/images/` — Local PNG images used by the website.
 - `assets/icons/` — Local PNG icon assets.
 - `assets/logo/exerfit-logo-dark.png` — Dark-green logo used in light mode.
@@ -57,13 +56,10 @@ The dashboard also includes a Strava-style side hide/reveal control for the floa
 - Map and routing features depend on external map services and browser internet access.
 - Account, workout, route, and activity prototype data is stored in the user's browser.
 
-## Map Route Planning
+## GitHub Pages Deployment
 
-- Route planning is separate from the Activity/GPS recorder.
-- Click the icon-only **Set destination on map** control below the zoom buttons.
-- After destination mode is enabled, click any point on the map.
-- ExerFit uses the current GPS position as the route start and the clicked point as the destination.
-- The planned GPS route is displayed before navigation starts.
-- Click **Navigate** in the route summary to begin route guidance.
-- Normal map clicks do nothing when destination mode is off.
-- The user's current location uses the PNG asset `assets/icons/map-pin.png` instead of a CSS-drawn marker.
+- Keep the JavaScript folder named exactly `JS` (uppercase), matching the paths used by the HTML pages. GitHub Pages runs on a case-sensitive Linux filesystem; `JS` and `js` are different paths even if they appear identical on some Windows setups.
+- The HTML entry points load `JS/auth.js`, `JS/dashboard.js`, and `JS/theme.js` using paths that match the repository folder name.
+- After pushing changes, open the published site and use a hard refresh (Ctrl+F5) to avoid an older cached copy.
+- Sign-up and login in this prototype use `localStorage`. Accounts are saved only in the browser and website origin where they are created; they are not shared with other browsers or devices.
+- This project does not currently connect to a hosted authentication database or server. Do not use a real password for this prototype.
