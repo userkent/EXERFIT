@@ -663,7 +663,13 @@ async function recalculateSelectedRoute() {
 
     // If navigation is already active, replace its guidance route without starting activity recording.
     const navigationSwitched = setActiveNavigationRoute(currentRoute);
-    if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
+    const routeLine = navigationSwitched
+      ? true
+      : drawPlannedRoute(currentRoute.coordinates);
+    if (!routeLine)
+      throw new Error(
+        "The route was calculated, but the map could not draw its route line. Please refresh the map and try again.",
+      );
     displayRouteSummary(currentRoute, selectedDestination);
 
     // Weather is tied to the selected destination and is refreshed after a new route profile is calculated.
@@ -985,7 +991,16 @@ function bindFindAnotherRoute() {
         alternatives: options.filter((_, index) => index !== nextIndex),
       };
       const navigationSwitched = setActiveNavigationRoute(currentRoute);
-      if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
+      const routeLine = navigationSwitched
+        ? true
+        : drawPlannedRoute(currentRoute.coordinates);
+      if (!routeLine) {
+        showToast(
+          "This alternative route could not be drawn on the map. Try another route.",
+          "error",
+        );
+        return;
+      }
       displayRouteSummary(
         currentRoute,
         selectedDestination || { name: "Destination" },

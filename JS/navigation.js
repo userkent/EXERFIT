@@ -9,6 +9,8 @@
 import {
   drawPlannedRoute,
   clearPlannedRoute,
+  drawNavigationTrail,
+  clearNavigationTrail,
   followNavigationPosition,
 } from "./map.js";
 import { getRoute } from "./routing-service.js";
@@ -22,6 +24,8 @@ let lastOffRouteNotice = 0;
 let lastProgress = null;
 let lastPosition = null;
 let arrivalNotified = false;
+let navigationTrailPoints = [];
+let lastTrailPoint = null;
 
 export function getActiveNavigation() {
   return activeRoute;
@@ -30,7 +34,7 @@ export function getActiveNavigation() {
 // Replace the active route without disconnecting Activity's shared GPS watcher.
 export function setActiveNavigationRoute(route) {
   if (!activeRoute || !route?.coordinates?.length) return false;
-  startNavigation(route, { externalGPS });
+  if (!startNavigation(route, { externalGPS })) return false;
   window.dispatchEvent(
     new CustomEvent("exerfit:navigation-route-updated", { detail: route }),
   );
@@ -47,6 +51,44 @@ function haversine(a, b) {
     Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
   return 2 * radius * Math.asin(Math.sqrt(h));
 }
+function appendNavigationTrailPoint(position) {
+  if (
+    !position ||
+    !Number.isFinite(position.lat) ||
+    !Number.isFinite(position.lon)
+  )
+    return;
+  // Keep obviously inaccurate fixes from creating noisy lines, but allow ordinary
+  // mobile GPS variation so the trail is not silently empty on phones/tablets.
+  if (Number.isFinite(position.accuracy) && position.accuracy > 100) return;
+  const point = {
+    lat: position.lat,
+    lon: position.lon,
+    timestamp: Number.isFinite(position.timestamp)
+      ? position.timestamp
+      : Date.now(),
+  };
+  if (lastTrailPoint) {
+    const distance = haversine(lastTrailPoint, point);
+    const elapsedSeconds = Math.max(
+      (point.timestamp - lastTrailPoint.timestamp) / 1000,
+      1,
+    );
+    if (distance < 2.5) return;
+    // Reject a large GPS teleport while allowing normal running/cycling movement.
+    if (distance / elapsedSeconds > 55) return;
+  }
+  navigationTrailPoints.push(point);
+  lastTrailPoint = point;
+  // Bound the in-memory trail for long navigation sessions on mobile devices.
+  if (navigationTrailPoints.length > 5000) {
+    navigationTrailPoints = navigationTrailPoints.filter(
+      (_, index) => index % 2 === 0,
+    );
+  }
+  drawNavigationTrail(navigationTrailPoints);
+}
+
 function nearestRouteIndex(point, coordinates) {
   let bestIndex = 0,
     bestDistance = Infinity;
@@ -87,14 +129,25 @@ export function startNavigation(route, options = {}) {
     showToast("This route does not contain route geometry.", "error");
     return false;
   }
+  const plannedLine = drawPlannedRoute(route.coordinates);
+  if (!plannedLine) {
+    showToast(
+      "The route was received, but its line could not be drawn. Recalculate the route and try again.",
+      "error",
+      5500,
+    );
+    return false;
+  }
   stopNavigationWatch();
+  clearNavigationTrail();
+  navigationTrailPoints = [];
+  lastTrailPoint = null;
   activeRoute = { ...route, indexedSteps: stepIndexes(route) };
   externalGPS = Boolean(options.externalGPS);
   offRouteCount = 0;
   lastOffRouteNotice = 0;
   lastPosition = null;
   arrivalNotified = false;
-  drawPlannedRoute(route.coordinates);
   const state = document.getElementById("nav-guidance");
   if (state) state.classList.remove("is-hidden");
   renderGuidance({
@@ -148,6 +201,9 @@ export function stopNavigation(keepRoute = true) {
   if (!keepRoute) {
     activeRoute = null;
     clearPlannedRoute();
+    clearNavigationTrail();
+    navigationTrailPoints = [];
+    lastTrailPoint = null;
   }
   const guidance = document.getElementById("nav-guidance");
   if (guidance) guidance.classList.add("is-hidden");
@@ -169,7 +225,9 @@ export function updateNavigation(position) {
   )
     return;
   lastPosition = position;
-  // Follow the live GPS position while navigating; Activity recording remains a separate module.
+  // Show the user's live movement as a dedicated polyline, even when Activity
+  // recording is not running. Activity's own saved track remains separate.
+  appendNavigationTrailPoint(position);
   followNavigationPosition(position.lat, position.lon, position.accuracy || 0);
   const nearest = nearestRouteIndex(position, activeRoute.coordinates);
   const remaining = remainingDistance(activeRoute.coordinates, nearest.index);
