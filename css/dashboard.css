@@ -341,6 +341,23 @@
   width: 17px;
   height: 17px;
 }
+.zoom-control button.is-active {
+  color: #fff;
+  background: var(--green-700);
+  border-color: var(--green-700);
+}
+.zoom-control button.is-active:hover {
+  background: var(--green-800);
+}
+.exerfit-gps-icon {
+  object-fit: contain;
+}
+.leaflet-container.is-picking-destination {
+  cursor: crosshair !important;
+}
+.leaflet-container.is-picking-destination .leaflet-interactive {
+  cursor: crosshair;
+}
 .floating-panel {
   position: absolute;
   z-index: 450;
@@ -755,46 +772,12 @@
     90px 70px,
     100% 31px;
 }
-.map-thumb-dark {
-  background-color: #3a4546;
-  background-image:
-    linear-gradient(
-      33deg,
-      transparent 45%,
-      #66716e 46%,
-      #66716e 49%,
-      transparent 50%
-    ),
-    linear-gradient(
-      150deg,
-      transparent 45%,
-      #505b59 46%,
-      #505b59 48%,
-      transparent 49%
-    );
-  background-size:
-    70px 52px,
-    90px 65px;
-}
 .map-thumb-satellite {
   background-color: #58755d;
   background-image:
     radial-gradient(ellipse at 30% 30%, #8c9d6c 0 16%, transparent 17%),
     radial-gradient(ellipse at 70% 75%, #274f48 0 22%, transparent 23%),
     linear-gradient(145deg, #55715b, #304f49 52%, #79906c);
-}
-.map-thumb-hybrid {
-  background-color: #496b55;
-  background-image:
-    linear-gradient(
-      35deg,
-      transparent 46%,
-      rgba(255, 255, 255, 0.7) 47%,
-      rgba(255, 255, 255, 0.7) 49%,
-      transparent 50%
-    ),
-    radial-gradient(ellipse at 28% 45%, #718b66 0 20%, transparent 21%),
-    linear-gradient(145deg, #526c59, #314e46);
 }
 .toggle-row {
   position: relative;
@@ -1028,7 +1011,8 @@
 .map-weather-card {
   position: absolute;
   z-index: 390;
-  right: 20px;
+  left: 20px;
+  right: auto;
   bottom: 60px;
   display: flex;
   align-items: center;
@@ -1205,7 +1189,7 @@ body.modal-open {
   overflow: hidden;
 }
 /* custom GPS markers */
-.exerfit-location-marker {
+.exerfit-location-marker.legacy {
   width: 20px;
   height: 20px;
   background: #388d66;
@@ -1232,32 +1216,84 @@ body.modal-open {
   height: 13px;
   transform: rotate(45deg);
 }
-.map-mode-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: fit-content;
-  gap: 10px;
+/* Travel-mode selector: a compact segmented card with touch-friendly route profiles. */
+.travel-mode-panel {
+  display: grid;
+  gap: 8px;
+  width: min(375px, calc(100vw - 40px));
   margin: 8px 0 0 8px;
-  padding: 6px 9px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(231, 237, 231, 0.9);
-  border-radius: 9px;
-  box-shadow: 0 3px 10px rgba(25, 50, 35, 0.04);
-  backdrop-filter: blur(8px);
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(226, 235, 227, 0.96);
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(25, 50, 35, 0.09);
+  backdrop-filter: blur(12px);
 }
-.map-mode-row label {
+.travel-mode-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.travel-mode-heading span {
   color: #819087;
   font-size: 9px;
-  font-weight: 700;
-}
-.map-mode-row select {
-  color: var(--green-800);
-  background: transparent;
-  border: 0;
-  outline: 0;
-  font-size: 9px;
   font-weight: 800;
+  letter-spacing: 0.11em;
+}
+.travel-mode-heading small {
+  color: #a0aaa3;
+  font-size: 9px;
+}
+.travel-mode-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.travel-mode-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 8px;
+  color: #63736a;
+  background: #f7faf7;
+  border: 1px solid #e6eee7;
+  border-radius: 10px;
+  font: 700 10px var(--font-body);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.travel-mode-option svg {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: #82968a;
+  stroke-width: 2;
+}
+.travel-mode-option:hover {
+  border-color: #b9d9c4;
+  color: var(--green-800);
+  transform: translateY(-1px);
+}
+.travel-mode-option.is-active {
+  color: #fff;
+  background: var(--green-700);
+  border-color: var(--green-700);
+  box-shadow: 0 3px 9px rgba(42, 116, 82, 0.18);
+}
+.travel-mode-option.is-active svg { color: #fff; }
+.travel-mode-option:focus-visible {
+  outline: 3px solid rgba(55, 148, 101, 0.28);
+  outline-offset: 2px;
+}
+.route-option-note {
+  margin: 7px 0 0;
+  color: #789084;
+  font-size: 9px;
+  font-weight: 700;
 }
 .header-weather svg {
   width: 15px;
@@ -1569,4 +1605,204 @@ body.modal-open {
   width: 64px;
   height: 64px;
   flex-basis: 64px;
+}
+
+
+/* =========================================================
+   EXERFIT MOBILE/TABLET DASHBOARD POLISH
+   Keeps the map usable with touch, moves dashboard navigation to
+   a bottom bar on phones, and prevents panels from covering the map.
+========================================================= */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .app-header {
+    height: 64px;
+    padding: 0 12px;
+  }
+  .app-header .brand-symbol { width: 48px; height: auto; }
+  .app-nav { gap: 2px; min-width: 0; }
+  .nav-item { min-width: 58px; padding: 0 6px; font-size: 9px; }
+  .header-actions { min-width: 170px; gap: 5px; }
+  .profile-trigger-name { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+  .map-workspace { height: calc(100dvh - 64px); min-height: 500px; }
+  .map-top-left { left: 14px; top: 14px; width: min(410px, 43vw); }
+  .map-top-right { top: 14px; right: 14px; }
+  .floating-panel { left: 14px; top: 14px; bottom: 14px; width: min(400px, 44vw); max-height: calc(100% - 28px); }
+  .route-summary { left: 14px; right: auto; width: min(500px, 55vw); }
+}
+
+@media (max-width: 760px) {
+  body.dashboard-page { overflow: hidden; }
+  .app-header {
+    height: 58px;
+    padding: 0 12px;
+    position: relative;
+    z-index: 1000;
+  }
+  .app-header .brand { flex: 0 0 auto; }
+  .app-header .brand-symbol { width: 43px; height: auto; }
+  .app-nav {
+    position: fixed;
+    z-index: 1100;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    width: 100vw;
+    height: 60px;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.97);
+    border-top: 1px solid #e2e9e3;
+    box-shadow: 0 -8px 24px rgba(20,44,33,.10);
+    backdrop-filter: blur(14px);
+  }
+  .nav-item {
+    min-width: 0;
+    min-height: 52px;
+    padding: 4px 2px;
+    border-radius: 10px;
+    font-size: 8px;
+    gap: 2px;
+  }
+  .nav-item svg { width: 17px; height: 17px; }
+  .header-actions { margin-left: auto; min-width: 0; gap: 5px; }
+  .header-weather, .profile-trigger-name, .profile-trigger > svg { display: none !important; }
+  .profile-trigger { padding: 0; width: 38px; justify-content: center; }
+  .icon-button { width: 38px; height: 38px; }
+  .map-workspace {
+    height: calc(100dvh - 58px);
+    min-height: 0;
+  }
+  .map-top-left {
+    top: 10px;
+    left: 10px;
+    width: calc(100vw - 20px);
+  }
+  .map-card-drag-grip, .map-hint { display: none; }
+  .map-search { height: 48px; border-radius: 14px; }
+  .map-search input { height: 44px; font-size: 13px; }
+  .travel-mode-panel { width: min(360px, calc(100vw - 20px)); margin: 7px 0 0; padding: 9px; }
+  .travel-mode-option { min-height: 40px; gap: 5px; padding: 0 5px; font-size: 10px; }
+  .travel-mode-option svg { width: 15px; height: 15px; flex-basis: 15px; }
+  .map-top-right {
+    top: 166px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+  }
+  .map-control-button { width: 42px; min-width: 42px; height: 42px; padding: 0; border-radius: 12px; }
+  .zoom-control { border-radius: 12px; }
+  .zoom-control button { width: 42px; height: 42px; }
+  .zoom-control .route-pick-button { height: 42px; color: var(--green-700); background: #f5faf6; border-top: 1px solid #edf1ed; }
+  .zoom-control .route-pick-button.is-active { color: white; background: var(--green-700); }
+  .floating-panel {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 68px;
+    width: auto;
+    max-height: min(67dvh, 560px);
+    border-radius: 18px;
+  }
+  .floating-panel-body { padding: 12px 13px 18px; overflow-y: auto; }
+  .floating-panel-header { min-height: 56px; padding: 10px 12px 10px 14px; }
+  .floating-panel-header h2 { font-size: 16px; }
+  .panel-side-toggle { width: 34px; height: 50px; }
+  .route-summary {
+    left: 8px;
+    right: 8px;
+    bottom: 68px;
+    width: auto;
+    max-height: 43dvh;
+    overflow-y: auto;
+    border-radius: 16px;
+  }
+  .route-metrics { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .route-metrics strong { font-size: 14px; }
+  .route-actions { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .route-actions .button { min-height: 42px; padding: 0 9px; font-size: 10px; }
+  .map-settings-panel { max-height: 64dvh; }
+  .map-type-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .map-type-option { min-height: 92px; }
+  .map-type-option strong { font-size: 10px; }
+  .map-type-option small { font-size: 9px; }
+  .map-thumb { height: 44px; }
+  .dashboard-overview-card, .map-weather-card { max-width: calc(100vw - 20px); }
+  .dashboard-overview-card { left: 10px; right: auto; bottom: 76px; }
+  .map-weather-card { right: 10px; bottom: 76px; }
+  .map-status-pill { bottom: 76px; max-width: 52vw; font-size: 8px; }
+}
+
+@media (max-width: 430px) {
+  .app-header .brand-symbol { width: 38px; }
+  .app-header { padding: 0 9px; }
+  .theme-toggle { display: none; }
+  .map-top-left { left: 8px; width: calc(100vw - 16px); }
+  .travel-mode-panel { width: 100%; }
+  .travel-mode-heading small { font-size: 8px; }
+  .map-top-right { right: 8px; }
+  .floating-panel { left: 6px; right: 6px; bottom: 66px; max-height: 64dvh; }
+  .route-summary { left: 6px; right: 6px; bottom: 66px; max-height: 39dvh; }
+  .route-metrics { grid-template-columns: 1fr 1fr 1fr; }
+  .route-actions { grid-template-columns: 1fr; }
+  .map-type-grid { grid-template-columns: 1fr; }
+  .map-type-option { grid-template-columns: 78px 1fr; min-height: 76px; text-align: left; }
+  .map-type-option .map-thumb { height: 56px; }
+  .map-status-pill { left: 8px; bottom: 70px; max-width: 58vw; }
+}
+
+
+/* Weather map mode is an icon-only control beside the route picker. */
+.weather-pick-button.is-active {
+  color: #fff !important;
+  background: var(--green-700) !important;
+}
+.map-canvas.is-weather-picking {
+  cursor: crosshair !important;
+}
+.map-weather-card {
+  left: 20px;
+  right: auto;
+  min-width: 180px;
+}
+.map-weather-card #weather-context {
+  color: #66736a;
+}
+#find-another-route:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+@media (max-width: 760px) {
+  .map-weather-card { left: 10px; right: auto; bottom: 76px; }
+  .route-actions { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 430px) {
+  .route-actions { grid-template-columns: 1fr; }
+}
+
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.nav-alternate-button {
+  min-height: 28px;
+  padding: 0 9px;
+  color: var(--green-900);
+  background: #fff;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.nav-alternate-button:hover:not(:disabled) { background: #f4faf6; }
+.nav-alternate-button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 600px) {
+  .nav-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .nav-alternate-button, .nav-recalculate-button { min-height: 32px; font-size: 9px; }
 }

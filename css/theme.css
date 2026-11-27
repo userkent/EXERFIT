@@ -299,6 +299,50 @@ html[data-theme="dark"] .toggle-row {
 html[data-theme="dark"] .map-type-option {
   color: #dce9e0;
 }
+html[data-theme="dark"] .travel-mode-panel {
+  color: #dce9e0;
+  background: rgba(22, 34, 26, 0.96);
+  border-color: #304237;
+}
+html[data-theme="dark"] .travel-mode-heading span {
+  color: #a8b9ad;
+}
+html[data-theme="dark"] .travel-mode-heading small,
+html[data-theme="dark"] .route-option-note {
+  color: #91a398;
+}
+html[data-theme="dark"] .travel-mode-option {
+  color: #c5d4ca;
+  background: #1a2a20;
+  border-color: #304237;
+}
+html[data-theme="dark"] .travel-mode-option svg {
+  color: #9bb4a3;
+}
+html[data-theme="dark"] .travel-mode-option.is-active {
+  color: #fff;
+  background: var(--green-700);
+  border-color: var(--green-700);
+}
+html[data-theme="dark"] .travel-mode-option.is-active svg {
+  color: #fff;
+}
+html[data-theme="dark"] .settings-block {
+  border-bottom-color: #2b3c31;
+}
+html[data-theme="dark"] .settings-block-heading h3 {
+  color: #e0ece4;
+}
+html[data-theme="dark"] .chip-button {
+  color: #bdcbbf;
+  background: #1a2a20;
+  border-color: #304237;
+}
+html[data-theme="dark"] .chip-button.is-active {
+  color: #c5f0d1;
+  background: #1c3526;
+  border-color: #4a8d63;
+}
 html[data-theme="dark"] .map-type-option.is-active {
   border-color: #6bc28e;
   background: #1c3124;
@@ -435,4 +479,46 @@ html[data-theme="dark"] .map-card-drag-grip,
 html[data-theme="dark"] .overview-drag-grip,
 html[data-theme="dark"] .weather-card-drag-grip {
   color: #728579;
+}
+
+/* Dark-mode support for the compact header search and route weather details. */
+html[data-theme="dark"] .header-map-search,
+html[data-theme="dark"] .header-search-results {
+  color: var(--ink);
+  background: #17251c;
+  border-color: #304236;
+}
+html[data-theme="dark"] .header-map-search input { color: var(--ink); }
+html[data-theme="dark"] .header-map-search input::placeholder { color: #83948a; }
+html[data-theme="dark"] .travel-mode-panel,
+html[data-theme="dark"] .route-weather-panel {
+  color: var(--ink);
+  background: rgba(22, 36, 27, .96);
+  border-color: #304236;
+}
+html[data-theme="dark"] .travel-mode-current-icon,
+html[data-theme="dark"] .travel-mode-toggle,
+html[data-theme="dark"] .route-weather-icon,
+html[data-theme="dark"] .route-weather-refresh {
+  color: #a9dfbb;
+  background: #20382a;
+  border-color: #385744;
+}
+html[data-theme="dark"] .travel-mode-heading small,
+html[data-theme="dark"] .route-weather-copy span,
+html[data-theme="dark"] .route-weather-copy > small:last-child,
+html[data-theme="dark"] .route-mode-prompt {
+  color: #9caf9f;
+}
+html[data-theme="dark"] .route-weather-copy strong { color: #d8f1df; }
+html[data-theme="dark"] .route-weather-copy > small:first-child { color: #91a698; }
+html[data-theme="dark"] .travel-mode-option {
+  color: #b9c9be;
+  background: #1a2a20;
+  border-color: #304236;
+}
+html[data-theme="dark"] .travel-mode-option.is-active {
+  color: #fff;
+  background: #287c59;
+  border-color: #287c59;
 }

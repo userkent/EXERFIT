@@ -6,7 +6,7 @@
    GPS is supplied by this module when navigating alone, or by the
    activity recorder when a user follows a route while recording.
 ========================================================= */
-import { drawPlannedRoute, clearPlannedRoute } from "./map.js";
+import { drawPlannedRoute, clearPlannedRoute, followNavigationPosition } from "./map.js";
 import { getRoute } from "./routing-service.js";
 import { showToast, formatDistance, escapeHTML } from "./ui.js";
 
@@ -21,6 +21,16 @@ let arrivalNotified = false;
 
 export function getActiveNavigation() {
   return activeRoute;
+}
+
+// Replace the active route without disconnecting Activity's shared GPS watcher.
+export function setActiveNavigationRoute(route) {
+  if (!activeRoute || !route?.coordinates?.length) return false;
+  startNavigation(route, { externalGPS });
+  window.dispatchEvent(
+    new CustomEvent("exerfit:navigation-route-updated", { detail: route }),
+  );
+  return true;
 }
 
 function haversine(a, b) {
@@ -141,6 +151,8 @@ export function updateNavigation(position) {
   )
     return;
   lastPosition = position;
+  // Follow the live GPS position while navigating; Activity recording remains a separate module.
+  followNavigationPosition(position.lat, position.lon, position.accuracy || 0);
   const nearest = nearestRouteIndex(position, activeRoute.coordinates);
   const remaining = remainingDistance(activeRoute.coordinates, nearest.index);
   const canJudgeOffRoute =
@@ -185,12 +197,46 @@ function renderGuidance(progress) {
   const guidance = document.getElementById("nav-guidance");
   if (!guidance) return;
   guidance.classList.toggle("warning", Boolean(progress.offRoute));
-  guidance.innerHTML = `<i data-lucide="${progress.offRoute ? "alert-triangle" : "navigation"}"></i><div><strong>${progress.offRoute ? "Off route — check your direction" : escapeHTML(progress.instruction)}</strong><small>${Number.isFinite(progress.remaining) ? `${formatDistance(progress.remaining)} remaining` : "Waiting for GPS"}${Number.isFinite(progress.distanceFromRoute) ? ` · ${Math.round(progress.distanceFromRoute)} m from route` : ""}${progress.accuracy ? ` · GPS ±${Math.round(progress.accuracy)} m` : ""}</small></div>${progress.offRoute ? '<button class="nav-recalculate-button" type="button">Recalculate</button>' : ""}`;
+  const routeOptions = activeRoute?.routeOptions?.length
+    ? activeRoute.routeOptions
+    : [activeRoute, ...(activeRoute?.alternatives || [])].filter(Boolean);
+  const hasAlternateRoute = routeOptions.length > 1;
+  guidance.innerHTML = `<i data-lucide="${progress.offRoute ? "alert-triangle" : "navigation"}"></i><div><strong>${progress.offRoute ? "Off route — check your direction" : escapeHTML(progress.instruction)}</strong><small>${Number.isFinite(progress.remaining) ? `${formatDistance(progress.remaining)} remaining` : "Waiting for GPS"}${Number.isFinite(progress.distanceFromRoute) ? ` · ${Math.round(progress.distanceFromRoute)} m from route` : ""}${progress.accuracy ? ` · GPS ±${Math.round(progress.accuracy)} m` : ""}</small></div><div class="nav-actions">${progress.offRoute ? '<button class="nav-recalculate-button" type="button">Recalculate</button>' : ""}<button class="nav-alternate-button" type="button" ${hasAlternateRoute ? "" : "disabled"}>Find another route</button></div>`;
   guidance
     .querySelector(".nav-recalculate-button")
     ?.addEventListener("click", recalculateNavigation);
+  guidance
+    .querySelector(".nav-alternate-button")
+    ?.addEventListener("click", findAlternativeNavigationRoute);
   if (window.lucide?.createIcons) window.lucide.createIcons();
 }
+function findAlternativeNavigationRoute() {
+  if (!activeRoute) return null;
+  const options = activeRoute.routeOptions?.length
+    ? activeRoute.routeOptions
+    : [activeRoute, ...(activeRoute.alternatives || [])];
+  if (options.length < 2) {
+    showToast("The routing service did not return another route for this journey.", "info");
+    return null;
+  }
+  const currentIndex = Number.isInteger(activeRoute.routeOptionIndex)
+    ? activeRoute.routeOptionIndex
+    : Math.max(0, options.indexOf(activeRoute));
+  const nextIndex = (currentIndex + 1) % options.length;
+  const candidate = {
+    ...options[nextIndex],
+    routeOptions: options,
+    routeOptionIndex: nextIndex,
+    alternatives: options.filter((_, index) => index !== nextIndex),
+    name: activeRoute.name,
+  };
+  const useExternalGPS = externalGPS;
+  startNavigation(candidate, { externalGPS: useExternalGPS });
+  window.dispatchEvent(new CustomEvent("exerfit:navigation-route-updated", { detail: candidate }));
+  showToast(`Alternative ${nextIndex + 1} of ${options.length} selected · ${Math.round(candidate.durationSeconds / 60)} min estimated.`, "success");
+  return candidate;
+}
+
 export async function recalculateNavigation() {
   if (!activeRoute || !lastPosition) {
     showToast("Wait for a current GPS fix before recalculating.", "warning");

@@ -12,6 +12,13 @@
 <body class="dashboard-page">
   <header class="app-header">
     <a class="brand" href="../index.html" aria-label="ExerFit home"><img class="brand-symbol" data-theme-logo data-light-src="../assets/logo/exerfit-logo-dark.png" data-dark-src="../assets/logo/exerfit-logo-light.png" src="../assets/logo/exerfit-logo-dark.png" alt="" aria-hidden="true"></a>
+    <!-- HEADER SEARCH: Kept beside the logo so destination search is always easy to reach. -->
+    <div class="header-search-wrap">
+      <form id="location-search-form" class="map-search header-map-search" role="search">
+        <i data-lucide="search"></i><input type="search" id="location-query" placeholder="Search places or destinations" autocomplete="off" aria-label="Search places or destinations"><button type="submit" aria-label="Search"><i data-lucide="arrow-right"></i></button>
+      </form>
+      <div id="search-results" class="search-results header-search-results is-hidden"></div>
+    </div>
     <nav class="app-nav" aria-label="Dashboard navigation">
       <button class="nav-item active" type="button" data-open-panel="overview" title="Map dashboard"><i data-lucide="map"></i><span>Explore</span></button>
       <button class="nav-item" type="button" data-open-panel="activity"><i data-lucide="footprints"></i><span>Activity</span></button>
@@ -29,25 +36,42 @@
 
   <main class="map-workspace">
     <div id="map" class="map-canvas" aria-label="Interactive map"></div>
-    <div class="map-top-left" id="map-search-card" data-draggable-card data-drag-handle=".map-card-drag-grip">
-      <div class="map-card-drag-grip" aria-label="Drag search card" title="Drag to move"><i data-lucide="grip-horizontal"></i></div>
-      <form id="location-search-form" class="map-search" role="search">
-        <i data-lucide="search"></i><input type="search" id="location-query" placeholder="Search places or destinations" autocomplete="off" aria-label="Search places or destinations"><button type="submit" aria-label="Search"><i data-lucide="arrow-right"></i></button>
-      </form>
-      <div id="search-results" class="search-results is-hidden"></div>
-      <div class="map-hint"><i data-lucide="mouse-pointer-2"></i><span>Search manually (no autocomplete) or use your location.</span><a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noreferrer">Search policy</a></div><div class="map-mode-row"><label for="travel-mode">Travel mode</label><select id="travel-mode"><option value="walking">Walking</option><option value="cycling">Cycling</option><option value="driving">Driving</option></select></div>
+    <!-- TRAVEL MODE CARD: The icon-only toggle hides/shows the three route profiles. -->
+    <div class="map-top-left" id="map-travel-card">
+      <section class="travel-mode-panel" id="travel-mode-panel" aria-label="Choose travel mode">
+        <div class="travel-mode-topline">
+          <span class="travel-mode-current-icon" id="travel-mode-current-icon"><i data-lucide="footprints"></i></span>
+          <div class="travel-mode-heading"><span>TRAVEL MODE</span><small id="travel-mode-current-label">Walking selected</small></div>
+          <button class="travel-mode-toggle" id="travel-mode-toggle" type="button" aria-label="Hide travel mode options" aria-expanded="true" title="Hide travel mode options"><i data-lucide="chevron-up"></i></button>
+        </div>
+        <div class="travel-mode-options" id="travel-mode-options" role="radiogroup" aria-label="Travel mode">
+          <button class="travel-mode-option is-active" type="button" data-travel-mode="walking" role="radio" aria-checked="true"><i data-lucide="footprints"></i><span>Walking</span></button>
+          <button class="travel-mode-option" type="button" data-travel-mode="cycling" role="radio" aria-checked="false"><i data-lucide="bike"></i><span>Cycling</span></button>
+          <button class="travel-mode-option" type="button" data-travel-mode="driving" role="radio" aria-checked="false"><i data-lucide="car-front"></i><span>Driving</span></button>
+        </div>
+        <input type="hidden" id="travel-mode" value="walking">
+      </section>
     </div>
 
     <div class="map-top-right">
       <button class="map-control-button" id="locate-me" type="button" title="Show my location"><i data-lucide="locate-fixed"></i></button>
-      <button class="map-control-button" id="open-map-settings" type="button" title="Map settings"><i data-lucide="layers-3"></i><span>Map</span></button>
-      <div class="zoom-control"><button id="zoom-in" type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button><button id="zoom-out" type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button></div>
+      <button class="map-control-button" id="open-map-settings" type="button" title="Base map" aria-label="Open base map settings"><i data-lucide="map"></i></button>
+      <div class="zoom-control"><button id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in"><i data-lucide="plus"></i></button><button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out"><i data-lucide="minus"></i></button><button class="route-pick-button" id="set-destination-map" type="button" aria-label="Set destination on map" title="Set destination on map" aria-pressed="false"><i data-lucide="route"></i></button><button class="weather-pick-button" id="weather-map-mode" type="button" aria-label="Weather on map" title="Weather on map" aria-pressed="false"><i data-lucide="cloud-sun"></i></button></div>
     </div>
 
-    <div class="map-bottom-left" id="route-summary" data-draggable-card data-drag-handle=".route-summary-header" hidden>
+    <div class="map-bottom-left route-summary" id="route-summary" data-draggable-card data-drag-handle=".route-summary-header" hidden>
       <div class="route-summary-header"><div><span class="eyebrow">YOUR ROUTE</span><h3 id="route-destination-title">Destination</h3></div><button class="icon-button icon-button-light" id="clear-route" type="button" title="Clear route"><i data-lucide="x"></i></button></div>
-      <div class="route-metrics"><div><strong id="route-distance">—</strong><small>Distance</small></div><div><strong id="route-duration">—</strong><small>Estimated time</small></div><div><strong id="route-mode-label">Walk</strong><small>Travel mode</small></div></div>
-      <div class="route-actions"><button class="button button-primary" id="save-current-route" type="button"><i data-lucide="bookmark-plus"></i> Save route</button><button class="button button-secondary" id="start-route-navigation" type="button"><i data-lucide="navigation"></i> Navigate</button></div>
+      <div class="route-metrics"><div><strong id="route-distance">—</strong><small>Distance</small></div><div><strong id="route-duration">—</strong><small>Estimated time</small></div><div><strong id="route-mode-label">Walking</strong><small>Travel mode</small></div></div>
+      <p class="route-option-note" id="route-option-note">Fastest available route for this travel mode</p>
+      <p class="route-mode-prompt" id="route-mode-prompt">Route calculated for the selected travel mode.</p>
+      <!-- ROUTE WEATHER: Destination weather is shown inside this card and can be refreshed separately. -->
+      <section class="route-weather-panel" id="route-weather-panel" aria-label="Destination weather">
+        <span class="route-weather-icon" id="route-weather-icon"><i data-lucide="cloud-sun"></i></span>
+        <div class="route-weather-copy"><small>DESTINATION WEATHER</small><strong id="route-weather-temp">—°C</strong><span id="route-weather-condition">Add a weather API key to see conditions</span><small id="route-weather-context">Weather at your destination</small></div>
+        <button class="route-weather-refresh" id="refresh-route-weather" type="button" aria-label="Refresh destination weather" title="Refresh destination weather"><i data-lucide="refresh-cw"></i></button>
+      </section>
+      <div class="route-actions route-actions-primary"><button class="button button-primary" id="save-current-route" type="button"><i data-lucide="bookmark-plus"></i> Save route</button><button class="button button-secondary" id="start-route-navigation" type="button"><i data-lucide="navigation"></i> Navigate</button></div>
+      <div class="route-actions route-actions-secondary"><button class="button button-secondary" id="refresh-destination-route" type="button"><i data-lucide="refresh-cw"></i> Refresh route</button><button class="button button-secondary" id="find-another-route" type="button"><i data-lucide="shuffle"></i> Find another route</button></div>
       <div id="route-instructions" class="route-instructions"></div>
       <p class="route-disclaimer">Route estimates are based on OpenStreetMap data and may differ from real conditions.</p>
     </div>
@@ -68,16 +92,32 @@
       <div class="floating-panel-header"><div><span class="eyebrow">PERSONALIZE YOUR VIEW</span><h2>Map settings</h2></div><div class="panel-header-actions"><button class="icon-button icon-button-light panel-collapse-button" id="collapse-map-settings" type="button" aria-label="Collapse map settings" aria-expanded="true" title="Hide panel contents"><i data-lucide="chevron-down"></i></button><button class="icon-button icon-button-light" id="close-map-settings" type="button" aria-label="Close map settings"><i data-lucide="x"></i></button></div></div>
       <div class="floating-panel-body">
         <section class="settings-block"><div class="settings-block-heading"><h3>Map type</h3><span>Choose a base map</span></div><div class="map-type-grid">
-          <button class="map-type-option is-active" data-map-type="standard" type="button"><span class="map-thumb map-thumb-standard"></span><strong>Standard</strong></button>
-          <button class="map-type-option" data-map-type="dark" type="button"><span class="map-thumb map-thumb-dark"></span><strong>Dark</strong></button>
-          <button class="map-type-option" data-map-type="satellite" type="button"><span class="map-thumb map-thumb-satellite"></span><strong>Satellite</strong></button>
-          <button class="map-type-option" data-map-type="hybrid" type="button"><span class="map-thumb map-thumb-hybrid"></span><strong>Hybrid</strong></button>
+          <button class="map-type-option is-active" data-map-type="standard" type="button"><span class="map-thumb map-thumb-standard"></span><strong>OpenStreetMap</strong><small>Standard map</small></button>
+          <button class="map-type-option" data-map-type="satellite" type="button"><span class="map-thumb map-thumb-satellite"></span><strong>Satellite View</strong><small>Satellite imagery</small></button>
         </div></section>
-        <section class="settings-block"><div class="settings-block-heading"><h3>Map layers</h3><span>Show your saved data</span></div>
-          <label class="toggle-row"><span><i data-lucide="route"></i><span><strong>Saved routes</strong><small>Display your route library</small></span></span><input type="checkbox" id="layer-saved-routes" checked><span class="toggle-switch"></span></label>
-          <label class="toggle-row"><span><i data-lucide="footprints"></i><span><strong>Activity routes</strong><small>Display recorded GPS tracks</small></span></span><input type="checkbox" id="layer-activity-routes" checked><span class="toggle-switch"></span></label>
+        <!-- MAP LAYERS: Restore saved route and activity overlays using the original map.js controls. -->
+        <section class="settings-block">
+          <div class="settings-block-heading"><h3>Map Layers</h3><span>Choose which personal map details are visible</span></div>
+          <label class="toggle-row" for="layer-saved-routes">
+            <span><i data-lucide="route"></i><span><strong>Saved routes</strong><small>Show routes saved to your library</small></span></span>
+            <input type="checkbox" id="layer-saved-routes" checked><span class="toggle-switch" aria-hidden="true"></span>
+          </label>
+          <label class="toggle-row" for="layer-activity-routes">
+            <span><i data-lucide="footprints"></i><span><strong>Recorded activities</strong><small>Show your completed GPS tracks</small></span></span>
+            <input type="checkbox" id="layer-activity-routes" checked><span class="toggle-switch" aria-hidden="true"></span>
+          </label>
         </section>
-        <section class="settings-block"><div class="settings-block-heading"><h3>Personal heatmap</h3><span>Built from your recorded activities</span></div><div class="heatmap-options"><button class="chip-button is-active" type="button" data-heatmap="off">Off</button><button class="chip-button" type="button" data-heatmap="all">All time</button><button class="chip-button" type="button" data-heatmap="week">7 days</button><button class="chip-button" type="button" data-heatmap="night">Night</button></div><p class="settings-note" id="heatmap-note">A heatmap appears after you save GPS activities. No sample tracks are added.</p></section>
+        <!-- PERSONAL HEATMAP: Reconnect the existing all, weekly, and night activity filters. -->
+        <section class="settings-block">
+          <div class="settings-block-heading"><h3>Personal Heatmap</h3><span>Visualize your own saved GPS activity</span></div>
+          <div class="heatmap-options" role="group" aria-label="Personal heatmap range">
+            <button class="chip-button is-active" type="button" data-heatmap="off">Off</button>
+            <button class="chip-button" type="button" data-heatmap="all">All activities</button>
+            <button class="chip-button" type="button" data-heatmap="week">This week</button>
+            <button class="chip-button" type="button" data-heatmap="night">Night</button>
+          </div>
+          <p class="settings-note" id="heatmap-note">Your saved GPS tracks appear here as an activity overlay.</p>
+        </section>
         <p class="map-attribution-note"><i data-lucide="info"></i> Map providers and their attribution are shown on the map. Provider availability and terms can change.</p>
       </div>
     </section>
@@ -89,7 +129,7 @@
 
     <div class="map-status-pill" id="map-status"><span class="status-dot"></span><span>Map ready</span></div>
     <div class="dashboard-overview-card" id="dashboard-overview-card" data-draggable-card data-drag-handle=".overview-drag-grip"><span class="overview-drag-grip" title="Drag statistics card" aria-label="Drag statistics card"><i data-lucide="grip-horizontal"></i></span><div><strong id="dashboard-total-distance">0.00 km</strong><small>Total distance</small></div><div><strong id="dashboard-activity-count">0</strong><small>Outdoor activities</small></div><div><strong id="dashboard-workout-count">0</strong><small>Workouts done</small></div></div>
-    <div class="map-weather-card is-hidden" id="map-weather-card" data-draggable-card data-drag-handle=".weather-card-drag-grip"><span class="weather-card-drag-grip" title="Drag weather card"><i data-lucide="grip-horizontal"></i></span><span class="weather-card-icon" id="weather-icon"><i data-lucide="cloud-sun"></i></span><div><strong id="weather-temp">—°</strong><small id="weather-condition">Weather</small></div></div>
+    <div class="map-weather-card is-hidden" id="map-weather-card" data-draggable-card data-drag-handle=".weather-card-drag-grip"><span class="weather-card-drag-grip" title="Drag weather card"><i data-lucide="grip-horizontal"></i></span><span class="weather-card-icon" id="weather-icon"><i data-lucide="cloud-sun"></i></span><div><strong id="weather-temp">—°</strong><small id="weather-condition">Weather</small><small id="weather-context">Click the map for weather</small></div></div>
   </main>
 
   <div class="app-modal-backdrop is-hidden" id="app-modal-backdrop"><section class="app-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-heading"><h2 id="modal-title">Dialog</h2><button class="icon-button icon-button-light" id="modal-close" type="button" aria-label="Close dialog"><i data-lucide="x"></i></button></div><div class="modal-content" id="modal-content"></div><div class="modal-actions" id="modal-actions"></div></section></div>

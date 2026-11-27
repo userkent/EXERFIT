@@ -8,7 +8,6 @@ import { getUserData, saveUserData } from "./storage.js";
 import {
   drawPlannedRoute,
   showDestination,
-  centerOn,
   refreshDataLayers,
 } from "./map.js";
 import { startNavigation } from "./navigation.js";

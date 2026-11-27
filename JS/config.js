@@ -18,21 +18,30 @@ export const WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather";
 export const TILE_PROVIDERS = {
   standard: {
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    maxNativeZoom: 19,
+    maxZoom: 20,
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>',
   },
-  dark: {
-    url: "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-    attribution:
-      'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a> &mdash; Sources: Esri, HERE, Garmin, USGS, EPA, NPS',
-  },
   satellite: {
     url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    maxNativeZoom: 18,
+    maxZoom: 20,
     attribution:
       'Sources: <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community',
   },
+  // Transparent label layer for place names and geographic boundaries on satellite imagery.
   hybridLabels: {
     url: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-    attribution: "Labels &copy; Esri",
+    maxNativeZoom: 19,
+    maxZoom: 20,
+    attribution: "Labels &copy; Esri, HERE, Garmin, USGS, EPA, NPS",
+  },
+  // Transparent road and transportation overlay for highways, roads, and transport labels.
+  hybridTransportation: {
+    url: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+    maxNativeZoom: 19,
+    maxZoom: 20,
+    attribution: "Transportation labels &copy; Esri, HERE, Garmin, USGS",
   },
 };

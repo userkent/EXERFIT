@@ -12,7 +12,6 @@ import {
   TILE_PROVIDERS,
 } from "./config.js";
 import { getUserData, updatePreferences } from "./storage.js";
-import { showToast } from "./ui.js";
 
 let map;
 let baseLayer;
@@ -29,7 +28,6 @@ let currentMapType = "standard";
 let savedLayerVisible = true;
 let activityLayerVisible = true;
 let heatmapMode = "off";
-let tileErrorShown = false;
 
 const toLatLngs = (coordinates) =>
   (coordinates || []).map((point) =>
@@ -47,6 +45,8 @@ export function initMap() {
     preferCanvas: true,
     scrollWheelZoom: true,
   }).setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
+  // Allow the map canvas to zoom beyond a provider's native tile level; Leaflet scales the last tile.
+  map.setMaxZoom(20);
   map.attributionControl.addAttribution(
     'Search & routing data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · <a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noreferrer">FOSSGIS routing</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Fix the map</a>',
   );
@@ -67,31 +67,42 @@ export function getMapView() {
 // Replace the base tile layer without changing center or zoom.
 export function setMapType(type, persist = true) {
   if (!map) return;
-  const chosen = ["standard", "dark", "satellite", "hybrid"].includes(type)
-    ? type
-    : "standard";
+  const chosen = ["standard", "satellite"].includes(type) ? type : "standard";
   const view = getMapView();
   if (baseLayer) map.removeLayer(baseLayer);
   if (hybridLabelLayer) {
     map.removeLayer(hybridLabelLayer);
     hybridLabelLayer = null;
   }
-  const provider = TILE_PROVIDERS[chosen === "hybrid" ? "satellite" : chosen];
+  const provider = TILE_PROVIDERS[chosen];
   baseLayer = L.tileLayer(provider.url, {
     attribution: provider.attribution,
-    maxZoom: 19,
+    // Keep zoom interactive past native tile resolution by scaling the latest available tile.
+    maxNativeZoom: provider.maxNativeZoom || 18,
+    maxZoom: provider.maxZoom || 20,
     crossOrigin: true,
   }).addTo(map);
   attachTileFeedback(baseLayer);
-  if (chosen === "hybrid") {
-    // Hybrid is genuine Esri imagery with the provider's reference labels.
-    const labelProvider = TILE_PROVIDERS.hybridLabels;
-    hybridLabelLayer = L.tileLayer(labelProvider.url, {
-      attribution: labelProvider.attribution,
-      maxZoom: 19,
+
+  // Satellite imagery needs transparent reference overlays for labels and roads.
+  if (chosen === "satellite") {
+    const transportLayer = L.tileLayer(TILE_PROVIDERS.hybridTransportation.url, {
+      attribution: TILE_PROVIDERS.hybridTransportation.attribution,
+      maxNativeZoom: TILE_PROVIDERS.hybridTransportation.maxNativeZoom || 19,
+      maxZoom: TILE_PROVIDERS.hybridTransportation.maxZoom || 20,
       pane: "overlayPane",
-    }).addTo(map);
-    attachTileFeedback(hybridLabelLayer);
+      zIndex: 610,
+      crossOrigin: true,
+    });
+    const placeLayer = L.tileLayer(TILE_PROVIDERS.hybridLabels.url, {
+      attribution: TILE_PROVIDERS.hybridLabels.attribution,
+      maxNativeZoom: TILE_PROVIDERS.hybridLabels.maxNativeZoom || 19,
+      maxZoom: TILE_PROVIDERS.hybridLabels.maxZoom || 20,
+      pane: "overlayPane",
+      zIndex: 620,
+      crossOrigin: true,
+    });
+    hybridLabelLayer = L.layerGroup([transportLayer, placeLayer]).addTo(map);
   }
   currentMapType = chosen;
   if (view) map.setView(view.center, view.zoom, { animate: false });
@@ -111,21 +122,8 @@ export function getMapType() {
 }
 
 function attachTileFeedback(layer) {
-  layer.on("tileerror", () => {
-    setMapStatus("Map tiles unavailable");
-    if (!tileErrorShown) {
-      tileErrorShown = true;
-      showToast(
-        "Some map tiles could not be loaded. Check your connection or choose another map type.",
-        "warning",
-        5000,
-      );
-    }
-  });
-  layer.on("load", () => {
-    tileErrorShown = false;
-    setMapStatus("Map ready");
-  });
+  // A missing tile is non-blocking; successful tile loads restore the normal status.
+  layer.on("load", () => setMapStatus("Map ready"));
 }
 
 export function setMapStatus(message) {
@@ -135,17 +133,24 @@ export function setMapStatus(message) {
 export function locateOnMap(lat, lon, accuracy = 0) {
   if (!map) return;
   const latLng = [lat, lon];
+  // Use the real PNG marker asset instead of a CSS-drawn location shape.
+  // The PNG path is relative to JS/map.js and therefore works on GitHub Pages.
+  const userLocationIcon = L.icon({
+    iconUrl: "../assets/icons/map-pin.png",
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
+    popupAnchor: [0, -38],
+    className: "exerfit-gps-icon",
+  });
   if (!userMarker) {
     userMarker = L.marker(latLng, {
-      icon: L.divIcon({
-        className: "",
-        html: '<span class="exerfit-location-marker"></span>',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-      }),
+      icon: userLocationIcon,
       zIndexOffset: 1000,
     }).addTo(map);
-  } else userMarker.setLatLng(latLng);
+  } else {
+    userMarker.setIcon(userLocationIcon);
+    userMarker.setLatLng(latLng);
+  }
   userMarker.bindPopup(
     `<strong>Your location</strong><br><small>GPS accuracy: ${Math.round(accuracy)} m</small>`,
   );
@@ -153,6 +158,14 @@ export function locateOnMap(lat, lon, accuracy = 0) {
 }
 export function centerOn(lat, lon, zoom = 16) {
   if (map) map.setView([lat, lon], zoom, { animate: true });
+}
+
+// Keep the live GPS marker and camera centered on the user during turn-by-turn navigation.
+export function followNavigationPosition(lat, lon, accuracy = 0) {
+  if (!map) return;
+  locateOnMap(lat, lon, accuracy);
+  if (map.getZoom() < 16) map.setZoom(16, { animate: false });
+  map.panTo([lat, lon], { animate: true, duration: 0.35 });
 }
 export function showDestination(lat, lon, label = "Destination") {
   if (!map) return;

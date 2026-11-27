@@ -93,7 +93,7 @@ function simplifyInstruction(step) {
 export async function getRoute(start, destination, mode = "walking") {
   const host = ROUTING_HOSTS[mode] || ROUTING_HOSTS.walking;
   const coordinates = `${start.lon},${start.lat};${destination.lon},${destination.lat}`;
-  const url = `${host}/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=true&alternatives=false`;
+  const url = `${host}/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=true&alternatives=3`;
   // Respect the public FOSSGIS demo server's one-request-per-second limit.
   await waitForRouteSlot();
   const response = await fetch(url);
@@ -104,8 +104,10 @@ export async function getRoute(start, destination, mode = "walking") {
     throw new Error(
       "No route was found for these locations and this travel mode.",
     );
-  const route = data.routes[0];
-  const steps = (route.legs || [])
+  // OSRM returns the recommended route and any alternatives. Rank the returned
+  // options by estimated travel time so the initial route is the fastest available.
+  const buildRoute = (candidate) => {
+    const steps = (candidate.legs || [])
     .flatMap((leg) => leg.steps || [])
     .map((step) => ({
       instruction: simplifyInstruction(step),
@@ -115,27 +117,34 @@ export async function getRoute(start, destination, mode = "walking") {
       type: step.maneuver?.type || "continue",
       modifier: step.maneuver?.modifier || "",
     }));
-  return {
-    coordinates: route.geometry.coordinates,
-    distanceMeters: route.distance,
-    durationSeconds: route.duration,
-    mode,
-    steps,
-    start: {
-      lat: start.lat,
-      lon: start.lon,
-      name: start.name || "Your location",
-    },
-    destination: {
-      lat: destination.lat,
-      lon: destination.lon,
-      name: destination.name || "Destination",
-    },
-    provider: "FOSSGIS OSRM / OpenStreetMap",
-    createdAt: new Date().toISOString(),
+    return {
+      coordinates: candidate.geometry.coordinates,
+      distanceMeters: candidate.distance,
+      durationSeconds: candidate.duration,
+      mode,
+      steps,
+      start: {
+        lat: start.lat,
+        lon: start.lon,
+        name: start.name || "Your location",
+      },
+      destination: {
+        lat: destination.lat,
+        lon: destination.lon,
+        name: destination.name || "Destination",
+      },
+      provider: "FOSSGIS OSRM / OpenStreetMap",
+      createdAt: new Date().toISOString(),
+    };
   };
-}
-export function estimateWalkPace(distanceMeters, durationSeconds) {
-  if (!distanceMeters || !durationSeconds) return null;
-  return durationSeconds / 60 / (distanceMeters / 1000);
+  const routeOptions = data.routes
+    .map(buildRoute)
+    .sort((a, b) => a.durationSeconds - b.durationSeconds || a.distanceMeters - b.distanceMeters);
+  const fastestRoute = routeOptions[0];
+  return {
+    ...fastestRoute,
+    routeOptions,
+    routeOptionIndex: 0,
+    alternatives: routeOptions.slice(1),
+  };
 }

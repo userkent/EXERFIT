@@ -69,6 +69,7 @@ export async function fetchWeather(lat, lon, force = false) {
   cache = {
     lat,
     lon,
+    context: cache?.context || "Current conditions",
     current,
     nextForecast,
     forecastAvailable: Boolean(forecast),
@@ -83,6 +84,14 @@ function renderNoWeatherKey() {
     header.innerHTML =
       '<span class="weather-loading-dot"></span><span>Set weather API key</span>';
   document.getElementById("map-weather-card")?.classList.add("is-hidden");
+  const routeCondition = document.getElementById("route-weather-condition");
+  const routeContext = document.getElementById("route-weather-context");
+  const routeTemp = document.getElementById("route-weather-temp");
+  if (routeCondition)
+    routeCondition.textContent = "Add a weather API key to see conditions";
+  if (routeContext)
+    routeContext.textContent = "Destination forecast unavailable";
+  if (routeTemp) routeTemp.textContent = "—°C";
 }
 function renderWeather(data) {
   const current = data.current;
@@ -102,7 +111,59 @@ function renderWeather(data) {
   if (tempNode) tempNode.textContent = `${temp}°`;
   const conditionNode = document.getElementById("weather-condition");
   if (conditionNode) conditionNode.textContent = description;
+  const contextNode = document.getElementById("weather-context");
+  if (contextNode)
+    contextNode.textContent = data.context || "Current conditions";
+
+  // Keep destination weather visible inside the route card as well as the floating map weather card.
+  const routeIcon = document.getElementById("route-weather-icon");
+  if (routeIcon) {
+    routeIcon.innerHTML = `<i data-lucide="${iconFor(current.weather?.[0]?.main)}"></i>`;
+    refreshIcons(routeIcon);
+  }
+  const routeTemp = document.getElementById("route-weather-temp");
+  if (routeTemp) routeTemp.textContent = `${temp}°C`;
+  const routeCondition = document.getElementById("route-weather-condition");
+  if (routeCondition)
+    routeCondition.textContent = `${description}${current.main?.feels_like != null ? ` · Feels like ${Math.round(current.main.feels_like)}°` : ""}`;
+  const routeContext = document.getElementById("route-weather-context");
+  if (routeContext)
+    routeContext.textContent = data.context || "Destination weather";
   refreshIcons(header || document);
+}
+
+export async function fetchWeatherForMap(lat, lon, context = "Map location") {
+  const data = await fetchWeather(lat, lon, true);
+  if (data) {
+    data.context = context;
+    renderWeather(data);
+  }
+  return data;
+}
+
+export async function testWeatherApiKey(key, lat = 12.8797, lon = 121.774) {
+  const value = String(key || "").trim();
+  if (!value) throw new Error("Paste your OpenWeatherMap API key first.");
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    appid: value,
+    units: "metric",
+  });
+  const response = await fetch(`${WEATHER_URL}?${params}`);
+  if (!response.ok) {
+    if (response.status === 401)
+      throw new Error(
+        "OpenWeatherMap rejected this API key. Check that it is active and copied correctly.",
+      );
+    throw new Error(`Weather API test failed (${response.status}).`);
+  }
+  const data = await response.json();
+  return {
+    ok: true,
+    city: data.name || "Test location",
+    country: data.sys?.country || "",
+  };
 }
 
 export function mountWeatherSettings(container) {
@@ -111,8 +172,8 @@ export function mountWeatherSettings(container) {
     <p class="panel-intro">Connect your own OpenWeatherMap key to see current conditions and the next forecast period. The app does not use fabricated weather data.</p>
     <section class="panel-section"><div class="panel-section-title"><span>Weather service</span><small>${key ? "Key saved in this browser" : "Not connected"}</small></div>
       <div class="form-field"><label for="weather-api-key">OpenWeatherMap API key</label><div class="form-inline"><input class="modal-form-input" style="flex:1" id="weather-api-key" type="password" autocomplete="off" placeholder="Paste your API key" value="${escapeHTML(key)}"><button class="icon-button" id="weather-key-toggle" type="button" aria-label="Show API key"><i data-lucide="eye"></i></button></div></div>
-      <div class="activity-controls"><button class="button button-primary" id="weather-key-save" type="button"><i data-lucide="save"></i> Save key</button><button class="button button-secondary" id="weather-key-remove" type="button"><i data-lucide="trash-2"></i> Remove</button></div>
-      <p class="settings-note" id="weather-settings-message">${key ? "A key is saved. Use Refresh weather to test it with your current location." : "Create a key in your OpenWeatherMap account, then paste it above."}</p>
+      <div class="activity-controls"><button class="button button-secondary" id="weather-key-test" type="button"><i data-lucide="shield-check"></i> Test API key</button><button class="button button-primary" id="weather-key-save" type="button"><i data-lucide="save"></i> Save key</button><button class="button button-secondary" id="weather-key-remove" type="button"><i data-lucide="trash-2"></i> Remove</button></div>
+      <p class="settings-note" id="weather-settings-message">${key ? "A key is saved in this browser. Test a new key before replacing it." : "Test your OpenWeatherMap key before saving it."}</p>
       <a class="text-link" href="https://home.openweathermap.org/api_keys" target="_blank" rel="noreferrer">Get an API key <i data-lucide="external-link"></i></a>
     </section>
     <section class="panel-section"><div class="panel-section-title"><span>Conditions</span><small>Current GPS position</small></div><button class="button button-secondary" id="weather-refresh" type="button" style="width:100%"><i data-lucide="refresh-cw"></i> Refresh weather</button><div id="weather-details" class="settings-note">${cache ? "Weather data is available." : "Weather details will appear here after a successful request."}</div></section>
@@ -129,6 +190,25 @@ export function mountWeatherSettings(container) {
       refreshIcons(event.currentTarget);
     });
   container
+    .querySelector("#weather-key-test")
+    .addEventListener("click", async () => {
+      const value = container.querySelector("#weather-api-key").value.trim();
+      const message = container.querySelector("#weather-settings-message");
+      message.textContent = "Testing API key…";
+      try {
+        const result = await testWeatherApiKey(
+          value,
+          lastPosition?.lat,
+          lastPosition?.lon,
+        );
+        message.textContent = `API key works · ${result.city}${result.country ? `, ${result.country}` : ""}. You can save it now.`;
+        showToast("Weather API key is valid.", "success");
+      } catch (error) {
+        message.textContent = error.message;
+        showToast(error.message, "error", 5000);
+      }
+    });
+  container
     .querySelector("#weather-key-save")
     .addEventListener("click", async () => {
       const value = container.querySelector("#weather-api-key").value.trim();
@@ -136,9 +216,21 @@ export function mountWeatherSettings(container) {
         showToast("Paste your OpenWeatherMap API key first.", "warning");
         return;
       }
-      saveWeatherKey(value);
       const message = container.querySelector("#weather-settings-message");
-      message.textContent = "Key saved. Testing the connection…";
+      message.textContent = "Testing API key before saving…";
+      try {
+        await testWeatherApiKey(value, lastPosition?.lat, lastPosition?.lon);
+      } catch (error) {
+        message.textContent = error.message;
+        showToast(
+          "API key was not saved because the test failed.",
+          "error",
+          5000,
+        );
+        return;
+      }
+      saveWeatherKey(value);
+      message.textContent = "Key verified and saved. Testing weather…";
       if (lastPosition) {
         try {
           await fetchWeather(lastPosition.lat, lastPosition.lon, true);

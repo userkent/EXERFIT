@@ -29,16 +29,12 @@ import {
   setMapStatus,
 } from "./map.js";
 import { searchLocations, getRoute } from "./routing-service.js";
-import {
-  startNavigation,
-  clearNavigation,
-  stopNavigation,
-} from "./navigation.js";
+import { startNavigation, clearNavigation, setActiveNavigationRoute } from "./navigation.js";
 import { mountActivityPanel } from "./activity.js";
 import { mountSavedRoutesPanel } from "./saved-routes.js";
 import { mountWorkoutPanel } from "./workout-planner.js";
 import { mountHistoryPanel } from "./activity-history.js";
-import { setWeatherPosition, mountWeatherSettings } from "./weather.js";
+import { setWeatherPosition, fetchWeatherForMap, mountWeatherSettings } from "./weather.js";
 import {
   profileStatisticsMarkup,
   refreshDashboardStats,
@@ -46,7 +42,6 @@ import {
 import {
   showToast,
   openModal,
-  closeModal,
   bindModalChrome,
   escapeHTML,
   formatDistance,
@@ -76,6 +71,10 @@ function initializeDashboard() {
   bindPanelNavigation();
   bindMapControls();
   bindDestinationSearch();
+  bindTravelModeSelection();
+  bindMapDestinationPicker();
+  bindFindAnotherRoute();
+  bindWeatherMapMode();
   bindMapSettings();
   bindProfileAndSettings();
   bindAppEvents();
@@ -381,6 +380,9 @@ function getCurrentPosition() {
 function bindDestinationSearch() {
   const form = document.getElementById("location-search-form");
   const resultsContainer = document.getElementById("search-results");
+  const searchInput = document.getElementById("location-query");
+  if (searchInput && window.matchMedia("(max-width: 430px)").matches)
+    searchInput.placeholder = "Search places";
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const query = document.getElementById("location-query").value.trim();
@@ -425,34 +427,159 @@ function bindDestinationSearch() {
     }
   });
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".map-top-left"))
+    if (!event.target.closest(".header-search-wrap"))
       resultsContainer?.classList.add("is-hidden");
   });
 }
 
 async function selectDestination(place, resultsContainer) {
   selectedDestination = place;
-  resultsContainer.classList.add("is-hidden");
+  resultsContainer?.classList.add("is-hidden");
   showDestination(place.lat, place.lon, place.name);
   centerOn(place.lat, place.lon, 14);
+  await recalculateSelectedRoute();
+}
+
+// Rebuilds the route from the latest GPS position using the currently selected travel mode.
+async function recalculateSelectedRoute() {
+  if (!selectedDestination) {
+    showToast("Choose a destination before refreshing the route.", "warning");
+    return null;
+  }
+
+  const refreshButton = document.getElementById("refresh-destination-route");
+  if (refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.setAttribute("aria-busy", "true");
+    refreshButton.classList.add("is-loading");
+  }
   setMapStatus("Calculating route…");
+
   try {
     const start = await getCurrentPosition();
-    const mode = document.getElementById("travel-mode").value;
-    const route = await getRoute(start, place, mode);
-    currentRoute = { ...route, name: `${start.name} to ${place.name}` };
-    drawPlannedRoute(route.coordinates);
-    displayRouteSummary(route, place);
+    const mode = document.getElementById("travel-mode")?.value || "walking";
+    const route = await getRoute(start, selectedDestination, mode);
+    currentRoute = {
+      ...route,
+      name: `${start.name} to ${selectedDestination.name || "Destination"}`,
+    };
+
+    // If navigation is already active, replace its guidance route without starting activity recording.
+    const navigationSwitched = setActiveNavigationRoute(currentRoute);
+    if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
+    displayRouteSummary(currentRoute, selectedDestination);
+
+    // Weather is tied to the selected destination and is refreshed after a new route profile is calculated.
+    fetchWeatherForMap(
+      selectedDestination.lat,
+      selectedDestination.lon,
+      "Route destination weather",
+    ).catch((error) => showToast(error.message, "warning", 3500));
+
     setMapStatus("Route ready");
-    showToast(
-      "A route was generated from your current GPS location.",
-      "success",
-    );
+    return currentRoute;
   } catch (error) {
     setMapStatus("Route unavailable");
     showToast(error.message, "error", 5500);
+    return null;
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+      refreshButton.removeAttribute("aria-busy");
+      refreshButton.classList.remove("is-loading");
+    }
   }
 }
+
+// Keep the mode buttons, compact current-mode icon, and hidden routing value in sync.
+function bindTravelModeSelection() {
+  const valueInput = document.getElementById("travel-mode");
+  const options = [...document.querySelectorAll("[data-travel-mode]")];
+  const panel = document.getElementById("travel-mode-panel");
+  const toggle = document.getElementById("travel-mode-toggle");
+  const currentIcon = document.getElementById("travel-mode-current-icon");
+  const currentLabel = document.getElementById("travel-mode-current-label");
+  if (!valueInput || !options.length) return;
+
+  const modeIcons = { walking: "footprints", cycling: "bike", driving: "car-front" };
+  const updateCompactMode = (mode, label) => {
+    if (currentIcon) {
+      currentIcon.innerHTML = `<i data-lucide="${modeIcons[mode] || "route"}"></i>`;
+      refreshIcons(currentIcon);
+    }
+    if (currentLabel) currentLabel.textContent = `${label} selected`;
+  };
+
+  options.forEach((button) => {
+    button.addEventListener("click", () => {
+      const mode = button.dataset.travelMode;
+      valueInput.value = mode;
+      options.forEach((option) => {
+        const selected = option === button;
+        option.classList.toggle("is-active", selected);
+        option.setAttribute("aria-checked", String(selected));
+      });
+      const modeLabel = button.querySelector("span")?.textContent || "Travel mode";
+      updateCompactMode(mode, modeLabel);
+      const routeNote = document.getElementById("route-mode-prompt");
+      if (routeNote) routeNote.textContent = `Mode changed to ${modeLabel}. Refresh the route to update distance, time, and directions.`;
+      showToast(`${modeLabel} selected. Press Refresh route on the destination card to recalculate.`, "info", 2600);
+    });
+  });
+
+  toggle?.addEventListener("click", () => {
+    const collapsed = panel?.classList.toggle("is-collapsed") || false;
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-label", collapsed ? "Show travel mode options" : "Hide travel mode options");
+    toggle.title = collapsed ? "Show travel mode options" : "Hide travel mode options";
+    toggle.innerHTML = `<i data-lucide="${collapsed ? "chevron-down" : "chevron-up"}"></i>`;
+    refreshIcons(toggle);
+  });
+}
+
+function bindMapDestinationPicker() {
+  const button = document.getElementById("set-destination-map");
+  const map = getMap();
+  if (!button || !map) return;
+
+  let pickingDestination = false;
+
+  const setPickingState = (enabled) => {
+    pickingDestination = enabled;
+    button.classList.toggle("is-active", enabled);
+    button.setAttribute("aria-pressed", String(enabled));
+    map.getContainer().classList.toggle("is-picking-destination", enabled);
+    map.getContainer().style.cursor = enabled ? "crosshair" : "";
+    setMapStatus(enabled ? "Click the map to set your destination" : "Map ready");
+  };
+
+  button.addEventListener("click", () => {
+    setPickingState(!pickingDestination);
+    if (pickingDestination)
+      showToast("Click anywhere on the map to set your destination.", "info");
+  });
+
+  map.on("click", async (event) => {
+    if (!pickingDestination) return;
+
+    setPickingState(false);
+    const place = {
+      id: `map-${Date.now()}`,
+      name: "Map destination",
+      address: `${event.latlng.lat.toFixed(5)}, ${event.latlng.lng.toFixed(5)}`,
+      lat: event.latlng.lat,
+      lon: event.latlng.lng,
+    };
+
+    selectedDestination = place;
+    showDestination(place.lat, place.lon, place.name);
+    setMapStatus("Calculating route…");
+
+    const route = await recalculateSelectedRoute();
+    if (route) showToast("GPS route is ready. Press Navigate when you are ready.", "success");
+  });
+}
+
 function displayRouteSummary(route, place) {
   const card = document.getElementById("route-summary");
   card.hidden = false;
@@ -475,6 +602,19 @@ function displayRouteSummary(route, place) {
   document.getElementById("route-instructions").innerHTML =
     instructions ||
     '<p class="settings-note">The routing service did not return turn details for this route.</p>';
+  const alternateButton = document.getElementById("find-another-route");
+  const alternatives = route.routeOptions?.length > 1 || (route.alternatives || []).length > 0;
+  if (alternateButton) alternateButton.disabled = !alternatives;
+  const modePrompt = document.getElementById("route-mode-prompt");
+  if (modePrompt) modePrompt.textContent = "Route calculated for the selected travel mode.";
+  const optionNote = document.getElementById("route-option-note");
+  if (optionNote) {
+    const total = route.routeOptions?.length || 1;
+    const index = (route.routeOptionIndex || 0) + 1;
+    optionNote.textContent = total > 1
+      ? `Route ${index} of ${total} · ${index === 1 ? "Fastest estimated route" : "Alternative route"}`
+      : "Fastest available route for this travel mode";
+  }
   refreshIcons(card);
 }
 function bindRouteActions() {
@@ -512,6 +652,23 @@ function bindRouteActions() {
       if (!currentRoute) return;
       if (startNavigation(currentRoute)) openPanel("activity");
     });
+  document
+    .getElementById("refresh-destination-route")
+    ?.addEventListener("click", recalculateSelectedRoute);
+  document
+    .getElementById("refresh-route-weather")
+    ?.addEventListener("click", async () => {
+      if (!selectedDestination) return;
+      const button = document.getElementById("refresh-route-weather");
+      button.disabled = true;
+      try {
+        await fetchWeatherForMap(selectedDestination.lat, selectedDestination.lon, "Route destination weather");
+      } catch (error) {
+        showToast(error.message, "warning", 3500);
+      } finally {
+        button.disabled = false;
+      }
+    });
   document.getElementById("clear-route")?.addEventListener("click", () => {
     clearNavigation();
     clearAllRouteDrawings();
@@ -519,6 +676,62 @@ function bindRouteActions() {
     selectedDestination = null;
     document.getElementById("route-summary").hidden = true;
     setMapStatus("Map ready");
+  });
+}
+
+function bindFindAnotherRoute() {
+  document.getElementById("find-another-route")?.addEventListener("click", () => {
+    if (!currentRoute) return;
+    const options = currentRoute.routeOptions?.length
+      ? currentRoute.routeOptions
+      : [currentRoute, ...(currentRoute.alternatives || [])];
+    if (options.length < 2) {
+      showToast("The routing service did not return another route for this journey.", "info");
+      return;
+    }
+    const currentIndex = Number.isInteger(currentRoute.routeOptionIndex)
+      ? currentRoute.routeOptionIndex
+      : Math.max(0, options.indexOf(currentRoute));
+    const nextIndex = (currentIndex + 1) % options.length;
+    currentRoute = {
+      ...options[nextIndex],
+      name: currentRoute.name,
+      routeOptions: options,
+      routeOptionIndex: nextIndex,
+      alternatives: options.filter((_, index) => index !== nextIndex),
+    };
+    const navigationSwitched = setActiveNavigationRoute(currentRoute);
+    if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
+    displayRouteSummary(currentRoute, selectedDestination || { name: "Destination" });
+    setMapStatus("Alternative route ready");
+    showToast(`Route ${nextIndex + 1} of ${options.length} selected · ${Math.round(currentRoute.durationSeconds / 60)} min estimated.`, "success");
+  });
+}
+
+function bindWeatherMapMode() {
+  const button = document.getElementById("weather-map-mode");
+  const map = getMap();
+  if (!button || !map) return;
+  let active = false;
+  button.addEventListener("click", () => {
+    active = !active;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+    map.getContainer().classList.toggle("is-weather-picking", active);
+    map.getContainer().style.cursor = active ? "crosshair" : "";
+    setMapStatus(active ? "Click the map to view weather" : "Map ready");
+    if (active) showToast("Click anywhere on the map to see the weather there.", "info");
+  });
+  map.on("click", async (event) => {
+    if (!active) return;
+    setMapStatus("Loading weather…");
+    try {
+      await fetchWeatherForMap(event.latlng.lat, event.latlng.lng, "Map location");
+      setMapStatus("Weather loaded");
+    } catch (error) {
+      showToast(error.message, "warning", 5000);
+      setMapStatus("Weather unavailable");
+    }
   });
 }
 
