@@ -1572,3 +1572,24 @@ a {
     bottom: 70px;
   }
 }
+
+/* Destination suggestions: comfortable touch targets on phones and tablets. */
+@media (max-width: 760px) {
+  .header-search-results {
+    max-height: min(58dvh, 420px);
+  }
+  .header-search-results .search-result {
+    min-height: 48px;
+    padding: 11px 10px;
+  }
+  .header-search-results .search-result strong {
+    font-size: 12px;
+  }
+  .header-search-results .search-result small {
+    font-size: 10px;
+  }
+  .search-suggestions-heading {
+    padding-top: 10px;
+    font-size: 9px;
+  }
+}

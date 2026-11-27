@@ -15,9 +15,9 @@
     <!-- HEADER SEARCH: Kept beside the logo so destination search is always easy to reach. -->
     <div class="header-search-wrap">
       <form id="location-search-form" class="map-search header-map-search" role="search">
-        <i data-lucide="search"></i><input type="search" id="location-query" placeholder="Search places or destinations" autocomplete="off" aria-label="Search places or destinations"><button type="submit" aria-label="Search"><i data-lucide="arrow-right"></i></button>
+        <i data-lucide="search"></i><input type="search" id="location-query" placeholder="Search places or destinations" autocomplete="off" aria-label="Search places or destinations" aria-expanded="false" aria-controls="search-results"><button type="submit" aria-label="Search"><i data-lucide="arrow-right"></i></button>
       </form>
-      <div id="search-results" class="search-results header-search-results is-hidden"></div>
+      <div id="search-results" class="search-results header-search-results is-hidden" aria-label="Destination search suggestions" aria-live="polite"></div>
     </div>
     <nav class="app-nav" aria-label="Dashboard navigation">
       <button class="nav-item active" type="button" data-open-panel="overview" title="Map dashboard"><i data-lucide="map"></i><span>Explore</span></button>

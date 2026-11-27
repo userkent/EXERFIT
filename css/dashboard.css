@@ -259,6 +259,25 @@
 .search-result:hover {
   background: var(--green-50);
 }
+.search-result:focus-visible {
+  outline: 2px solid var(--green-700);
+  outline-offset: -2px;
+  background: var(--green-50);
+}
+.search-suggestions-heading {
+  padding: 8px 10px 4px;
+  color: #87938b;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.search-query-suggestion {
+  border-top: 1px solid var(--line);
+  margin-top: 3px;
+}
+.search-query-suggestion strong {
+  color: var(--green-800);
+}
 .search-result > svg {
   flex: 0 0 16px;
   width: 16px;

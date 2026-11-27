@@ -415,60 +415,223 @@ function bindDestinationSearch() {
   const form = document.getElementById("location-search-form");
   const resultsContainer = document.getElementById("search-results");
   const searchInput = document.getElementById("location-query");
-  if (searchInput && window.matchMedia("(max-width: 430px)").matches)
+  if (!form || !resultsContainer || !searchInput) return;
+
+  if (window.matchMedia("(max-width: 430px)").matches)
     searchInput.placeholder = "Search places";
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const query = document.getElementById("location-query").value.trim();
+
+  // Suggestions are built locally from recent searches and saved routes.
+  // Do not send autocomplete requests to the public Nominatim service.
+  let availablePlaces = [];
+  let searchRequestId = 0;
+
+  const setSuggestionsOpen = (open) => {
+    resultsContainer.classList.toggle("is-hidden", !open);
+    searchInput.setAttribute("aria-expanded", String(open));
+  };
+
+  const addPlace = (place, label, idPrefix, list) => {
+    if (
+      !place ||
+      !Number.isFinite(Number(place.lat)) ||
+      !Number.isFinite(Number(place.lon))
+    )
+      return;
+    const name = String(place.name || place.label || "Saved destination");
+    const address = String(place.address || "Previously selected destination");
+    const query = String(searchInput.value || "")
+      .trim()
+      .toLowerCase();
+    if (query && !`${name} ${address}`.toLowerCase().includes(query)) return;
+    const key = `${Number(place.lat).toFixed(5)},${Number(place.lon).toFixed(5)}`;
+    if (list.some((item) => item.key === key)) return;
+    list.push({
+      key,
+      id: `${idPrefix}-${list.length + 1}`,
+      name,
+      address,
+      lat: Number(place.lat),
+      lon: Number(place.lon),
+      category: place.category || "saved",
+      sourceLabel: label,
+    });
+  };
+
+  const renderPlaceGroup = (title, places) => {
+    if (!places.length) return "";
+    const buttons = places
+      .map((place) => {
+        availablePlaces.push(place);
+        return `<button class="search-result" type="button" role="option" data-place-id="${escapeHTML(place.id)}"><i data-lucide="map-pin"></i><span><strong>${escapeHTML(place.name)}</strong><small>${escapeHTML(place.sourceLabel)} · ${escapeHTML(place.address)}</small></span></button>`;
+      })
+      .join("");
+    return `<div class="search-suggestions-heading">${escapeHTML(title)}</div>${buttons}`;
+  };
+
+  const renderLocalSuggestions = () => {
+    const query = searchInput.value.trim();
+    const data = getUserData();
+    const recent = Array.isArray(data.preferences?.recentDestinationSearches)
+      ? data.preferences.recentDestinationSearches
+      : [];
+    const savedRoutes = Array.isArray(data.routes) ? data.routes : [];
+    const recentPlaces = [];
+    const savedPlaces = [];
+
+    recent
+      .slice(0, 6)
+      .forEach((place) =>
+        addPlace(place, "Recent search", "recent", recentPlaces),
+      );
+    savedRoutes
+      .slice()
+      .reverse()
+      .forEach((route) =>
+        addPlace(route.destination, "Saved route", "saved", savedPlaces),
+      );
+
+    availablePlaces = [];
+    let markup = renderPlaceGroup("RECENT SEARCHES", recentPlaces.slice(0, 4));
+    markup += renderPlaceGroup("SAVED DESTINATIONS", savedPlaces.slice(0, 4));
+
+    if (query.length >= 3) {
+      markup += `<button class="search-result search-query-suggestion" type="button" data-search-query><i data-lucide="search"></i><span><strong>Search for “${escapeHTML(query)}”</strong><small>Look up this place on the map</small></span></button>`;
+    } else if (!markup) {
+      markup = `<div class="search-empty">Type at least 3 characters to search, or use a recent or saved destination.</div>`;
+    }
+
+    resultsContainer.innerHTML = markup;
+    refreshIcons(resultsContainer);
+    setSuggestionsOpen(true);
+  };
+
+  const performMapSearch = async () => {
+    const query = searchInput.value.trim();
     if (query.length < 3) {
       showToast("Type at least 3 characters to search.", "warning");
       return;
     }
-    resultsContainer.classList.remove("is-hidden");
+
+    const requestId = ++searchRequestId;
+    setSuggestionsOpen(true);
     resultsContainer.innerHTML =
       '<div class="search-empty">Searching OpenStreetMap…</div>';
     setMapStatus("Searching places…");
+
     try {
       const results = await searchLocations(query);
+      if (requestId !== searchRequestId) return;
       if (!results.length) {
         resultsContainer.innerHTML =
           '<div class="search-empty">No matching places were found. Try a nearby landmark or a more specific name.</div>';
         setMapStatus("No search results");
         return;
       }
-      resultsContainer.innerHTML = results
-        .map(
-          (result) =>
-            `<button class="search-result" type="button" data-place-id="${escapeHTML(result.id)}"><i data-lucide="map-pin"></i><span><strong>${escapeHTML(result.name)}</strong><small>${escapeHTML(result.address)}</small></span></button>`,
-        )
-        .join("");
+
+      availablePlaces = results;
+      resultsContainer.innerHTML =
+        '<div class="search-suggestions-heading">MAP SEARCH RESULTS</div>' +
+        results
+          .map(
+            (result) =>
+              `<button class="search-result" type="button" role="option" data-place-id="${escapeHTML(result.id)}"><i data-lucide="map-pin"></i><span><strong>${escapeHTML(result.name)}</strong><small>${escapeHTML(result.address)}</small></span></button>`,
+          )
+          .join("");
       refreshIcons(resultsContainer);
       setMapStatus(
         `${results.length} place${results.length === 1 ? "" : "s"} found`,
       );
-      resultsContainer.querySelectorAll("[data-place-id]").forEach((button) =>
-        button.addEventListener("click", () => {
-          const place = results.find(
-            (item) => String(item.id) === button.dataset.placeId,
-          );
-          if (place) selectDestination(place, resultsContainer);
-        }),
-      );
     } catch (error) {
+      if (requestId !== searchRequestId) return;
       resultsContainer.innerHTML = `<div class="search-empty">${escapeHTML(error.message)}</div>`;
       setMapStatus("Search unavailable");
       showToast(error.message, "error", 5000);
     }
+  };
+
+  searchInput.addEventListener("focus", renderLocalSuggestions);
+  searchInput.addEventListener("input", () => {
+    // Invalidate an older submitted search so it cannot replace newer suggestions.
+    searchRequestId += 1;
+    renderLocalSuggestions();
   });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await performMapSearch();
+  });
+
+  resultsContainer.addEventListener("click", async (event) => {
+    const placeButton = event.target.closest("[data-place-id]");
+    if (placeButton) {
+      const place = availablePlaces.find(
+        (item) => String(item.id) === placeButton.dataset.placeId,
+      );
+      if (place) await selectDestination(place, resultsContainer);
+      return;
+    }
+    if (event.target.closest("[data-search-query]")) await performMapSearch();
+  });
+
+  searchInput.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setSuggestionsOpen(false);
+    if (event.key === "ArrowDown") {
+      const firstResult = resultsContainer.querySelector(".search-result");
+      if (firstResult && !resultsContainer.classList.contains("is-hidden")) {
+        event.preventDefault();
+        firstResult.focus();
+      }
+    }
+  });
+
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".header-search-wrap"))
-      resultsContainer?.classList.add("is-hidden");
+    if (!event.target.closest(".header-search-wrap")) setSuggestionsOpen(false);
   });
+}
+
+function rememberDestinationSearch(place) {
+  if (
+    !place ||
+    !Number.isFinite(Number(place.lat)) ||
+    !Number.isFinite(Number(place.lon))
+  )
+    return;
+  const data = getUserData();
+  data.preferences ||= {};
+  const previous = Array.isArray(data.preferences.recentDestinationSearches)
+    ? data.preferences.recentDestinationSearches
+    : [];
+  const key = `${Number(place.lat).toFixed(5)},${Number(place.lon).toFixed(5)}`;
+  data.preferences.recentDestinationSearches = [
+    {
+      name: String(place.name || "Saved destination"),
+      address: String(place.address || "Previously selected destination"),
+      lat: Number(place.lat),
+      lon: Number(place.lon),
+      category: String(place.category || "place"),
+    },
+    ...previous.filter((item) => {
+      if (
+        !item ||
+        !Number.isFinite(Number(item.lat)) ||
+        !Number.isFinite(Number(item.lon))
+      )
+        return false;
+      return (
+        `${Number(item.lat).toFixed(5)},${Number(item.lon).toFixed(5)}` !== key
+      );
+    }),
+  ].slice(0, 6);
+  saveUserData(data);
 }
 
 async function selectDestination(place, resultsContainer) {
   selectedDestination = place;
+  rememberDestinationSearch(place);
   resultsContainer?.classList.add("is-hidden");
+  document
+    .getElementById("location-query")
+    ?.setAttribute("aria-expanded", "false");
   showDestination(place.lat, place.lon, place.name);
   centerOn(place.lat, place.lon, 14);
   await recalculateSelectedRoute();

@@ -2,7 +2,8 @@
 /* =========================================================
    FILE: routing-service.js
    PURPOSE: Connects location search and route requests to OpenStreetMap
-   services. Search is submitted by the user; no autocomplete requests
+   services. Search is intentionally submitted by the user. Dashboard
+   suggestions use local recent/saved destinations; no autocomplete requests
    are sent to public Nominatim.
    LIMIT: Public geocoding/routing endpoints are best-effort demo services.
 ========================================================= */
@@ -108,15 +109,15 @@ export async function getRoute(start, destination, mode = "walking") {
   // options by estimated travel time so the initial route is the fastest available.
   const buildRoute = (candidate) => {
     const steps = (candidate.legs || [])
-    .flatMap((leg) => leg.steps || [])
-    .map((step) => ({
-      instruction: simplifyInstruction(step),
-      distance: step.distance || 0,
-      duration: step.duration || 0,
-      location: step.maneuver?.location || null,
-      type: step.maneuver?.type || "continue",
-      modifier: step.maneuver?.modifier || "",
-    }));
+      .flatMap((leg) => leg.steps || [])
+      .map((step) => ({
+        instruction: simplifyInstruction(step),
+        distance: step.distance || 0,
+        duration: step.duration || 0,
+        location: step.maneuver?.location || null,
+        type: step.maneuver?.type || "continue",
+        modifier: step.maneuver?.modifier || "",
+      }));
     return {
       coordinates: candidate.geometry.coordinates,
       distanceMeters: candidate.distance,
@@ -139,7 +140,11 @@ export async function getRoute(start, destination, mode = "walking") {
   };
   const routeOptions = data.routes
     .map(buildRoute)
-    .sort((a, b) => a.durationSeconds - b.durationSeconds || a.distanceMeters - b.distanceMeters);
+    .sort(
+      (a, b) =>
+        a.durationSeconds - b.durationSeconds ||
+        a.distanceMeters - b.distanceMeters,
+    );
   const fastestRoute = routeOptions[0];
   return {
     ...fastestRoute,

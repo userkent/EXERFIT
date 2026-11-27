@@ -1,7 +1,5 @@
 # ExerFit
 
-ExerFit: A Smart Fitness Monitoring and Physical Activity Tracking System
-
 ## Problem
 
 People who exercise outdoors or indoors often use different tools to find routes, track activities, and manage workouts. ExerFit brings these activities together in one web application so users can explore routes, record outdoor movement, and organize indoor training without switching between separate pages or tools.
@@ -29,12 +27,13 @@ The dashboard also includes a Strava-style side hide/reveal control for the floa
 - App page: Interactive map dashboard for routes, outdoor activity tracking, workouts, history, weather, and settings.
 - Cart or Subscription page: Not included in the current prototype.
 
+## Team
+
+- Add team members here.
+
 ## Live Link
 
-github actions: https://userkent.github.io/EXERFIT/
-
-vercel: https://exerfitkj.vercel.app/
-
+- Add the deployed ExerFit website link here.
 
 ## Project Structure
 

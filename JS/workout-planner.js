@@ -24,9 +24,7 @@ function toLocalDateTimeValue(value) {
   if (!value) return "";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
 function unlockReminderAudio() {
@@ -34,14 +32,10 @@ function unlockReminderAudio() {
   if (!AudioContextClass) return null;
   try {
     if (!reminderAudioContext) reminderAudioContext = new AudioContextClass();
-    if (reminderAudioContext.state === "suspended")
-      reminderAudioContext.resume().catch(() => {});
+    if (reminderAudioContext.state === "suspended") reminderAudioContext.resume().catch(() => {});
     return reminderAudioContext;
   } catch (error) {
-    console.warn(
-      "Workout reminder sound is unavailable in this browser.",
-      error,
-    );
+    console.warn("Workout reminder sound is unavailable in this browser.", error);
     return null;
   }
 }
@@ -66,11 +60,7 @@ function playWorkoutAlarm() {
       oscillator.stop(startAt + offset + 0.26);
     });
   };
-  if (context.state === "suspended")
-    context
-      .resume()
-      .then(scheduleBeeps)
-      .catch(() => {});
+  if (context.state === "suspended") context.resume().then(scheduleBeeps).catch(() => {});
   else scheduleBeeps();
 }
 
@@ -80,11 +70,8 @@ function notifyWorkoutReminder(workout) {
   playWorkoutAlarm();
   showToast(`${title}. ${body}`, "success", 9000);
   if ("Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification(title, { body, tag: `exerfit-${workout.id}` });
-    } catch (error) {
-      console.warn("Workout notification could not be displayed.", error);
-    }
+    try { new Notification(title, { body, tag: `exerfit-${workout.id}` }); }
+    catch (error) { console.warn("Workout notification could not be displayed.", error); }
   }
 }
 
@@ -94,12 +81,7 @@ function checkWorkoutReminders() {
   let changed = false;
   const due = [];
   (data.workouts || []).forEach((workout) => {
-    if (
-      !workout.reminderAt ||
-      workout.reminderFiredAt ||
-      workout.status === "completed"
-    )
-      return;
+    if (!workout.reminderAt || workout.reminderFiredAt || workout.status === "completed") return;
     const dueAt = new Date(workout.reminderAt).getTime();
     if (!Number.isFinite(dueAt) || dueAt > now) return;
     workout.reminderFiredAt = new Date().toISOString();
@@ -117,10 +99,7 @@ function startReminderMonitor() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") checkWorkoutReminders();
   });
-  document.addEventListener("pointerdown", unlockReminderAudio, {
-    once: true,
-    passive: true,
-  });
+  document.addEventListener("pointerdown", unlockReminderAudio, { once: true, passive: true });
   checkWorkoutReminders();
 }
 
@@ -186,9 +165,7 @@ export function mountWorkoutPanel(container) {
       container.querySelector("#workout-category").value = editing.category;
       container.querySelector("#workout-date").value = editing.date;
       container.querySelector("#workout-notes").value = editing.notes || "";
-      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(
-        editing.reminderAt,
-      );
+      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(editing.reminderAt);
       container.querySelector("#exercise-list").innerHTML = (
         editing.exercises || []
       )
@@ -201,43 +178,25 @@ export function mountWorkoutPanel(container) {
     } else editingWorkoutId = null;
   }
   const form = container.querySelector("#workout-form");
-  container
-    .querySelector("#workout-test-alarm")
-    ?.addEventListener("click", () => {
-      unlockReminderAudio();
-      playWorkoutAlarm();
-      showToast("Workout alarm sound test.", "info", 2500);
-    });
-  const notificationButton = container.querySelector(
-    "#workout-enable-notifications",
-  );
+  container.querySelector("#workout-test-alarm")?.addEventListener("click", () => {
+    unlockReminderAudio();
+    playWorkoutAlarm();
+    showToast("Workout alarm sound test.", "info", 2500);
+  });
+  const notificationButton = container.querySelector("#workout-enable-notifications");
   if (notificationButton) {
     if (!("Notification" in window)) notificationButton.disabled = true;
     notificationButton.addEventListener("click", async () => {
       unlockReminderAudio();
       if (!("Notification" in window)) {
-        showToast(
-          "Browser notifications are not supported here. The in-page sound can still work while ExerFit is open.",
-          "warning",
-          5000,
-        );
+        showToast("Browser notifications are not supported here. The in-page sound can still work while ExerFit is open.", "warning", 5000);
         return;
       }
       try {
         const permission = await Notification.requestPermission();
-        showToast(
-          permission === "granted"
-            ? "Browser workout alerts are enabled."
-            : "Browser alerts were not enabled. The in-page alarm works while ExerFit is open.",
-          permission === "granted" ? "success" : "info",
-          4500,
-        );
+        showToast(permission === "granted" ? "Browser workout alerts are enabled." : "Browser alerts were not enabled. The in-page alarm works while ExerFit is open.", permission === "granted" ? "success" : "info", 4500);
       } catch (error) {
-        showToast(
-          "Could not request browser notification permission in this browser.",
-          "warning",
-          4000,
-        );
+        showToast("Could not request browser notification permission in this browser.", "warning", 4000);
       }
     });
   }
@@ -285,9 +244,7 @@ export function mountWorkoutPanel(container) {
           date: container.querySelector("#workout-date").value,
           exercises,
           notes: container.querySelector("#workout-notes").value.trim(),
-          reminderAt: reminderValue
-            ? new Date(reminderValue).toISOString()
-            : null,
+          reminderAt: reminderValue ? new Date(reminderValue).toISOString() : null,
           reminderFiredAt: null,
           updatedAt: new Date().toISOString(),
         });
@@ -299,9 +256,7 @@ export function mountWorkoutPanel(container) {
         date: container.querySelector("#workout-date").value,
         exercises,
         notes: container.querySelector("#workout-notes").value.trim(),
-        reminderAt: reminderValue
-          ? new Date(reminderValue).toISOString()
-          : null,
+        reminderAt: reminderValue ? new Date(reminderValue).toISOString() : null,
         reminderFiredAt: null,
         status: "planned",
         createdAt: new Date().toISOString(),
@@ -329,9 +284,7 @@ export function mountWorkoutPanel(container) {
       container.querySelector("#workout-category").value = workout.category;
       container.querySelector("#workout-date").value = workout.date;
       container.querySelector("#workout-notes").value = workout.notes || "";
-      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(
-        workout.reminderAt,
-      );
+      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(workout.reminderAt);
       container.querySelector("#exercise-list").innerHTML = (
         workout.exercises || []
       )
