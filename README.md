@@ -32,7 +32,7 @@ The dashboard also includes a Strava-style side hide/reveal control for the floa
 
 github actions: https://userkent.github.io/EXERFIT/
 
-vercel: https://exerfit.kj.vercel.app/
+vercel: https://exerfitkj.vercel.app/
 
 ## Project Structure
 
