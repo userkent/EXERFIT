@@ -39,6 +39,18 @@ export default class GPSTracker {
     this.lastAccuracy = null;
   }
   start() {
+    const hostname = window.location.hostname;
+    const localHost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "[::1]";
+    if (!window.isSecureContext && !localHost) {
+      this.onError(
+        "GPS recording requires HTTPS on phones and tablets. Open ExerFit with a secure HTTPS address, then allow location access.",
+      );
+      this.onStatus("idle");
+      return false;
+    }
     if (!navigator.geolocation) {
       this.onError("This browser does not support GPS location.");
       return false;

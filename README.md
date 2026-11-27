@@ -1,4 +1,5 @@
 # ExerFit
+
 ExerFit: A Smart Fitness Monitoring and Physical Activity Tracking System
 
 ## Problem
@@ -28,13 +29,12 @@ The dashboard also includes a Strava-style side hide/reveal control for the floa
 - App page: Interactive map dashboard for routes, outdoor activity tracking, workouts, history, weather, and settings.
 - Cart or Subscription page: Not included in the current prototype.
 
-## Team
-
-- Add team members here.
-
 ## Live Link
 
-- Add the deployed ExerFit website link here.
+# github actions: https://userkent.github.io/EXERFIT/
+
+# vercel: https://exerfitkj.vercel.app/
+
 
 ## Project Structure
 
@@ -135,14 +135,8 @@ The dashboard map and panels include dedicated tablet and mobile layouts. Contro
 - The travel-mode card on the map can be collapsed and expanded using its icon-only chevron button. When collapsed, the selected travel-mode icon and label stay visible.
 - After choosing a different travel mode, select **Refresh route** in the destination card to request a new route for that mode. The route card also shows destination weather and has a separate weather refresh button.
 
-## Open Live
+## Mobile GPS and workout reminders
 
-# github actions: https://userkent.github.io/EXERFIT/
-
-# vercel: https://exerfit.vercel.app/
-
-
-
-
-
-
+- Live location, GPS recording, and live navigation require a secure browser context. Use an HTTPS URL when opening ExerFit on a phone or tablet. A LAN address such as `http://192.168.x.x:3000` is not a secure context in common mobile browsers, so location access may be unavailable. The user must also grant the browser's location permission.
+- Workout reminders are checked while the ExerFit dashboard page is open. The app plays a short in-page alarm and can show a browser notification when notification permission is granted. Browser autoplay rules mean the user should test the alarm once or interact with the page to enable audio. A browser tab cannot guarantee an alarm after the page is closed or suspended by the operating system; use a native device alarm for critical reminders.
+- The public OpenStreetMap search and FOSSGIS routing endpoints are demonstration services. They need an internet connection and may occasionally be unavailable; keep their attribution and use limits in place.

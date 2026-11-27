@@ -28,6 +28,14 @@ let currentMapType = "standard";
 let savedLayerVisible = true;
 let activityLayerVisible = true;
 let heatmapMode = "off";
+let mapResizeTimer = null;
+
+function scheduleMapResize() {
+  if (mapResizeTimer) window.clearTimeout(mapResizeTimer);
+  mapResizeTimer = window.setTimeout(() => {
+    if (map) map.invalidateSize({ pan: false });
+  }, 160);
+}
 
 const toLatLngs = (coordinates) =>
   (coordinates || []).map((point) =>
@@ -55,6 +63,14 @@ export function initMap() {
   heatmapLayer = group().addTo(map);
   setMapType(getUserData().preferences.mapType || "standard", false);
   refreshDataLayers();
+  window.addEventListener("resize", scheduleMapResize, { passive: true });
+  window.addEventListener("orientationchange", scheduleMapResize, {
+    passive: true,
+  });
+  window.visualViewport?.addEventListener("resize", scheduleMapResize, {
+    passive: true,
+  });
+  window.setTimeout(scheduleMapResize, 220);
   return map;
 }
 export function getMap() {
@@ -86,14 +102,17 @@ export function setMapType(type, persist = true) {
 
   // Satellite imagery needs transparent reference overlays for labels and roads.
   if (chosen === "satellite") {
-    const transportLayer = L.tileLayer(TILE_PROVIDERS.hybridTransportation.url, {
-      attribution: TILE_PROVIDERS.hybridTransportation.attribution,
-      maxNativeZoom: TILE_PROVIDERS.hybridTransportation.maxNativeZoom || 19,
-      maxZoom: TILE_PROVIDERS.hybridTransportation.maxZoom || 20,
-      pane: "overlayPane",
-      zIndex: 610,
-      crossOrigin: true,
-    });
+    const transportLayer = L.tileLayer(
+      TILE_PROVIDERS.hybridTransportation.url,
+      {
+        attribution: TILE_PROVIDERS.hybridTransportation.attribution,
+        maxNativeZoom: TILE_PROVIDERS.hybridTransportation.maxNativeZoom || 19,
+        maxZoom: TILE_PROVIDERS.hybridTransportation.maxZoom || 20,
+        pane: "overlayPane",
+        zIndex: 610,
+        crossOrigin: true,
+      },
+    );
     const placeLayer = L.tileLayer(TILE_PROVIDERS.hybridLabels.url, {
       attribution: TILE_PROVIDERS.hybridLabels.attribution,
       maxNativeZoom: TILE_PROVIDERS.hybridLabels.maxNativeZoom || 19,
@@ -187,17 +206,32 @@ export function clearDestination() {
   destinationMarker = null;
 }
 export function drawPlannedRoute(coordinates, color = "#e98e62") {
-  if (!map || !coordinates?.length) return;
+  if (!map || !Array.isArray(coordinates) || coordinates.length < 2) return;
+  const latLngs = toLatLngs(coordinates).filter(
+    (point) =>
+      Array.isArray(point) &&
+      Number.isFinite(point[0]) &&
+      Number.isFinite(point[1]),
+  );
+  if (latLngs.length < 2) return;
   if (plannedLine) map.removeLayer(plannedLine);
-  plannedLine = L.polyline(toLatLngs(coordinates), {
+  plannedLine = L.polyline(latLngs, {
     color,
     weight: 5,
     opacity: 0.95,
     lineCap: "round",
     lineJoin: "round",
   }).addTo(map);
-  if (plannedLine.getBounds().isValid())
-    map.fitBounds(plannedLine.getBounds(), { padding: [55, 55], maxZoom: 16 });
+  if (plannedLine.getBounds().isValid()) {
+    scheduleMapResize();
+    window.setTimeout(() => {
+      if (map && plannedLine)
+        map.fitBounds(plannedLine.getBounds(), {
+          padding: [55, 55],
+          maxZoom: 16,
+        });
+    }, 180);
+  }
   return plannedLine;
 }
 export function clearPlannedRoute() {

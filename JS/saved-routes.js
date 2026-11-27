@@ -5,11 +5,7 @@
    Saved routes are navigation plans, not completed activities.
 ========================================================= */
 import { getUserData, saveUserData } from "./storage.js";
-import {
-  drawPlannedRoute,
-  showDestination,
-  refreshDataLayers,
-} from "./map.js";
+import { drawPlannedRoute, showDestination, refreshDataLayers } from "./map.js";
 import { startNavigation } from "./navigation.js";
 import {
   openModal,
@@ -46,6 +42,11 @@ export function mountSavedRoutesPanel(container) {
         route.destination.lat,
         route.destination.lon,
         route.destination.name,
+      );
+      window.dispatchEvent(
+        new CustomEvent("exerfit:open-panel", {
+          detail: { panel: "overview" },
+        }),
       );
       showToast(`Showing ${route.name} on the map.`, "info");
     }),

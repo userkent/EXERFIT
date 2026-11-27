@@ -6,7 +6,11 @@
    GPS is supplied by this module when navigating alone, or by the
    activity recorder when a user follows a route while recording.
 ========================================================= */
-import { drawPlannedRoute, clearPlannedRoute, followNavigationPosition } from "./map.js";
+import {
+  drawPlannedRoute,
+  clearPlannedRoute,
+  followNavigationPosition,
+} from "./map.js";
 import { getRoute } from "./routing-service.js";
 import { showToast, formatDistance, escapeHTML } from "./ui.js";
 
@@ -98,7 +102,15 @@ export function startNavigation(route, options = {}) {
     remaining: route.distanceMeters,
     offRoute: false,
   });
-  if (!externalGPS && navigator.geolocation) {
+  const hostname = window.location.hostname;
+  const localHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]";
+  const canUseLiveGPS =
+    Boolean(window.isSecureContext || localHost) &&
+    Boolean(navigator.geolocation);
+  if (!externalGPS && canUseLiveGPS) {
     watchId = navigator.geolocation.watchPosition(
       (position) =>
         updateNavigation({
@@ -109,6 +121,12 @@ export function startNavigation(route, options = {}) {
         }),
       (error) => showToast(`Navigation GPS: ${error.message}`, "warning"),
       { enableHighAccuracy: true, maximumAge: 2500, timeout: 15000 },
+    );
+  } else if (!externalGPS) {
+    showToast(
+      "The route is displayed, but live GPS guidance needs an HTTPS connection and location permission.",
+      "warning",
+      6500,
     );
   }
   window.dispatchEvent(
@@ -216,7 +234,10 @@ function findAlternativeNavigationRoute() {
     ? activeRoute.routeOptions
     : [activeRoute, ...(activeRoute.alternatives || [])];
   if (options.length < 2) {
-    showToast("The routing service did not return another route for this journey.", "info");
+    showToast(
+      "The routing service did not return another route for this journey.",
+      "info",
+    );
     return null;
   }
   const currentIndex = Number.isInteger(activeRoute.routeOptionIndex)
@@ -232,8 +253,13 @@ function findAlternativeNavigationRoute() {
   };
   const useExternalGPS = externalGPS;
   startNavigation(candidate, { externalGPS: useExternalGPS });
-  window.dispatchEvent(new CustomEvent("exerfit:navigation-route-updated", { detail: candidate }));
-  showToast(`Alternative ${nextIndex + 1} of ${options.length} selected · ${Math.round(candidate.durationSeconds / 60)} min estimated.`, "success");
+  window.dispatchEvent(
+    new CustomEvent("exerfit:navigation-route-updated", { detail: candidate }),
+  );
+  showToast(
+    `Alternative ${nextIndex + 1} of ${options.length} selected · ${Math.round(candidate.durationSeconds / 60)} min estimated.`,
+    "success",
+  );
   return candidate;
 }
 

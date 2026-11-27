@@ -101,7 +101,8 @@ function renderWeather(data) {
   if (header)
     header.innerHTML = `<i data-lucide="${iconFor(current.weather?.[0]?.main)}"></i><span>${temp}°C · ${escapeHTML(description)}</span>`;
   const card = document.getElementById("map-weather-card");
-  card?.classList.remove("is-hidden");
+  if (card && card.dataset.userHidden !== "true")
+    card.classList.remove("is-hidden");
   const icon = document.getElementById("weather-icon");
   if (icon) {
     icon.innerHTML = `<i data-lucide="${iconFor(current.weather?.[0]?.main)}"></i>`;

@@ -8,6 +8,8 @@ import { getUserData, saveUserData, createId } from "./storage.js";
 import { openModal, showToast, escapeHTML, refreshIcons } from "./ui.js";
 
 let editingWorkoutId = null;
+let reminderTimer = null;
+let reminderAudioContext = null;
 const categories = [
   "Strength Training",
   "Cardio",
@@ -17,6 +19,110 @@ const categories = [
   "Upper Body",
   "Lower Body",
 ];
+
+function toLocalDateTimeValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+function unlockReminderAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  try {
+    if (!reminderAudioContext) reminderAudioContext = new AudioContextClass();
+    if (reminderAudioContext.state === "suspended")
+      reminderAudioContext.resume().catch(() => {});
+    return reminderAudioContext;
+  } catch (error) {
+    console.warn(
+      "Workout reminder sound is unavailable in this browser.",
+      error,
+    );
+    return null;
+  }
+}
+
+function playWorkoutAlarm() {
+  const context = unlockReminderAudio();
+  if (!context) return;
+  const scheduleBeeps = () => {
+    if (context.state !== "running") return;
+    const startAt = context.currentTime + 0.05;
+    [0, 0.42, 0.84].forEach((offset) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, startAt + offset);
+      gain.gain.setValueAtTime(0.0001, startAt + offset);
+      gain.gain.exponentialRampToValueAtTime(0.18, startAt + offset + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.24);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(startAt + offset);
+      oscillator.stop(startAt + offset + 0.26);
+    });
+  };
+  if (context.state === "suspended")
+    context
+      .resume()
+      .then(scheduleBeeps)
+      .catch(() => {});
+  else scheduleBeeps();
+}
+
+function notifyWorkoutReminder(workout) {
+  const title = `Time for ${workout.name}`;
+  const body = `Your ${workout.category || "workout"} reminder is due now.`;
+  playWorkoutAlarm();
+  showToast(`${title}. ${body}`, "success", 9000);
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification(title, { body, tag: `exerfit-${workout.id}` });
+    } catch (error) {
+      console.warn("Workout notification could not be displayed.", error);
+    }
+  }
+}
+
+function checkWorkoutReminders() {
+  const data = getUserData();
+  const now = Date.now();
+  let changed = false;
+  const due = [];
+  (data.workouts || []).forEach((workout) => {
+    if (
+      !workout.reminderAt ||
+      workout.reminderFiredAt ||
+      workout.status === "completed"
+    )
+      return;
+    const dueAt = new Date(workout.reminderAt).getTime();
+    if (!Number.isFinite(dueAt) || dueAt > now) return;
+    workout.reminderFiredAt = new Date().toISOString();
+    changed = true;
+    // A reminder more than 30 minutes late is marked as handled but is not sounded belatedly.
+    if (now - dueAt <= 30 * 60 * 1000) due.push(workout);
+  });
+  if (changed) saveUserData(data);
+  due.forEach(notifyWorkoutReminder);
+}
+
+function startReminderMonitor() {
+  if (reminderTimer) return;
+  reminderTimer = window.setInterval(checkWorkoutReminders, 15000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkWorkoutReminders();
+  });
+  document.addEventListener("pointerdown", unlockReminderAudio, {
+    once: true,
+    passive: true,
+  });
+  checkWorkoutReminders();
+}
 
 function exerciseRow(exercise = {}) {
   return `<div class="exercise-row list-card" style="padding:11px;margin-bottom:8px">
@@ -50,7 +156,8 @@ export function mountWorkoutPanel(container) {
         .map(
           (workout) => `
     <article class="list-card"><div class="list-card-top"><div><h3>${escapeHTML(workout.name)}</h3><p>${escapeHTML(workout.category)} · ${new Date(`${workout.date}T00:00:00`).toLocaleDateString()}</p></div><span class="recording-status ${workout.status === "completed" ? "" : "paused"}">${workout.status === "completed" ? "Completed" : "Planned"}</span></div>
-    <div class="list-card-meta"><span><i data-lucide="list-checks"></i>${workout.exercises.length} exercises</span><span><i data-lucide="clock"></i>${workout.exercises.reduce((sum, item) => sum + Number(item.duration || 0), 0)} min listed</span></div>
+    <div class="list-card-meta"><span><i data-lucide="list-checks"></i>${(workout.exercises || []).length} exercises</span><span><i data-lucide="clock"></i>${(workout.exercises || []).reduce((sum, item) => sum + Number(item.duration || 0), 0)} min listed</span></div>
+    ${workout.reminderAt && !workout.reminderFiredAt && workout.status !== "completed" ? `<p class="workout-reminder-note"><i data-lucide="alarm-clock"></i> Reminder: ${escapeHTML(new Date(workout.reminderAt).toLocaleString())}</p>` : workout.reminderFiredAt ? `<p class="workout-reminder-note is-done"><i data-lucide="bell-ring"></i> Reminder already sent</p>` : ""}
     <div class="list-card-actions"><button class="button button-secondary" type="button" data-edit-workout="${escapeHTML(workout.id)}"><i data-lucide="pencil"></i> Edit</button>${workout.status !== "completed" ? `<button class="button button-primary" type="button" data-complete-workout="${escapeHTML(workout.id)}"><i data-lucide="check"></i> Complete</button>` : ""}<button class="button button-danger" type="button" data-delete-workout="${escapeHTML(workout.id)}"><i data-lucide="trash-2"></i> Delete</button></div></article>`,
         )
         .join("")
@@ -64,10 +171,12 @@ export function mountWorkoutPanel(container) {
       <div class="panel-section-title"><span>Exercises</span><small>Sets, reps, rest</small></div><div id="exercise-list">${exerciseRow()}</div>
       <button class="button button-secondary" id="add-exercise" type="button" style="width:100%;margin:3px 0 10px"><i data-lucide="plus"></i> Add exercise</button>
       <div class="form-field"><label for="workout-notes">Workout notes</label><textarea id="workout-notes" placeholder="Optional notes for this routine"></textarea></div>
+      <div class="workout-reminder-box"><div class="form-field"><label for="workout-reminder">Reminder date and time (optional)</label><input id="workout-reminder" type="datetime-local"></div><p>ExerFit can play a sound and show an alert while this page is open. Keep the app open for the reminder to run.</p><div class="form-inline workout-reminder-actions"><button class="button button-secondary" id="workout-test-alarm" type="button"><i data-lucide="volume-2"></i> Test alarm</button><button class="button button-secondary" id="workout-enable-notifications" type="button"><i data-lucide="bell"></i> Enable browser alerts</button></div></div>
       <div class="form-inline"><button class="button button-primary" type="submit"><i data-lucide="save"></i> Save workout</button><button class="button button-secondary" id="cancel-workout-edit" type="button" ${editingWorkoutId ? "" : "hidden"}>Cancel edit</button></div>
     </form>
     <section><div class="panel-section-title"><span>Saved workouts</span><small>${workouts.length} plans</small></div><div class="panel-list">${list}</div></section>`;
   container.dataset.panel = "workouts";
+  startReminderMonitor();
   refreshIcons(container);
   // Restore the edit form if the user switches to another panel and comes back.
   if (editingWorkoutId) {
@@ -77,6 +186,9 @@ export function mountWorkoutPanel(container) {
       container.querySelector("#workout-category").value = editing.category;
       container.querySelector("#workout-date").value = editing.date;
       container.querySelector("#workout-notes").value = editing.notes || "";
+      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(
+        editing.reminderAt,
+      );
       container.querySelector("#exercise-list").innerHTML = (
         editing.exercises || []
       )
@@ -89,6 +201,46 @@ export function mountWorkoutPanel(container) {
     } else editingWorkoutId = null;
   }
   const form = container.querySelector("#workout-form");
+  container
+    .querySelector("#workout-test-alarm")
+    ?.addEventListener("click", () => {
+      unlockReminderAudio();
+      playWorkoutAlarm();
+      showToast("Workout alarm sound test.", "info", 2500);
+    });
+  const notificationButton = container.querySelector(
+    "#workout-enable-notifications",
+  );
+  if (notificationButton) {
+    if (!("Notification" in window)) notificationButton.disabled = true;
+    notificationButton.addEventListener("click", async () => {
+      unlockReminderAudio();
+      if (!("Notification" in window)) {
+        showToast(
+          "Browser notifications are not supported here. The in-page sound can still work while ExerFit is open.",
+          "warning",
+          5000,
+        );
+        return;
+      }
+      try {
+        const permission = await Notification.requestPermission();
+        showToast(
+          permission === "granted"
+            ? "Browser workout alerts are enabled."
+            : "Browser alerts were not enabled. The in-page alarm works while ExerFit is open.",
+          permission === "granted" ? "success" : "info",
+          4500,
+        );
+      } catch (error) {
+        showToast(
+          "Could not request browser notification permission in this browser.",
+          "warning",
+          4000,
+        );
+      }
+    });
+  }
   container.querySelector("#add-exercise").addEventListener("click", () => {
     container
       .querySelector("#exercise-list")
@@ -111,6 +263,12 @@ export function mountWorkoutPanel(container) {
     event.preventDefault();
     const name = container.querySelector("#workout-name").value.trim();
     const exercises = collectExercises(container);
+    const reminderValue = container.querySelector("#workout-reminder").value;
+    if (reminderValue && !Number.isFinite(new Date(reminderValue).getTime())) {
+      showToast("Choose a valid reminder date and time.", "warning");
+      return;
+    }
+    unlockReminderAudio();
     if (!name || !exercises.length) {
       showToast("Enter a workout name and at least one exercise.", "warning");
       return;
@@ -127,6 +285,10 @@ export function mountWorkoutPanel(container) {
           date: container.querySelector("#workout-date").value,
           exercises,
           notes: container.querySelector("#workout-notes").value.trim(),
+          reminderAt: reminderValue
+            ? new Date(reminderValue).toISOString()
+            : null,
+          reminderFiredAt: null,
           updatedAt: new Date().toISOString(),
         });
     } else {
@@ -137,6 +299,10 @@ export function mountWorkoutPanel(container) {
         date: container.querySelector("#workout-date").value,
         exercises,
         notes: container.querySelector("#workout-notes").value.trim(),
+        reminderAt: reminderValue
+          ? new Date(reminderValue).toISOString()
+          : null,
+        reminderFiredAt: null,
         status: "planned",
         createdAt: new Date().toISOString(),
       });
@@ -163,6 +329,9 @@ export function mountWorkoutPanel(container) {
       container.querySelector("#workout-category").value = workout.category;
       container.querySelector("#workout-date").value = workout.date;
       container.querySelector("#workout-notes").value = workout.notes || "";
+      container.querySelector("#workout-reminder").value = toLocalDateTimeValue(
+        workout.reminderAt,
+      );
       container.querySelector("#exercise-list").innerHTML = (
         workout.exercises || []
       )
@@ -216,3 +385,6 @@ export function mountWorkoutPanel(container) {
     }),
   );
 }
+
+// Keep reminders checked while the dashboard is open, even when another panel is selected.
+startReminderMonitor();

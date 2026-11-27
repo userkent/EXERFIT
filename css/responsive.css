@@ -422,7 +422,6 @@
   }
 }
 
-
 /* =========================================================
    EXERFIT TABLET + MOBILE MAP LAYOUT
    Keeps controls reachable, prevents cards from covering the whole map,
@@ -649,7 +648,7 @@
   height: 42px;
   padding-left: 12px;
   border-radius: 13px;
-  box-shadow: 0 3px 12px rgba(24, 52, 37, .07);
+  box-shadow: 0 3px 12px rgba(24, 52, 37, 0.07);
 }
 .header-map-search input {
   height: 38px;
@@ -783,7 +782,7 @@
   color: #87948b;
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
 }
 .route-weather-copy strong {
   color: #294b36;
@@ -838,21 +837,46 @@
   height: 14px;
 }
 .route-actions .is-loading svg {
-  animation: route-refresh-spin .8s linear infinite;
+  animation: route-refresh-spin 0.8s linear infinite;
 }
 @keyframes route-refresh-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (min-width: 761px) and (max-width: 1100px) {
-  .app-header { gap: 8px; padding-right: 10px; padding-left: 10px; }
-  .app-header .brand { flex-basis: 54px; }
-  .header-search-wrap { flex: 0 1 260px; min-width: 170px; margin-right: 2px; }
-  .app-nav { gap: 0; }
-  .nav-item { min-width: 52px; padding: 0 4px; }
-  .header-actions { gap: 4px; margin-left: 4px; }
-  .header-actions .icon-button { width: 34px; height: 34px; }
-  .profile-trigger { gap: 4px; }
+  .app-header {
+    gap: 8px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  .app-header .brand {
+    flex-basis: 54px;
+  }
+  .header-search-wrap {
+    flex: 0 1 260px;
+    min-width: 170px;
+    margin-right: 2px;
+  }
+  .app-nav {
+    gap: 0;
+  }
+  .nav-item {
+    min-width: 52px;
+    padding: 0 4px;
+  }
+  .header-actions {
+    gap: 4px;
+    margin-left: 4px;
+  }
+  .header-actions .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+  .profile-trigger {
+    gap: 4px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -862,8 +886,13 @@
     gap: 8px;
     padding: 0 9px;
   }
-  .app-header .brand { flex: 0 0 43px; }
-  .app-header .brand-symbol { width: 42px; height: 26px; }
+  .app-header .brand {
+    flex: 0 0 43px;
+  }
+  .app-header .brand-symbol {
+    width: 42px;
+    height: 26px;
+  }
   .header-search-wrap {
     flex: 1 1 auto;
     min-width: 0;
@@ -874,62 +903,156 @@
     padding-left: 9px;
     border-radius: 11px;
   }
-  .header-map-search > svg { flex-basis: 15px; width: 15px; height: 15px; }
+  .header-map-search > svg {
+    flex-basis: 15px;
+    width: 15px;
+    height: 15px;
+  }
   .header-map-search input {
     height: 36px;
     padding: 0 7px;
     font-size: 11px;
   }
-  .header-map-search input::placeholder { font-size: 10px; }
-  .header-map-search button { flex-basis: 29px; width: 29px; height: 29px; }
-  .app-nav { margin-left: 0; }
-  .header-actions { flex: 0 0 auto; margin-left: 0; gap: 3px; }
-  .header-actions .icon-button { width: 34px; height: 34px; }
-  .profile-trigger { width: 32px; }
-  .map-top-left { top: 10px; left: 10px; width: min(280px, calc(100vw - 20px)); }
-  .travel-mode-panel { padding: 8px; }
-  .travel-mode-options { gap: 5px; }
-  .travel-mode-option { min-height: 39px; gap: 4px; padding: 0 5px; font-size: 10px; }
-  .travel-mode-panel.is-collapsed { width: 168px; }
-  .route-weather-panel { gap: 8px; padding: 8px; }
-  .route-weather-icon { flex-basis: 32px; width: 32px; height: 32px; }
-  .route-actions-primary, .route-actions-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .route-actions .button { min-height: 38px; font-size: 9px; }
-  .route-summary { max-height: min(62dvh, 560px); overflow-y: auto; }
+  .header-map-search input::placeholder {
+    font-size: 10px;
+  }
+  .header-map-search button {
+    flex-basis: 29px;
+    width: 29px;
+    height: 29px;
+  }
+  .app-nav {
+    margin-left: 0;
+  }
+  .header-actions {
+    flex: 0 0 auto;
+    margin-left: 0;
+    gap: 3px;
+  }
+  .header-actions .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+  .profile-trigger {
+    width: 32px;
+  }
+  .map-top-left {
+    top: 10px;
+    left: 10px;
+    width: min(280px, calc(100vw - 20px));
+  }
+  .travel-mode-panel {
+    padding: 8px;
+  }
+  .travel-mode-options {
+    gap: 5px;
+  }
+  .travel-mode-option {
+    min-height: 39px;
+    gap: 4px;
+    padding: 0 5px;
+    font-size: 10px;
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 168px;
+  }
+  .route-weather-panel {
+    gap: 8px;
+    padding: 8px;
+  }
+  .route-weather-icon {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+  .route-actions-primary,
+  .route-actions-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .route-actions .button {
+    min-height: 38px;
+    font-size: 9px;
+  }
+  .route-summary {
+    max-height: min(62dvh, 560px);
+    overflow-y: auto;
+  }
 }
 
 @media (max-width: 430px) {
-  .app-header { gap: 6px; padding: 0 7px; }
-  .app-header .brand { flex-basis: 36px; }
-  .app-header .brand-symbol { width: 36px; height: 24px; }
-  .header-search-wrap { margin-right: 0; }
-  .header-map-search input::placeholder { content: "Search places"; }
-  .header-actions { gap: 2px; }
-  .header-actions .icon-button { width: 31px; height: 33px; }
-  .profile-trigger { width: 29px; }
-  .map-top-left { left: 8px; width: min(250px, calc(100vw - 16px)); }
-  .travel-mode-panel.is-collapsed { width: 158px; }
-  .route-weather-copy span { font-size: 9px; }
-  .route-weather-copy strong { font-size: 14px; }
-  .route-actions .button { padding: 0 5px; font-size: 8px; }
+  .app-header {
+    gap: 6px;
+    padding: 0 7px;
+  }
+  .app-header .brand {
+    flex-basis: 36px;
+  }
+  .app-header .brand-symbol {
+    width: 36px;
+    height: 24px;
+  }
+  .header-search-wrap {
+    margin-right: 0;
+  }
+  .header-map-search input::placeholder {
+    content: "Search places";
+  }
+  .header-actions {
+    gap: 2px;
+  }
+  .header-actions .icon-button {
+    width: 31px;
+    height: 33px;
+  }
+  .profile-trigger {
+    width: 29px;
+  }
+  .map-top-left {
+    left: 8px;
+    width: min(250px, calc(100vw - 16px));
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 158px;
+  }
+  .route-weather-copy span {
+    font-size: 9px;
+  }
+  .route-weather-copy strong {
+    font-size: 14px;
+  }
+  .route-actions .button {
+    padding: 0 5px;
+    font-size: 8px;
+  }
 }
 
 /* Header search takes the old upper-map space, so align the map tool stack at the top edge. */
 @media (max-width: 760px) {
-  .map-workspace { height: calc(100dvh - 62px - 62px); }
-  .map-top-right { top: 12px; }
+  .map-workspace {
+    height: calc(100dvh - 62px - 62px);
+  }
+  .map-top-right {
+    top: 12px;
+  }
 }
 @media (max-width: 380px) {
-  .map-top-left { width: min(205px, calc(100vw - 16px)); }
-  .travel-mode-panel.is-collapsed { width: 152px; }
-  .travel-mode-option { font-size: 9px; }
+  .map-top-left {
+    width: min(205px, calc(100vw - 16px));
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 152px;
+  }
+  .travel-mode-option {
+    font-size: 9px;
+  }
 }
 
 /* =========================================================
    LANDING + AUTH MOBILE POLISH (iOS Safari / Android Chrome)
    Loaded after the base theme so phone-specific rules win.
 ========================================================= */
-html, body {
+html,
+body {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
@@ -938,22 +1061,40 @@ body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
-img, svg, video, canvas {
+img,
+svg,
+video,
+canvas {
   max-width: 100%;
 }
-button, .button, a {
+button,
+.button,
+a {
   touch-action: manipulation;
 }
 
 @media (min-width: 761px) and (max-width: 1100px) {
-  .landing-header { padding: 20px 28px; }
-  .landing-nav { gap: clamp(14px, 2.5vw, 28px); }
-  .hero-section { gap: 28px; padding-right: 34px; padding-left: 34px; }
-  .hero-copy h1 { font-size: clamp(44px, 5.2vw, 60px); letter-spacing: -2.8px; }
+  .landing-header {
+    padding: 20px 28px;
+  }
+  .landing-nav {
+    gap: clamp(14px, 2.5vw, 28px);
+  }
+  .hero-section {
+    gap: 28px;
+    padding-right: 34px;
+    padding-left: 34px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(44px, 5.2vw, 60px);
+    letter-spacing: -2.8px;
+  }
 }
 
 @media (max-width: 760px) {
-  .landing-page { overflow-x: clip; }
+  .landing-page {
+    overflow-x: clip;
+  }
   .landing-header {
     position: relative;
     display: flex;
@@ -962,8 +1103,13 @@ button, .button, a {
     padding: 12px 18px;
     gap: 12px;
   }
-  .landing-header .brand-symbol { width: 48px; height: 28px; }
-  .landing-nav { display: none !important; }
+  .landing-header .brand-symbol {
+    width: 48px;
+    height: 28px;
+  }
+  .landing-nav {
+    display: none !important;
+  }
   .landing-actions {
     display: flex;
     flex: 0 1 auto;
@@ -971,7 +1117,10 @@ button, .button, a {
     margin-left: auto;
     gap: 6px;
   }
-  .landing-actions .theme-toggle { width: 38px; height: 38px; }
+  .landing-actions .theme-toggle {
+    width: 38px;
+    height: 38px;
+  }
   .landing-actions .button {
     display: inline-flex;
     min-height: 38px;
@@ -980,8 +1129,12 @@ button, .button, a {
     font-size: 11px;
     white-space: nowrap;
   }
-  .landing-actions .button-primary { display: none; }
-  .landing-actions .button-quiet { display: inline-flex; }
+  .landing-actions .button-primary {
+    display: none;
+  }
+  .landing-actions .button-quiet {
+    display: inline-flex;
+  }
 
   .hero-section {
     display: grid;
@@ -991,8 +1144,15 @@ button, .button, a {
     padding: clamp(34px, 8vw, 54px) 22px 42px;
     overflow: hidden;
   }
-  .hero-copy { width: 100%; max-width: 620px; min-width: 0; }
-  .hero-copy .eyebrow { font-size: 9px; letter-spacing: 1.15px; }
+  .hero-copy {
+    width: 100%;
+    max-width: 620px;
+    min-width: 0;
+  }
+  .hero-copy .eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.15px;
+  }
   .hero-copy h1 {
     max-width: 12ch;
     margin: 17px 0 15px;
@@ -1006,9 +1166,20 @@ button, .button, a {
     font-size: 15px;
     line-height: 1.7;
   }
-  .hero-actions { flex-wrap: wrap; gap: 12px 18px; margin-top: 23px; }
-  .hero-actions .button { min-height: 48px; }
-  .hero-proof { flex-wrap: wrap; gap: 10px; margin-top: 25px; font-size: 11px; }
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 23px;
+  }
+  .hero-actions .button {
+    min-height: 48px;
+  }
+  .hero-proof {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 25px;
+    font-size: 11px;
+  }
   .hero-visual {
     width: 100%;
     height: clamp(220px, 58vw, 330px);
@@ -1033,76 +1204,225 @@ button, .button, a {
     border-width: 5px;
     border-radius: 16px;
   }
-  .hero-stat-card { top: 12%; left: 0; max-width: 54%; }
-  .hero-weather-card { right: 0; bottom: 7%; max-width: 62%; }
-  .hero-orbit { display: none; }
+  .hero-stat-card {
+    top: 12%;
+    left: 0;
+    max-width: 54%;
+  }
+  .hero-weather-card {
+    right: 0;
+    bottom: 7%;
+    max-width: 62%;
+  }
+  .hero-orbit {
+    display: none;
+  }
 
-  .feature-strip { padding: 48px 22px 54px; }
-  .feature-strip-heading { gap: 8px; }
-  .feature-strip-heading h2, .workflow-copy h2 { font-size: clamp(27px, 7vw, 34px); line-height: 1.12; }
-  .feature-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .feature-card { padding: 21px; }
-  .workflow-section { grid-template-columns: minmax(0, 1fr); gap: 27px; padding: 8px 22px 58px; }
-  .workflow-image { width: 100%; height: clamp(220px, 62vw, 310px); }
-  .workflow-copy { min-width: 0; }
-  .about-section { padding: 54px 22px 60px; }
-  .about-heading h2 { font-size: clamp(28px, 7vw, 36px); }
-  .about-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .about-card { min-height: 0; padding: 22px; }
-  .about-note { gap: 20px; padding: 22px; }
-  .about-note .button { width: 100%; }
-  .landing-footer { padding: 28px 22px 18px; }
-  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
-  .footer-brand-column { grid-column: 1 / -1; }
-  .footer-link-column { min-width: 0; }
-  .footer-bottom { gap: 9px; }
+  .feature-strip {
+    padding: 48px 22px 54px;
+  }
+  .feature-strip-heading {
+    gap: 8px;
+  }
+  .feature-strip-heading h2,
+  .workflow-copy h2 {
+    font-size: clamp(27px, 7vw, 34px);
+    line-height: 1.12;
+  }
+  .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .feature-card {
+    padding: 21px;
+  }
+  .workflow-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 27px;
+    padding: 8px 22px 58px;
+  }
+  .workflow-image {
+    width: 100%;
+    height: clamp(220px, 62vw, 310px);
+  }
+  .workflow-copy {
+    min-width: 0;
+  }
+  .about-section {
+    padding: 54px 22px 60px;
+  }
+  .about-heading h2 {
+    font-size: clamp(28px, 7vw, 36px);
+  }
+  .about-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .about-card {
+    min-height: 0;
+    padding: 22px;
+  }
+  .about-note {
+    gap: 20px;
+    padding: 22px;
+  }
+  .about-note .button {
+    width: 100%;
+  }
+  .landing-footer {
+    padding: 28px 22px 18px;
+  }
+  .footer-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+  .footer-brand-column {
+    grid-column: 1 / -1;
+  }
+  .footer-link-column {
+    min-width: 0;
+  }
+  .footer-bottom {
+    gap: 9px;
+  }
 
-  .auth-main { min-height: 100vh; min-height: 100dvh; padding-right: 22px; padding-left: 22px; }
-  .auth-form-wrap { width: 100%; max-width: 465px; }
-  .input-wrap { min-height: 48px; }
-  .input-wrap input { min-width: 0; font-size: 16px; }
-  .auth-form .button { min-height: 48px; }
+  .auth-main {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+  .auth-form-wrap {
+    width: 100%;
+    max-width: 465px;
+  }
+  .input-wrap {
+    min-height: 48px;
+  }
+  .input-wrap input {
+    min-width: 0;
+    font-size: 16px;
+  }
+  .auth-form .button {
+    min-height: 48px;
+  }
 }
 
 @media (max-width: 480px) {
-  .landing-header { padding-right: 15px; padding-left: 15px; }
-  .landing-header .brand-symbol { width: 43px; }
-  .landing-actions { gap: 5px; }
-  .landing-actions .theme-toggle { width: 36px; height: 36px; }
-  .landing-actions .button { padding: 0 10px; }
-  .hero-section { padding-right: 19px; padding-left: 19px; }
-  .hero-copy h1 { font-size: clamp(37px, 10.2vw, 48px); letter-spacing: -2.25px; }
-  .hero-copy > p { font-size: 14px; }
-  .hero-visual { height: 230px; }
-  .hero-stat-card, .hero-weather-card { padding: 9px; gap: 7px; }
-  .hero-stat-card strong, .hero-weather-card strong { font-size: 9px; }
-  .hero-stat-card small, .hero-weather-card small { font-size: 8px; }
-  .stat-icon, .weather-sun { flex: 0 0 29px; width: 29px; height: 29px; }
-  .feature-strip, .workflow-section, .about-section { padding-right: 19px; padding-left: 19px; }
-  .footer-main { gap: 22px 12px; }
+  .landing-header {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+  .landing-header .brand-symbol {
+    width: 43px;
+  }
+  .landing-actions {
+    gap: 5px;
+  }
+  .landing-actions .theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+  .landing-actions .button {
+    padding: 0 10px;
+  }
+  .hero-section {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(37px, 10.2vw, 48px);
+    letter-spacing: -2.25px;
+  }
+  .hero-copy > p {
+    font-size: 14px;
+  }
+  .hero-visual {
+    height: 230px;
+  }
+  .hero-stat-card,
+  .hero-weather-card {
+    padding: 9px;
+    gap: 7px;
+  }
+  .hero-stat-card strong,
+  .hero-weather-card strong {
+    font-size: 9px;
+  }
+  .hero-stat-card small,
+  .hero-weather-card small {
+    font-size: 8px;
+  }
+  .stat-icon,
+  .weather-sun {
+    flex: 0 0 29px;
+    width: 29px;
+    height: 29px;
+  }
+  .feature-strip,
+  .workflow-section,
+  .about-section {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+  .footer-main {
+    gap: 22px 12px;
+  }
 }
 
 @media (max-width: 360px) {
-  .landing-header { gap: 7px; }
-  .landing-actions .button { font-size: 10px; padding: 0 8px; }
-  .hero-copy h1 { font-size: 36px; letter-spacing: -2px; }
-  .hero-actions { align-items: flex-start; flex-direction: column; }
-  .hero-actions .text-link { min-height: 40px; }
-  .hero-visual { height: 205px; }
-  .footer-main { grid-template-columns: 1fr 1fr; }
+  .landing-header {
+    gap: 7px;
+  }
+  .landing-actions .button {
+    font-size: 10px;
+    padding: 0 8px;
+  }
+  .hero-copy h1 {
+    font-size: 36px;
+    letter-spacing: -2px;
+  }
+  .hero-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .hero-actions .text-link {
+    min-height: 40px;
+  }
+  .hero-visual {
+    height: 205px;
+  }
+  .footer-main {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @supports (padding: max(0px)) {
-  .landing-header { padding-left: max(15px, env(safe-area-inset-left)); padding-right: max(15px, env(safe-area-inset-right)); }
-  .landing-footer { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
-  .app-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(62px + env(safe-area-inset-bottom)); }
+  .landing-header {
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+  }
+  .landing-footer {
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+  .app-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(62px + env(safe-area-inset-bottom));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
-
 
 /* =========================================================
    AUTHENTICATION LAYOUT FIX
@@ -1207,5 +1527,48 @@ button, .button, a {
 
   .password-rules {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Final cascade for the map overlays on mobile/tablet. Weather sits opposite the stats card. */
+@media (max-width: 760px) {
+  .map-weather-card {
+    left: auto !important;
+    right: 10px !important;
+    bottom: 103px !important;
+    width: max-content;
+    min-width: 0;
+    max-width: calc(100vw - 20px);
+  }
+  #restore-weather-card {
+    left: auto;
+    right: 10px;
+    bottom: 103px;
+  }
+  #restore-dashboard-stats {
+    right: 10px;
+    bottom: 49px;
+  }
+  #restore-route-summary {
+    left: 10px;
+    bottom: 70px;
+  }
+}
+@media (max-width: 430px) {
+  .map-weather-card {
+    right: 8px !important;
+    max-width: calc(100vw - 16px);
+  }
+  #restore-weather-card {
+    right: 8px;
+    bottom: 103px;
+  }
+  #restore-dashboard-stats {
+    right: 8px;
+    bottom: 49px;
+  }
+  #restore-route-summary {
+    left: 8px;
+    bottom: 70px;
   }
 }

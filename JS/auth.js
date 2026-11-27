@@ -42,6 +42,7 @@ function getPasswordRules(password) {
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
+    alphanumeric: /^[A-Za-z0-9]+$/.test(password),
   };
 }
 
@@ -54,7 +55,14 @@ function updatePasswordFeedback() {
   const rules = getPasswordRules(password);
   const ruleNames = Object.keys(rules);
   const score = password ? ruleNames.filter((rule) => rules[rule]).length : 0;
-  const strengthLabels = ["Not entered", "Very weak", "Weak", "Good", "Strong"];
+  const strengthLabels = [
+    "Not entered",
+    "Very weak",
+    "Weak",
+    "Fair",
+    "Good",
+    "Strong",
+  ];
   const strength = document.getElementById("password-strength-label");
   const track = document.getElementById("password-strength-track");
   const fill = document.getElementById("password-strength-fill");
@@ -64,7 +72,7 @@ function updatePasswordFeedback() {
     track.dataset.level = String(score);
     track.setAttribute("aria-valuenow", String(score));
   }
-  if (fill) fill.style.width = `${score * 25}%`;
+  if (fill) fill.style.width = `${score * 20}%`;
 
   ruleNames.forEach((rule) => {
     const item = document.querySelector(`[data-password-rule="${rule}"]`);
@@ -174,8 +182,9 @@ if (signupForm) {
     }
     const passwordRules = getPasswordRules(password);
     if (!Object.values(passwordRules).every(Boolean)) {
-      message.textContent =
-        "Your password must have at least 8 characters, one uppercase letter, one lowercase letter, and one number.";
+      message.textContent = passwordRules.alphanumeric
+        ? "Your password must have at least 8 characters, one uppercase letter, one lowercase letter, and one number."
+        : "Use letters and numbers only. Spaces and special characters are not allowed.";
       return;
     }
     if (password !== confirm) {

@@ -29,12 +29,20 @@ import {
   setMapStatus,
 } from "./map.js";
 import { searchLocations, getRoute } from "./routing-service.js";
-import { startNavigation, clearNavigation, setActiveNavigationRoute } from "./navigation.js";
+import {
+  startNavigation,
+  clearNavigation,
+  setActiveNavigationRoute,
+} from "./navigation.js";
 import { mountActivityPanel } from "./activity.js";
 import { mountSavedRoutesPanel } from "./saved-routes.js";
 import { mountWorkoutPanel } from "./workout-planner.js";
 import { mountHistoryPanel } from "./activity-history.js";
-import { setWeatherPosition, fetchWeatherForMap, mountWeatherSettings } from "./weather.js";
+import {
+  setWeatherPosition,
+  fetchWeatherForMap,
+  mountWeatherSettings,
+} from "./weather.js";
 import {
   profileStatisticsMarkup,
   refreshDashboardStats,
@@ -73,9 +81,11 @@ function initializeDashboard() {
   bindDestinationSearch();
   bindTravelModeSelection();
   bindMapDestinationPicker();
+  bindMapOverlayHideControls();
   bindFindAnotherRoute();
   bindWeatherMapMode();
   bindMapSettings();
+  bindRouteActions();
   bindProfileAndSettings();
   bindAppEvents();
   initDraggableCards();
@@ -305,7 +315,24 @@ function bindMapControls() {
     .getElementById("header-weather")
     ?.addEventListener("click", () => openPanel("settings"));
 }
+function isLocationContextSecure() {
+  const hostname = window.location.hostname;
+  const localHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]";
+  return Boolean(window.isSecureContext || localHost);
+}
 function locateUser() {
+  if (!isLocationContextSecure()) {
+    showToast(
+      "Live location requires HTTPS on phones and tablets. Open ExerFit through a secure HTTPS address, then allow location access.",
+      "warning",
+      7000,
+    );
+    setMapStatus("Secure connection needed for GPS");
+    return;
+  }
   if (!navigator.geolocation) {
     showToast("This browser does not support geolocation.", "error");
     return;
@@ -340,6 +367,13 @@ function locateUser() {
   );
 }
 function getCurrentPosition() {
+  if (!isLocationContextSecure()) {
+    return Promise.reject(
+      new Error(
+        "Live GPS requires a secure HTTPS connection on mobile devices. Open ExerFit over HTTPS and allow location access.",
+      ),
+    );
+  }
   if (
     lastKnownPosition &&
     Date.now() - lastKnownPosition.timestamp < 2 * 60 * 1000
@@ -501,7 +535,11 @@ function bindTravelModeSelection() {
   const currentLabel = document.getElementById("travel-mode-current-label");
   if (!valueInput || !options.length) return;
 
-  const modeIcons = { walking: "footprints", cycling: "bike", driving: "car-front" };
+  const modeIcons = {
+    walking: "footprints",
+    cycling: "bike",
+    driving: "car-front",
+  };
   const updateCompactMode = (mode, label) => {
     if (currentIcon) {
       currentIcon.innerHTML = `<i data-lucide="${modeIcons[mode] || "route"}"></i>`;
@@ -519,21 +557,81 @@ function bindTravelModeSelection() {
         option.classList.toggle("is-active", selected);
         option.setAttribute("aria-checked", String(selected));
       });
-      const modeLabel = button.querySelector("span")?.textContent || "Travel mode";
+      const modeLabel =
+        button.querySelector("span")?.textContent || "Travel mode";
       updateCompactMode(mode, modeLabel);
       const routeNote = document.getElementById("route-mode-prompt");
-      if (routeNote) routeNote.textContent = `Mode changed to ${modeLabel}. Refresh the route to update distance, time, and directions.`;
-      showToast(`${modeLabel} selected. Press Refresh route on the destination card to recalculate.`, "info", 2600);
+      if (routeNote)
+        routeNote.textContent = `Mode changed to ${modeLabel}. Refresh the route to update distance, time, and directions.`;
+      showToast(
+        `${modeLabel} selected. Press Refresh route on the destination card to recalculate.`,
+        "info",
+        2600,
+      );
     });
   });
 
   toggle?.addEventListener("click", () => {
     const collapsed = panel?.classList.toggle("is-collapsed") || false;
     toggle.setAttribute("aria-expanded", String(!collapsed));
-    toggle.setAttribute("aria-label", collapsed ? "Show travel mode options" : "Hide travel mode options");
-    toggle.title = collapsed ? "Show travel mode options" : "Hide travel mode options";
+    toggle.setAttribute(
+      "aria-label",
+      collapsed ? "Show travel mode options" : "Hide travel mode options",
+    );
+    toggle.title = collapsed
+      ? "Show travel mode options"
+      : "Hide travel mode options";
     toggle.innerHTML = `<i data-lucide="${collapsed ? "chevron-down" : "chevron-up"}"></i>`;
     refreshIcons(toggle);
+  });
+}
+
+function bindMapOverlayHideControls() {
+  const routeCard = document.getElementById("route-summary");
+  const restoreRoute = document.getElementById("restore-route-summary");
+  const weatherCard = document.getElementById("map-weather-card");
+  const restoreWeather = document.getElementById("restore-weather-card");
+  const statsCard = document.getElementById("dashboard-overview-card");
+  const restoreStats = document.getElementById("restore-dashboard-stats");
+
+  document
+    .getElementById("hide-route-summary")
+    ?.addEventListener("click", () => {
+      if (routeCard) routeCard.hidden = true;
+      restoreRoute?.classList.remove("is-hidden");
+    });
+  restoreRoute?.addEventListener("click", () => {
+    if (routeCard) routeCard.hidden = false;
+    restoreRoute.classList.add("is-hidden");
+    window.setTimeout(() => getMap()?.invalidateSize(), 80);
+  });
+
+  document
+    .getElementById("hide-weather-card")
+    ?.addEventListener("click", () => {
+      if (weatherCard) {
+        weatherCard.dataset.userHidden = "true";
+        weatherCard.classList.add("is-hidden");
+      }
+      restoreWeather?.classList.remove("is-hidden");
+    });
+  restoreWeather?.addEventListener("click", () => {
+    if (weatherCard) {
+      delete weatherCard.dataset.userHidden;
+      weatherCard.classList.remove("is-hidden");
+    }
+    restoreWeather.classList.add("is-hidden");
+  });
+
+  document
+    .getElementById("hide-dashboard-stats")
+    ?.addEventListener("click", () => {
+      statsCard?.classList.add("is-hidden");
+      restoreStats?.classList.remove("is-hidden");
+    });
+  restoreStats?.addEventListener("click", () => {
+    statsCard?.classList.remove("is-hidden");
+    restoreStats.classList.add("is-hidden");
   });
 }
 
@@ -550,7 +648,9 @@ function bindMapDestinationPicker() {
     button.setAttribute("aria-pressed", String(enabled));
     map.getContainer().classList.toggle("is-picking-destination", enabled);
     map.getContainer().style.cursor = enabled ? "crosshair" : "";
-    setMapStatus(enabled ? "Click the map to set your destination" : "Map ready");
+    setMapStatus(
+      enabled ? "Click the map to set your destination" : "Map ready",
+    );
   };
 
   button.addEventListener("click", () => {
@@ -576,13 +676,19 @@ function bindMapDestinationPicker() {
     setMapStatus("Calculating route…");
 
     const route = await recalculateSelectedRoute();
-    if (route) showToast("GPS route is ready. Press Navigate when you are ready.", "success");
+    if (route)
+      showToast(
+        "GPS route is ready. Press Navigate when you are ready.",
+        "success",
+      );
   });
 }
 
 function displayRouteSummary(route, place) {
   const card = document.getElementById("route-summary");
+  if (!card) return;
   card.hidden = false;
+  document.getElementById("restore-route-summary")?.classList.add("is-hidden");
   document.getElementById("route-destination-title").textContent = place.name;
   document.getElementById("route-distance").textContent = formatDistance(
     route.distanceMeters,
@@ -603,17 +709,20 @@ function displayRouteSummary(route, place) {
     instructions ||
     '<p class="settings-note">The routing service did not return turn details for this route.</p>';
   const alternateButton = document.getElementById("find-another-route");
-  const alternatives = route.routeOptions?.length > 1 || (route.alternatives || []).length > 0;
+  const alternatives =
+    route.routeOptions?.length > 1 || (route.alternatives || []).length > 0;
   if (alternateButton) alternateButton.disabled = !alternatives;
   const modePrompt = document.getElementById("route-mode-prompt");
-  if (modePrompt) modePrompt.textContent = "Route calculated for the selected travel mode.";
+  if (modePrompt)
+    modePrompt.textContent = "Route calculated for the selected travel mode.";
   const optionNote = document.getElementById("route-option-note");
   if (optionNote) {
     const total = route.routeOptions?.length || 1;
     const index = (route.routeOptionIndex || 0) + 1;
-    optionNote.textContent = total > 1
-      ? `Route ${index} of ${total} · ${index === 1 ? "Fastest estimated route" : "Alternative route"}`
-      : "Fastest available route for this travel mode";
+    optionNote.textContent =
+      total > 1
+        ? `Route ${index} of ${total} · ${index === 1 ? "Fastest estimated route" : "Alternative route"}`
+        : "Fastest available route for this travel mode";
   }
   refreshIcons(card);
 }
@@ -662,7 +771,11 @@ function bindRouteActions() {
       const button = document.getElementById("refresh-route-weather");
       button.disabled = true;
       try {
-        await fetchWeatherForMap(selectedDestination.lat, selectedDestination.lon, "Route destination weather");
+        await fetchWeatherForMap(
+          selectedDestination.lat,
+          selectedDestination.lon,
+          "Route destination weather",
+        );
       } catch (error) {
         showToast(error.message, "warning", 3500);
       } finally {
@@ -675,37 +788,51 @@ function bindRouteActions() {
     currentRoute = null;
     selectedDestination = null;
     document.getElementById("route-summary").hidden = true;
+    document
+      .getElementById("restore-route-summary")
+      ?.classList.add("is-hidden");
     setMapStatus("Map ready");
   });
 }
 
 function bindFindAnotherRoute() {
-  document.getElementById("find-another-route")?.addEventListener("click", () => {
-    if (!currentRoute) return;
-    const options = currentRoute.routeOptions?.length
-      ? currentRoute.routeOptions
-      : [currentRoute, ...(currentRoute.alternatives || [])];
-    if (options.length < 2) {
-      showToast("The routing service did not return another route for this journey.", "info");
-      return;
-    }
-    const currentIndex = Number.isInteger(currentRoute.routeOptionIndex)
-      ? currentRoute.routeOptionIndex
-      : Math.max(0, options.indexOf(currentRoute));
-    const nextIndex = (currentIndex + 1) % options.length;
-    currentRoute = {
-      ...options[nextIndex],
-      name: currentRoute.name,
-      routeOptions: options,
-      routeOptionIndex: nextIndex,
-      alternatives: options.filter((_, index) => index !== nextIndex),
-    };
-    const navigationSwitched = setActiveNavigationRoute(currentRoute);
-    if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
-    displayRouteSummary(currentRoute, selectedDestination || { name: "Destination" });
-    setMapStatus("Alternative route ready");
-    showToast(`Route ${nextIndex + 1} of ${options.length} selected · ${Math.round(currentRoute.durationSeconds / 60)} min estimated.`, "success");
-  });
+  document
+    .getElementById("find-another-route")
+    ?.addEventListener("click", () => {
+      if (!currentRoute) return;
+      const options = currentRoute.routeOptions?.length
+        ? currentRoute.routeOptions
+        : [currentRoute, ...(currentRoute.alternatives || [])];
+      if (options.length < 2) {
+        showToast(
+          "The routing service did not return another route for this journey.",
+          "info",
+        );
+        return;
+      }
+      const currentIndex = Number.isInteger(currentRoute.routeOptionIndex)
+        ? currentRoute.routeOptionIndex
+        : Math.max(0, options.indexOf(currentRoute));
+      const nextIndex = (currentIndex + 1) % options.length;
+      currentRoute = {
+        ...options[nextIndex],
+        name: currentRoute.name,
+        routeOptions: options,
+        routeOptionIndex: nextIndex,
+        alternatives: options.filter((_, index) => index !== nextIndex),
+      };
+      const navigationSwitched = setActiveNavigationRoute(currentRoute);
+      if (!navigationSwitched) drawPlannedRoute(currentRoute.coordinates);
+      displayRouteSummary(
+        currentRoute,
+        selectedDestination || { name: "Destination" },
+      );
+      setMapStatus("Alternative route ready");
+      showToast(
+        `Route ${nextIndex + 1} of ${options.length} selected · ${Math.round(currentRoute.durationSeconds / 60)} min estimated.`,
+        "success",
+      );
+    });
 }
 
 function bindWeatherMapMode() {
@@ -720,13 +847,18 @@ function bindWeatherMapMode() {
     map.getContainer().classList.toggle("is-weather-picking", active);
     map.getContainer().style.cursor = active ? "crosshair" : "";
     setMapStatus(active ? "Click the map to view weather" : "Map ready");
-    if (active) showToast("Click anywhere on the map to see the weather there.", "info");
+    if (active)
+      showToast("Click anywhere on the map to see the weather there.", "info");
   });
   map.on("click", async (event) => {
     if (!active) return;
     setMapStatus("Loading weather…");
     try {
-      await fetchWeatherForMap(event.latlng.lat, event.latlng.lng, "Map location");
+      await fetchWeatherForMap(
+        event.latlng.lat,
+        event.latlng.lng,
+        "Map location",
+      );
       setMapStatus("Weather loaded");
     } catch (error) {
       showToast(error.message, "warning", 5000);
@@ -839,7 +971,6 @@ function bindProfileAndSettings() {
   document
     .getElementById("open-profile")
     ?.addEventListener("click", openProfile);
-  bindRouteActions();
 }
 function openProfile() {
   const user = getCurrentUser();

@@ -19,15 +19,16 @@
         <div class="form-two-columns"><div><label for="signup-nickname">Nickname</label><div class="input-wrap"><i data-lucide="at-sign"></i><input id="signup-nickname" name="nickname" type="text" autocomplete="nickname" placeholder="e.g. trailrunner" required></div></div><div><label for="signup-fullname">Full name</label><div class="input-wrap"><i data-lucide="user"></i><input id="signup-fullname" name="fullname" type="text" autocomplete="name" placeholder="Your name" required></div></div></div>
         <label for="signup-email">Email address</label><div class="input-wrap"><i data-lucide="mail"></i><input id="signup-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
         <label for="signup-password">Password</label>
-        <div class="input-wrap"><i data-lucide="lock-keyhole"></i><input id="signup-password" name="password" type="password" autocomplete="new-password" placeholder="Create a strong password" aria-describedby="password-feedback" required><button class="password-toggle" type="button" data-toggle-password="signup-password" aria-label="Show password"><i data-lucide="eye"></i></button></div>
+        <div class="input-wrap"><i data-lucide="lock-keyhole"></i><input id="signup-password" name="password" type="password" autocomplete="new-password" placeholder="Letters and numbers only" pattern="[A-Za-z0-9]+" title="Use letters and numbers only; no spaces or special characters." aria-describedby="password-feedback" required><button class="password-toggle" type="button" data-toggle-password="signup-password" aria-label="Show password"><i data-lucide="eye"></i></button></div>
         <div class="password-feedback" id="password-feedback">
           <div class="password-strength-heading"><span>Password strength</span><strong id="password-strength-label">Not entered</strong></div>
-          <div class="password-strength-track" role="progressbar" aria-label="Password strength" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" id="password-strength-track"><span id="password-strength-fill"></span></div>
+          <div class="password-strength-track" role="progressbar" aria-label="Password strength" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="password-strength-track"><span id="password-strength-fill"></span></div>
           <ul class="password-rules" aria-live="polite">
             <li data-password-rule="length"><i data-lucide="circle"></i><span>At least 8 characters</span></li>
             <li data-password-rule="uppercase"><i data-lucide="circle"></i><span>One uppercase letter (A–Z)</span></li>
             <li data-password-rule="lowercase"><i data-lucide="circle"></i><span>One lowercase letter (a–z)</span></li>
             <li data-password-rule="number"><i data-lucide="circle"></i><span>At least one number (0–9)</span></li>
+            <li data-password-rule="alphanumeric"><i data-lucide="circle"></i><span>Letters and numbers only (no symbols or spaces)</span></li>
           </ul>
         </div>
         <label for="signup-confirm">Confirm password</label>
