@@ -1,4 +1,5 @@
 # ExerFit
+ExerFit: A Smart Fitness Monitoring and Physical Activity Tracking System
 
 ## Problem
 
@@ -133,3 +134,15 @@ The dashboard map and panels include dedicated tablet and mobile layouts. Contro
 - Place search is located in the dashboard header immediately to the right of the ExerFit logo. Search results open directly below the search field.
 - The travel-mode card on the map can be collapsed and expanded using its icon-only chevron button. When collapsed, the selected travel-mode icon and label stay visible.
 - After choosing a different travel mode, select **Refresh route** in the destination card to request a new route for that mode. The route card also shows destination weather and has a separate weather refresh button.
+
+## Open Live
+
+# github actions: https://userkent.github.io/EXERFIT/
+
+# vercel: https://exerfit.vercel.app/
+
+
+
+
+
+
