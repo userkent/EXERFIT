@@ -1,172 +1,114 @@
-<!doctype html>
+<!DOCTYPE html>
+<!-- FILE PURPOSE: Landing page: introduces ExerFit and links users into the application. -->
 <html lang="en">
 <head>
-  <!-- Page setup: sets the page title, browser tab icon, mobile screen sizing, and connects the CSS design file -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07140d">
-  <meta name="description" content="ExerFit helps you track movement, plan routes, and build a consistent activity habit.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f7f3">
+  <meta name="description" content="ExerFit helps you explore, track outdoor activities, and plan indoor workouts.">
   <title>ExerFit — Move with purpose</title>
-  <link rel="icon" href="images/input/logo/exerfit-logo-light-mode.png" type="image/png">
-  <link rel="stylesheet" href="MystylesCSS/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
+<!-- PAGE STRUCTURE: The body contains the visible layout for this ExerFit page. -->
 <body class="landing-page">
-
-  <!-- Top Menu Bar: holds the ExerFit logo and the Log in / Get started buttons -->
-  <nav class="landing-nav" id="landing-nav" aria-label="Main navigation">
-    <a href="index.html" aria-label="ExerFit home"><img class="brand-logo" src="images/input/logo/exerfit-logo-dark-mode.png" alt="ExerFit"></a>
-    <div class="nav-actions">
-      <a class="landing-about-link" href="#about">About</a>
-      <a class="btn secondary" href="auth.html?mode=login">Log in</a>
-      <a class="btn" href="auth.html?mode=signup">Get started</a>
-    </div>
-  </nav>
-
-  <!-- Main Welcome Banner: the first big section visitors see with the main headline and action buttons -->
-  <header class="hero">
-    <div class="hero-content">
-      <span class="eyebrow" style="color:#8befa8">A smarter way to move</span>
-      <h1>Make every move <em>count.</em></h1>
-      <p>One calm, connected space for your walks, runs, rides, workouts, and recovery days. Plan your route, understand the conditions, and keep your progress together.</p>
-      <div class="hero-actions">
-        <a class="btn" href="auth.html?mode=signup">Create your free account</a>
-        <a class="btn secondary" href="#see-it">Explore the tracker</a>
-      </div>
-      <div class="hero-meta" aria-label="ExerFit highlights">
-        <div><strong>05</strong>Activity categories</div>
-        <div><strong>01</strong>Connected activity space</div>
-        <div><strong>100%</strong>Your pace, your way</div>
-      </div>
-    </div>
-    <div class="hero-gear-stage" aria-hidden="true">
-      <div class="simple-activity-3d"><span class="simple-orbit orbit-one"></span><span class="simple-orbit orbit-two"></span><span class="simple-orbit orbit-three"></span><span class="simple-core"></span><span class="simple-spark spark-one"></span><span class="simple-spark spark-two"></span></div>
-    </div>
+  <!-- HEADER: Branding and primary navigation. -->
+<header class="landing-header">
+    <a class="brand" href="index.html" aria-label="ExerFit home"><img class="brand-symbol" data-theme-logo data-light-src="assets/logo/exerfit-logo-dark.png" data-dark-src="assets/logo/exerfit-logo-light.png" src="assets/logo/exerfit-logo-dark.png" alt="" aria-hidden="true"></a>
+    <nav class="landing-nav" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#about">About</a>
+    </nav>
+    <div class="landing-actions"><button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch theme"><i data-lucide="moon"></i></button><a class="button button-quiet" href="pages/login.html">Log in</a><a class="button button-primary" href="pages/signup.html">Get started <i data-lucide="arrow-up-right"></i></a></div>
   </header>
 
-  <!-- Moving Text Strip: a scrolling bar showing different exercises like Walk, Run, Ride, and Yoga -->
-  <div class="marquee" aria-hidden="true"><div class="marquee-track">
-    <span>Walk</span><span>Run</span><span>Ride</span><span>Hike</span><span>Strength</span><span>Yoga</span><span>Stretch</span><span>Move well</span>
-    <span>Walk</span><span>Run</span><span>Ride</span><span>Hike</span><span>Strength</span><span>Yoga</span><span>Stretch</span><span>Move well</span>
-  </div></div>
+  <!-- MAIN CONTENT: Primary page content begins here. -->
+  <main>
+    <section class="hero-section" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR MOVEMENT, IN ONE PLACE</div>
+        <h1>Move smarter.<br><span>Explore farther.</span><br>Train better.</h1>
+        <p>Track your outdoor adventures, find your next route, understand the conditions, and keep your indoor workouts on track.</p>
+        <div class="hero-actions"><a class="button button-primary button-large" href="pages/signup.html">Start moving <i data-lucide="arrow-right"></i></a><a class="text-link" href="#features">Explore ExerFit <i data-lucide="chevron-down"></i></a></div>
+        <div class="hero-proof"><div class="proof-icons"><span><i data-lucide="footprints"></i></span><span><i data-lucide="bike"></i></span><span><i data-lucide="dumbbell"></i></span></div><span>One simple space for every kind of movement.</span></div>
+      </div>
+      <div class="hero-visual" aria-label="Outdoor fitness route preview">
+        <div class="hero-photo hero-photo-main"><img src="assets/images/hero-trail.png" alt="Athlete running along a forest trail" loading="lazy" decoding="async"></div>
+        <div class="hero-map-card"><div class="mini-map-grid"></div><svg class="mini-route" viewBox="0 0 260 150" role="img" aria-label="Illustrative route line"><path d="M12 118 C43 120 35 77 74 83 S101 125 132 93 S165 31 197 52 S226 82 248 22" fill="none" stroke="#3b9b72" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 0"/><circle cx="12" cy="118" r="7" fill="#3b9b72" stroke="white" stroke-width="3"/><circle cx="248" cy="22" r="7" fill="#ef9364" stroke="white" stroke-width="3"/></svg><div class="mini-map-label"><i data-lucide="route"></i><span>Find your way</span></div></div>
+        <div class="hero-stat-card"><span class="stat-icon"><i data-lucide="footprints"></i></span><div><strong>Every step counts</strong><small>Make your movement matter</small></div></div>
+        <div class="hero-weather-card"><span class="weather-sun"><i data-lucide="sun"></i></span><div><strong>Check the conditions</strong><small>Plan your next outdoor session</small></div></div>
+        <div class="hero-orbit hero-orbit-one"></div><div class="hero-orbit hero-orbit-two"></div>
+      </div>
+    </section>
 
-  <!-- App Features: 6 cards explaining what the app can do (tracking, maps, weather, progress, etc.) -->
-  <section class="section" id="features">
-    <div class="section-inner">
-      <div class="section-copy reveal">
-        <span class="eyebrow">Everything in one place</span>
-        <h2>Built around the way you move.</h2>
-        <p>ExerFit brings planning, activity records, and personal goals into one simple dashboard. Outdoor routes and indoor sessions both belong here.</p>
+    <section class="feature-strip" id="features">
+      <div class="feature-strip-heading"><span class="eyebrow">BUILT AROUND YOUR ROUTINE</span><h2>Everything you need<br>to keep moving.</h2></div>
+      <div class="feature-grid">
+        <article class="feature-card"><div class="feature-icon feature-icon-green"><i data-lucide="map"></i></div><h3>Explore your world</h3><p>Search destinations, compare map views, and follow real routes from your current location.</p><a href="pages/signup.html">Explore maps <i data-lucide="arrow-up-right"></i></a></article>
+        <article class="feature-card"><div class="feature-icon feature-icon-orange"><i data-lucide="navigation"></i></div><h3>Track every move</h3><p>Record walks, runs, rides, and hikes with your device’s GPS and review your progress.</p><a href="pages/signup.html">Track an activity <i data-lucide="arrow-up-right"></i></a></article>
+        <article class="feature-card"><div class="feature-icon feature-icon-blue"><i data-lucide="dumbbell"></i></div><h3>Plan your workouts</h3><p>Build gym or home routines, organize exercises, and keep a record of completed sessions.</p><a href="pages/signup.html">Plan a workout <i data-lucide="arrow-up-right"></i></a></article>
       </div>
-      <div class="grid three">
-        <article class="card feature-card reveal"><div class="feature-number">01</div><h3>Track your activity</h3><p>Record outdoor GPS sessions, indoor cardio, strength sets, repetitions, and mind-and-body activities.</p><div class="feature-art"></div></article>
-        <article class="card feature-card reveal"><div class="feature-number">02</div><h3>Plan with context</h3><p>Explore an OpenStreetMap, plan a route, and check available local weather before heading out.</p><div class="feature-art"></div></article>
-        <article class="card feature-card reveal"><div class="feature-number">03</div><h3>See your progress</h3><p>Bring your activity history, personal goals, streaks, and weekly patterns together.</p><div class="feature-art"></div></article>
-        <article class="card feature-card reveal"><div class="feature-number">04</div><h3>Indoor and outdoor</h3><p>Switch between walking, running, cycling, gym training, bodyweight workouts, and more.</p><div class="feature-art"></div></article>
-        <article class="card feature-card reveal"><div class="feature-number">05</div><h3>Weather-aware planning</h3><p>Use current conditions and the available five-day, three-hour forecast to plan outdoor sessions.</p><div class="feature-art"></div></article>
-        <article class="card feature-card reveal"><div class="feature-number">06</div><h3>Your data, your account</h3><p>Each local demo account keeps its own profile, activities, goals, preferences, and saved routes.</p><div class="feature-art"></div></article>
+    </section>
+
+    <section class="workflow-section" id="how-it-works">
+      <div class="workflow-image"><img src="assets/images/images.jpg" alt="Athlete lifting a barbell in a gym" loading="lazy" decoding="async"><div class="image-caption"><span class="caption-pulse"></span> Built for outdoor and indoor movement</div></div>
+      <div class="workflow-copy"><span class="eyebrow">A ROUTINE THAT FITS YOU</span><h2>From your first step<br>to your next personal best.</h2><p>Choose an outdoor activity and record your route, or plan an indoor session with exercises that fit your goals. ExerFit keeps your activity records and workout history together.</p><div class="workflow-list"><div><span class="workflow-number">01</span><div><strong>Choose how you move</strong><small>Walking, running, cycling, hiking, or indoor training.</small></div></div><div><span class="workflow-number">02</span><div><strong>Track your progress</strong><small>Use GPS activity records and practical workout details.</small></div></div><div><span class="workflow-number">03</span><div><strong>Learn from your history</strong><small>Review your distance, duration, and completed sessions.</small></div></div></div><a class="button button-dark" href="pages/signup.html">Create your account <i data-lucide="arrow-right"></i></a></div>
+    </section>
+
+    <!-- ABOUT EXERFIT: A dedicated section explaining the purpose and scope of the platform. -->
+    <section class="about-section" id="about">
+      <div class="about-heading">
+        <span class="eyebrow">ABOUT EXERFIT</span>
+        <h2>One place for the way you move.</h2>
+        <p>ExerFit brings outdoor activity tracking, route exploration, and indoor workout planning into one simple fitness workspace.</p>
       </div>
+      <div class="about-grid">
+        <article class="about-card about-card-primary">
+          <span class="about-card-icon"><i data-lucide="compass"></i></span>
+          <h3>Our purpose</h3>
+          <p>Make it easier to plan movement, record progress, and understand your activity in a single place. Whether you are taking a short walk or building a weekly workout routine, ExerFit helps you keep the details organized.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-card-icon"><i data-lucide="map-pinned"></i></span>
+          <h3>Explore with context</h3>
+          <p>Use an interactive map to search destinations, view supported route options, and save route geometry for another day. GPS-based activity tracks remain separate from planned routes.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-card-icon"><i data-lucide="activity"></i></span>
+          <h3>Track your movement</h3>
+          <p>Record walking, running, cycling, or hiking with your device's location permission. Review distance and duration after an activity is completed.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-card-icon"><i data-lucide="dumbbell"></i></span>
+          <h3>Plan indoor training</h3>
+          <p>Organize exercises, sets, repetitions, rest periods, and workout notes for gym or home sessions. Mark routines complete and keep a record of them.</p>
+        </article>
+      </div>
+      <div class="about-note">
+        <div><span class="eyebrow">BUILT WITH OPEN TECHNOLOGY</span><h3>Designed to be understandable and adaptable.</h3><p>ExerFit is a learning prototype built with HTML, CSS, JavaScript, Leaflet, and open map data. Map, routing, geocoding, GPS, and weather features depend on browser permissions and the availability and terms of their connected services.</p></div>
+        <a class="button button-primary" href="pages/signup.html">Try ExerFit <i data-lucide="arrow-up-right"></i></a>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER: Main site links, project summary, and prototype disclosure. -->
+  <footer class="landing-footer" id="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand-column">
+        <a class="brand" href="index.html" aria-label="ExerFit home"><img class="brand-symbol" data-theme-logo data-light-src="assets/logo/exerfit-logo-dark.png" data-dark-src="assets/logo/exerfit-logo-light.png" src="assets/logo/exerfit-logo-dark.png" alt="" aria-hidden="true"><span>exer<span>fit</span></span></a>
+        <p>Move with purpose. Explore at your pace, track your activity, and keep your training organized.</p>
+      </div>
+      <div class="footer-link-column"><strong>Explore</strong><a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#about">About ExerFit</a></div>
+      <div class="footer-link-column"><strong>Your account</strong><a href="pages/login.html">Log in</a><a href="pages/signup.html">Create an account</a><a href="pages/dashboard.html">Dashboard</a></div>
+      <div class="footer-link-column"><strong>Project</strong><a href="#about">About the project</a><a href="#prototype-notice">Prototype notice</a></div>
     </div>
-  </section>
-
-  <!-- Fake Tracker Demo: lets visitors test a pretend workout with a sample map, timer, and Start/Pause/Finish buttons -->
-  <section class="section alt" id="see-it">
-    <div class="section-inner action-preview">
-      <div class="reveal">
-        <span class="eyebrow">See it in action</span>
-        <h2>A preview of the ExerFit Tracker.</h2>
-        <p class="muted">Try this small simulated session. Start it, pause or resume it, then finish or reset it. The timer and sample values respond to your actions. This demonstration does not request GPS permission or save anything to your account.</p>
-        <div class="row wrap" style="margin:22px 0"><span class="pill green">Simulated session</span><span class="pill">No GPS access</span><span class="pill">Not saved to History</span></div>
-        <a class="btn" href="auth.html?mode=signup">Open the full tracker</a>
-      </div>
-      <div class="demo-window reveal" aria-label="Interactive simulated tracker demonstration">
-        <div class="demo-top"><strong>EXERFIT / TRACKER</strong><span class="demo-status" id="demo-status">Ready to start</span></div>
-        <div class="demo-map">
-          <svg viewBox="0 0 520 280" role="img" aria-label="Illustrative route line on a sample map">
-            <path d="M35 221 C95 210 91 164 143 170 S214 201 245 142 S319 103 345 127 S401 89 478 52" fill="none" stroke="#63836a" stroke-width="3" stroke-dasharray="7 10" opacity=".7"/>
-            <path class="demo-route" d="M35 221 C95 210 91 164 143 170 S214 201 245 142 S319 103 345 127 S401 89 478 52" fill="none" stroke="#4ade80" stroke-width="6" stroke-linecap="round"/>
-            <circle cx="35" cy="221" r="10" fill="#4ade80" stroke="#fff" stroke-width="4"/><circle cx="478" cy="52" r="10" fill="#fff" stroke="#4ade80" stroke-width="4"/>
-          </svg>
-        </div>
-        <div class="demo-stats">
-          <div class="demo-stat">TIME<strong id="demo-time">00:00</strong></div>
-          <div class="demo-stat">DISTANCE<strong id="demo-distance">0.00 km</strong></div>
-          <div class="demo-stat">PACE<strong id="demo-pace">—</strong></div>
-        </div>
-        <div class="demo-controls">
-          <button class="btn" id="demo-start" type="button">Start</button>
-          <button class="btn secondary" id="demo-pause" type="button" disabled>Pause</button>
-          <button class="btn secondary" id="demo-finish" type="button" disabled>Finish</button>
-        </div>
-        <p class="demo-note" id="demo-note">Illustrative route and weather only. No live location is used.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works: shows the 3 easy steps to use the app (Choose -> Record -> Review) -->
-  <section class="section" id="how-it-works">
-    <div class="section-inner">
-      <div class="section-copy reveal"><span class="eyebrow">Simple by design</span><h2>Start small. Keep showing up.</h2><p>Move from a quick activity log to a connected view of your progress.</p></div>
-      <div class="grid three">
-        <article class="card reveal"><span class="pill green">Step 01</span><h3 style="margin-top:18px">Choose an activity</h3><p class="muted">Pick an outdoor, indoor, strength, or mind-and-body activity.</p></article>
-        <article class="card reveal"><span class="pill green">Step 02</span><h3 style="margin-top:18px">Record your session</h3><p class="muted">Use GPS tracking when available, a timer, or a quick manual log.</p></article>
-        <article class="card reveal"><span class="pill green">Step 03</span><h3 style="margin-top:18px">Review your progress</h3><p class="muted">See your saved sessions in the dashboard, goals, and activity history.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <!-- About ExerFit: introduces the student-built project and explains its purpose -->
-  <section class="section" id="about">
-    <div class="section-inner about-landing-grid">
-      <div class="section-copy reveal"><span class="eyebrow">About ExerFit</span><h2>Movement, made easier to understand.</h2><p>ExerFit is a student-built activity tracking demonstration that brings activity planning, session records, personal goals, and progress history into one clear space.</p><a class="text-button" href="auth.html?mode=signup">Explore ExerFit →</a></div>
-      <div class="about-landing-points reveal">
-        <div><strong>Plan</strong><span>Explore maps and check OpenWeather conditions before an outdoor activity.</span></div>
-        <div><strong>Record</strong><span>Track outdoor sessions or log indoor, strength, and mind-and-body activities.</span></div>
-        <div><strong>Review</strong><span>Bring saved sessions, activity goals, and progress into view.</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Photo Gallery: displays pictures of different workouts like running, cycling, hiking, gym, and yoga -->
-  <section class="section alt" id="gallery">
-    <div class="section-inner">
-      <div class="section-copy reveal"><span class="eyebrow">Move your way</span><h2>Different ways to feel active.</h2><p>Outdoor movement, gym sessions, and slower practices all have a place.</p></div>
-      <div class="gallery-grid">
-        <div class="gallery-tile reveal"><img loading="lazy" src="images/gallery/runner.jpg" alt="Runner moving along a green outdoor trail"><strong>Outdoor running</strong></div>
-        <div class="gallery-tile reveal"><img loading="lazy" src="images/gallery/cycling.jpg" alt="Cyclist riding outdoors"><strong>Cycling</strong></div>
-        <div class="gallery-tile reveal"><img loading="lazy" src="images/gallery/hiking.jpg" alt="Cyclist riding along a green road"><strong>Scenic cycling</strong></div>
-        <div class="gallery-tile reveal"><img loading="lazy" src="images/gallery/gym.jpg" alt="Gym training space"><strong>Gym training</strong></div>
-        <div class="gallery-tile reveal"><img loading="lazy" src="images/gallery/yoga.jpg" alt="Person practicing yoga and stretching"><strong>Mind and body</strong></div>
-      </div>
-      <p class="small muted" style="margin-top:12px">Photos are loaded from the local images folder included with this project.</p>
-    </div>
-  </section>
-
-  <!-- Common Questions (FAQ): clickable questions that open up to show answers about the app -->
-  <section class="section" id="faq">
-    <div class="section-inner" style="max-width:860px">
-      <div class="section-copy reveal"><span class="eyebrow">Good to know</span><h2>Frequently asked questions.</h2></div>
-      <div class="reveal">
-        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does ExerFit track more than running?<span>+</span></button><div class="faq-a">Yes. The demo supports outdoor activities, indoor cardio, bodyweight exercises, gym and strength sessions, and mind-and-body activities.</div></div>
-        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Does weather work immediately?<span>+</span></button><div class="faq-a">Weather uses OpenWeather. Add your API key in Settings → Weather, then choose or share a location in Tracker to load conditions and the forecast.</div></div>
-        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false">Is this secure production authentication?<span>+</span></button><div class="faq-a">No. ExerFit is a classroom front-end demonstration. Accounts are stored locally in your browser, and passwords are not protected by a server-side authentication system.</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Final Sign-Up Box: one last prompt at the bottom of the page encouraging users to create an account -->
-  <section class="section" style="padding-top:10px">
-    <div class="section-inner welcome-banner reveal">
-      <span class="eyebrow" style="color:#a6f3bb">Your next session starts here</span>
-      <h2>Make room for movement.</h2>
-      <p>Set up your local ExerFit account and bring your activities together.</p>
-      <a class="btn" href="auth.html?mode=signup">Create an account</a>
-    </div>
-  </section>
-
-  <!-- Bottom Footer: shows the logo, student project credit, and a login link -->
-  <footer class="footer"><div class="footer-inner"><a href="index.html"><img class="brand-logo" src="images/input/logo/exerfit-logo-dark-mode.png" alt="ExerFit"></a><span class="small">A student-built activity tracking demonstration · IT24</span><div class="footer-links"><a class="small" href="#about">About</a><a class="small" href="auth.html">Log in / Sign up</a></div></div></footer>
-
-  <!-- JavaScript File: makes the fake tracker buttons, FAQ dropdowns, and scroll animations work -->
-  <script src="JS/index.js"></script>
+    <div class="footer-bottom"><span>© <span id="year"></span> ExerFit. All rights reserved.</span><span>Fitness tracking and planning in one place.</span><span class="footer-prototype-note" id="prototype-notice">Learning prototype · Not a medical or emergency navigation service</span></div>
+  </footer>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module">import { initTheme } from "./JS/theme.js"; initTheme(); document.getElementById("year").textContent = new Date().getFullYear(); window.lucide?.createIcons();</script>
 </body>
 </html>

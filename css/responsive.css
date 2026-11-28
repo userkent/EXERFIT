@@ -1,0 +1,1595 @@
+/* FILE PURPOSE: Responsive layout rules for tablet and mobile screen sizes. */
+/* Responsive adjustments for tablet and phone screens. */
+@media (max-width: 1050px) {
+  .app-header {
+    padding: 0 15px;
+  }
+  .app-header .brand {
+    flex-basis: 115px;
+    font-size: 19px;
+  }
+  .nav-item {
+    min-width: 66px;
+    padding: 0 7px;
+  }
+  .header-actions {
+    min-width: 220px;
+    gap: 7px;
+  }
+  .header-weather {
+    display: none;
+  }
+  .hero-section {
+    gap: 20px;
+    padding-right: 35px;
+    padding-left: 35px;
+  }
+  .workflow-section {
+    gap: 5%;
+  }
+}
+@media (max-width: 760px) {
+  .landing-header {
+    padding: 16px 20px;
+  }
+  .landing-nav {
+    display: none;
+  }
+  .landing-actions {
+    gap: 3px;
+  }
+  .landing-actions .button {
+    min-height: 37px;
+    padding: 0 11px;
+    font-size: 11px;
+  }
+  .hero-section {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    min-height: 0;
+    padding: 47px 24px 62px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(43px, 11vw, 62px);
+    letter-spacing: -2.8px;
+  }
+  .hero-copy > p {
+    font-size: 14px;
+  }
+  .hero-visual {
+    height: 390px;
+    margin-top: 13px;
+  }
+  .hero-photo-main {
+    right: 6%;
+    width: 69%;
+    height: 320px;
+  }
+  .hero-map-card {
+    bottom: 7px;
+    height: 150px;
+  }
+  .hero-stat-card {
+    top: 45px;
+    left: -1%;
+  }
+  .hero-weather-card {
+    right: -2%;
+    bottom: 14px;
+  }
+  .feature-strip {
+    padding: 52px 23px 60px;
+  }
+  .feature-strip-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .feature-strip-heading h2,
+  .workflow-copy h2 {
+    font-size: 30px;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+  .feature-card {
+    min-height: 0;
+    padding: 21px;
+  }
+  .feature-card p {
+    min-height: 0;
+  }
+  .workflow-section {
+    grid-template-columns: 1fr;
+    gap: 31px;
+    padding: 6px 23px 70px;
+  }
+  .workflow-image {
+    height: 300px;
+  }
+  .landing-footer {
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    padding: 22px 23px;
+  }
+  .landing-footer p {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
+  }
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+  .auth-aside {
+    display: none;
+  }
+  .auth-main {
+    min-height: 100vh;
+    padding: 84px 24px 55px;
+  }
+  .back-link {
+    top: 25px;
+    left: 24px;
+  }
+  .auth-mobile-brand {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  .auth-main-signup {
+    padding-top: 75px;
+  }
+  .auth-main-signup .auth-form-wrap {
+    max-width: 465px;
+  }
+  .form-two-columns {
+    gap: 8px;
+  }
+  .dashboard-page {
+    min-height: 500px;
+  }
+  .app-header {
+    height: 62px;
+    padding: 0 12px;
+  }
+  .app-header .brand {
+    flex: 0 0 auto;
+    gap: 7px;
+    font-size: 18px;
+  }
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+  .app-nav {
+    position: fixed;
+    z-index: 700;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    justify-content: space-around;
+    height: 62px;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.97);
+    border-top: 1px solid #e5ece6;
+    box-shadow: 0 -4px 18px rgba(25, 50, 35, 0.07);
+    backdrop-filter: blur(12px);
+  }
+  .nav-item {
+    flex: 1;
+    min-width: 0;
+    height: 62px;
+    gap: 3px;
+    padding: 0 2px;
+    font-size: 8px;
+  }
+  .nav-item svg {
+    width: 17px;
+    height: 17px;
+  }
+  .nav-item.active:after {
+    right: 25%;
+    left: 25%;
+    top: 0;
+    bottom: auto;
+  }
+  .header-actions {
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: 5px;
+  }
+  #open-settings {
+    width: 35px;
+    height: 35px;
+  }
+  .profile-trigger {
+    gap: 5px;
+  }
+  .profile-trigger-name,
+  .profile-trigger > svg {
+    display: none;
+  }
+  .avatar-small {
+    width: 31px;
+    height: 31px;
+  }
+  .map-workspace {
+    height: calc(100vh - 62px - 62px);
+    min-height: 430px;
+  }
+  .map-top-left {
+    top: 11px;
+    left: 10px;
+    width: min(340px, calc(100vw - 20px));
+  }
+  .map-search {
+    height: 46px;
+    border-radius: 13px;
+  }
+  .map-search input {
+    height: 42px;
+    font-size: 11px;
+  }
+  .map-hint {
+    display: none;
+  }
+  .map-top-right {
+    top: 166px;
+    right: 10px;
+    gap: 5px;
+  }
+  .map-control-button {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 11px;
+  }
+  .map-control-button svg {
+    width: 15px;
+    height: 15px;
+  }
+  .map-control-button span {
+    display: none;
+  }
+  .zoom-control button {
+    width: 36px;
+    height: 34px;
+  }
+  .floating-panel {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: min(73%, 560px);
+    border-radius: 19px;
+  }
+  .floating-panel-header {
+    min-height: 65px;
+    padding: 13px 15px 11px 18px;
+  }
+  .floating-panel-header h2 {
+    font-size: 17px;
+  }
+  .floating-panel-body {
+    padding: 14px 16px 18px;
+  }
+  .map-settings-panel {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 76%;
+  }
+  .map-bottom-left {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    padding: 13px;
+  }
+  .map-status-pill {
+    right: 10px;
+    bottom: 10px;
+    padding: 7px 9px;
+    font-size: 8px;
+  }
+  .map-weather-card {
+    right: 10px;
+    bottom: 45px;
+    padding: 8px 10px;
+  }
+  .map-weather-card strong {
+    font-size: 14px;
+  }
+  .route-summary-header h3 {
+    font-size: 14px;
+  }
+  .route-metrics strong {
+    font-size: 14px;
+  }
+  .route-actions .button {
+    font-size: 9px;
+  }
+  .app-modal-backdrop {
+    align-items: end;
+    padding: 8px;
+  }
+  .app-modal {
+    width: 100%;
+    max-height: 82vh;
+    border-radius: 18px 18px 14px 14px;
+  }
+  .modal-content {
+    max-height: calc(82vh - 130px);
+  }
+}
+@media (max-width: 420px) {
+  .landing-actions .button-quiet {
+    display: none;
+  }
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .hero-visual {
+    height: 330px;
+  }
+  .hero-photo-main {
+    height: 275px;
+  }
+  .hero-stat-card,
+  .hero-weather-card {
+    padding: 10px;
+    gap: 7px;
+  }
+  .hero-stat-card strong,
+  .hero-weather-card strong {
+    font-size: 9px;
+  }
+  .hero-stat-card small,
+  .hero-weather-card small {
+    font-size: 8px;
+  }
+  .stat-icon,
+  .weather-sun {
+    width: 29px;
+    height: 29px;
+  }
+  .auth-main {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .auth-form-heading h2 {
+    font-size: 27px;
+  }
+  .form-two-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .form-two-columns > div {
+    gap: 7px;
+  }
+  .form-two-columns > div + div {
+    margin-top: 5px;
+  }
+  .app-header .brand > span:last-child {
+    display: none;
+  }
+  .app-header .brand {
+    width: 34px;
+  }
+  .map-top-right {
+    top: 65px;
+  }
+  .route-metrics {
+    gap: 3px;
+  }
+  .route-metrics > div + div {
+    padding-left: 6px;
+  }
+  .activity-controls .button {
+    flex-basis: calc(50% - 7px);
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-overview-card {
+    right: 10px;
+    bottom: 49px;
+    padding: 8px 1px;
+  }
+  .dashboard-overview-card > div {
+    min-width: 77px;
+    padding: 0 8px;
+  }
+  .dashboard-overview-card strong {
+    font-size: 12px;
+  }
+  .dashboard-overview-card small {
+    font-size: 7px;
+  }
+  .map-weather-card {
+    bottom: 103px;
+  }
+  .map-hint {
+    max-width: 100%;
+    gap: 5px;
+    font-size: 8px;
+  }
+}
+
+/* =========================================================
+   EXERFIT TABLET + MOBILE MAP LAYOUT
+   Keeps controls reachable, prevents cards from covering the whole map,
+   and gives touch targets enough space on smaller screens.
+========================================================= */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .app-header {
+    height: 68px;
+    padding: 0 14px;
+  }
+  .app-header .brand-symbol {
+    width: 52px;
+    height: 30px;
+  }
+  .app-nav {
+    gap: 2px;
+  }
+  .nav-item {
+    min-width: 58px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+  .header-actions {
+    min-width: 155px;
+    gap: 6px;
+  }
+  .map-workspace {
+    height: calc(100dvh - 68px);
+    min-height: 520px;
+  }
+  .map-top-left {
+    left: 14px;
+    width: min(390px, calc(100vw - 28px));
+  }
+  .map-top-right {
+    top: 18px;
+    right: 14px;
+  }
+  .floating-panel {
+    left: 14px;
+    top: 14px;
+    bottom: 14px;
+    width: min(390px, 43vw);
+    max-height: calc(100% - 28px);
+  }
+  .map-settings-panel {
+    width: min(410px, 46vw);
+  }
+  .map-bottom-left {
+    left: 14px;
+    right: 14px;
+    max-width: 520px;
+  }
+  .route-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-page {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+  .app-header {
+    height: 58px;
+    padding: 0 10px;
+  }
+  .app-header .brand-symbol {
+    width: 42px;
+    height: 25px;
+  }
+  .map-workspace {
+    height: calc(100dvh - 58px - 60px);
+    min-height: 420px;
+  }
+  .map-top-left {
+    top: 10px;
+    left: 10px;
+    width: calc(100vw - 20px);
+  }
+  .map-search {
+    height: 48px;
+  }
+  .map-top-right {
+    top: 166px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .map-control-button,
+  .zoom-control button {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+  .zoom-control {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .floating-panel {
+    right: 7px;
+    bottom: 7px;
+    left: 7px;
+    top: auto;
+    width: auto;
+    max-height: min(70dvh, 570px);
+    border-radius: 18px;
+  }
+  .floating-panel-header {
+    min-height: 60px;
+    padding: 11px 13px 10px 16px;
+  }
+  .floating-panel-header h2 {
+    font-size: 16px;
+  }
+  .floating-panel-body {
+    padding: 13px 14px 20px;
+  }
+  .activity-controls {
+    gap: 7px;
+  }
+  .activity-controls .button {
+    min-height: 45px;
+    font-size: 10px;
+  }
+  .route-summary {
+    max-width: none;
+  }
+  .map-bottom-left {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    max-height: 42dvh;
+    overflow: auto;
+  }
+  .route-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .route-actions .button {
+    min-height: 42px;
+  }
+  .panel-side-toggle {
+    width: 32px;
+    height: 48px;
+  }
+  .map-settings-panel {
+    max-height: min(76dvh, 600px);
+  }
+  .map-type-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .map-type-option {
+    min-height: 100px;
+  }
+  .map-thumb {
+    height: 48px;
+  }
+  .nav-item {
+    min-height: 60px;
+  }
+  .nav-item span {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 430px) {
+  .map-workspace {
+    min-height: 390px;
+  }
+  .map-top-left {
+    width: calc(100vw - 20px);
+  }
+  .map-search input {
+    font-size: 12px;
+  }
+  .floating-panel {
+    max-height: 68dvh;
+  }
+  .floating-panel-body {
+    padding: 12px 13px 18px;
+  }
+  .map-type-grid {
+    grid-template-columns: 1fr;
+  }
+  .map-type-option {
+    min-height: 84px;
+    grid-template-columns: 88px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .map-type-option .map-thumb {
+    grid-row: 1 / span 2;
+    height: 62px;
+  }
+  .route-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   EXERFIT HEADER SEARCH + COLLAPSIBLE TRAVEL MODE + ROUTE WEATHER
+   Search stays beside the brand; route profiles can collapse to an icon.
+========================================================= */
+.app-header {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.app-header .brand {
+  flex: 0 0 70px;
+  min-width: 52px;
+}
+.header-search-wrap {
+  position: relative;
+  z-index: 1200;
+  flex: 0 1 360px;
+  min-width: 210px;
+  margin-right: 8px;
+}
+.header-map-search {
+  height: 42px;
+  padding-left: 12px;
+  border-radius: 13px;
+  box-shadow: 0 3px 12px rgba(24, 52, 37, 0.07);
+}
+.header-map-search input {
+  height: 38px;
+  font-size: 12px;
+}
+.header-map-search button {
+  flex-basis: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.header-search-results {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  z-index: 1300;
+  max-height: min(52vh, 360px);
+  margin-top: 0;
+}
+.app-nav {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+.header-actions {
+  flex: 0 0 auto;
+  min-width: 0;
+  margin-left: 8px;
+}
+.map-top-left {
+  width: min(320px, calc(100vw - 40px));
+}
+.travel-mode-panel {
+  width: 100%;
+  margin: 0;
+}
+.travel-mode-topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.travel-mode-current-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--green-800);
+  background: var(--green-50);
+  border: 1px solid #dcebe0;
+  border-radius: 10px;
+}
+.travel-mode-current-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.travel-mode-heading {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 3px;
+}
+.travel-mode-heading small {
+  color: #718076;
+  font-size: 10px;
+}
+.travel-mode-toggle {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #607267;
+  background: #f4f8f4;
+  border: 1px solid #e4ece5;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.travel-mode-toggle:hover {
+  color: var(--green-800);
+  background: var(--green-50);
+}
+.travel-mode-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+.travel-mode-panel.is-collapsed .travel-mode-options {
+  display: none;
+}
+.travel-mode-panel.is-collapsed {
+  width: min(190px, calc(100vw - 40px));
+  padding: 8px;
+}
+.route-mode-prompt {
+  margin: -2px 0 9px;
+  color: #829187;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.route-weather-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 12px;
+  padding: 10px;
+  background: #f4f8f4;
+  border: 1px solid #e3ece4;
+  border-radius: 13px;
+}
+.route-weather-icon {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #bd8b3f;
+  background: #fff;
+  border: 1px solid #edf0e7;
+  border-radius: 11px;
+}
+.route-weather-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.route-weather-copy {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
+}
+.route-weather-copy > small:first-child {
+  color: #87948b;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.route-weather-copy strong {
+  color: #294b36;
+  font: 800 16px var(--font-display);
+}
+.route-weather-copy span {
+  overflow: hidden;
+  color: #596b60;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.route-weather-copy > small:last-child {
+  color: #89968e;
+  font-size: 8px;
+}
+.route-weather-refresh {
+  display: grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #64766a;
+  background: #fff;
+  border: 1px solid #e3ece4;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.route-weather-refresh svg {
+  width: 15px;
+  height: 15px;
+}
+.route-actions-primary,
+.route-actions-secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.route-actions-secondary {
+  margin-top: 7px;
+}
+.route-actions .button {
+  justify-content: center;
+  min-width: 0;
+  padding-right: 8px;
+  padding-left: 8px;
+  font-size: 9px;
+}
+.route-actions .button svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+}
+.route-actions .is-loading svg {
+  animation: route-refresh-spin 0.8s linear infinite;
+}
+@keyframes route-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .app-header {
+    gap: 8px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  .app-header .brand {
+    flex-basis: 54px;
+  }
+  .header-search-wrap {
+    flex: 0 1 260px;
+    min-width: 170px;
+    margin-right: 2px;
+  }
+  .app-nav {
+    gap: 0;
+  }
+  .nav-item {
+    min-width: 52px;
+    padding: 0 4px;
+  }
+  .header-actions {
+    gap: 4px;
+    margin-left: 4px;
+  }
+  .header-actions .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+  .profile-trigger {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-header {
+    display: flex;
+    height: 62px;
+    gap: 8px;
+    padding: 0 9px;
+  }
+  .app-header .brand {
+    flex: 0 0 43px;
+  }
+  .app-header .brand-symbol {
+    width: 42px;
+    height: 26px;
+  }
+  .header-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 2px 0 0;
+  }
+  .header-map-search {
+    height: 40px;
+    padding-left: 9px;
+    border-radius: 11px;
+  }
+  .header-map-search > svg {
+    flex-basis: 15px;
+    width: 15px;
+    height: 15px;
+  }
+  .header-map-search input {
+    height: 36px;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+  .header-map-search input::placeholder {
+    font-size: 10px;
+  }
+  .header-map-search button {
+    flex-basis: 29px;
+    width: 29px;
+    height: 29px;
+  }
+  .app-nav {
+    margin-left: 0;
+  }
+  .header-actions {
+    flex: 0 0 auto;
+    margin-left: 0;
+    gap: 3px;
+  }
+  .header-actions .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+  .profile-trigger {
+    width: 32px;
+  }
+  .map-top-left {
+    top: 10px;
+    left: 10px;
+    width: min(280px, calc(100vw - 20px));
+  }
+  .travel-mode-panel {
+    padding: 8px;
+  }
+  .travel-mode-options {
+    gap: 5px;
+  }
+  .travel-mode-option {
+    min-height: 39px;
+    gap: 4px;
+    padding: 0 5px;
+    font-size: 10px;
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 168px;
+  }
+  .route-weather-panel {
+    gap: 8px;
+    padding: 8px;
+  }
+  .route-weather-icon {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+  .route-actions-primary,
+  .route-actions-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .route-actions .button {
+    min-height: 38px;
+    font-size: 9px;
+  }
+  .route-summary {
+    max-height: min(62dvh, 560px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-header {
+    gap: 6px;
+    padding: 0 7px;
+  }
+  .app-header .brand {
+    flex-basis: 36px;
+  }
+  .app-header .brand-symbol {
+    width: 36px;
+    height: 24px;
+  }
+  .header-search-wrap {
+    margin-right: 0;
+  }
+  .header-map-search input::placeholder {
+    content: "Search places";
+  }
+  .header-actions {
+    gap: 2px;
+  }
+  .header-actions .icon-button {
+    width: 31px;
+    height: 33px;
+  }
+  .profile-trigger {
+    width: 29px;
+  }
+  .map-top-left {
+    left: 8px;
+    width: min(250px, calc(100vw - 16px));
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 158px;
+  }
+  .route-weather-copy span {
+    font-size: 9px;
+  }
+  .route-weather-copy strong {
+    font-size: 14px;
+  }
+  .route-actions .button {
+    padding: 0 5px;
+    font-size: 8px;
+  }
+}
+
+/* Header search takes the old upper-map space, so align the map tool stack at the top edge. */
+@media (max-width: 760px) {
+  .map-workspace {
+    height: calc(100dvh - 62px - 62px);
+  }
+  .map-top-right {
+    top: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .map-top-left {
+    width: min(205px, calc(100vw - 16px));
+  }
+  .travel-mode-panel.is-collapsed {
+    width: 152px;
+  }
+  .travel-mode-option {
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   LANDING + AUTH MOBILE POLISH (iOS Safari / Android Chrome)
+   Loaded after the base theme so phone-specific rules win.
+========================================================= */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+button,
+.button,
+a {
+  touch-action: manipulation;
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .landing-header {
+    padding: 20px 28px;
+  }
+  .landing-nav {
+    gap: clamp(14px, 2.5vw, 28px);
+  }
+  .hero-section {
+    gap: 28px;
+    padding-right: 34px;
+    padding-left: 34px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(44px, 5.2vw, 60px);
+    letter-spacing: -2.8px;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-page {
+    overflow-x: clip;
+  }
+  .landing-header {
+    position: relative;
+    display: flex;
+    flex-wrap: nowrap;
+    min-height: 68px;
+    padding: 12px 18px;
+    gap: 12px;
+  }
+  .landing-header .brand-symbol {
+    width: 48px;
+    height: 28px;
+  }
+  .landing-nav {
+    display: none !important;
+  }
+  .landing-actions {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-left: auto;
+    gap: 6px;
+  }
+  .landing-actions .theme-toggle {
+    width: 38px;
+    height: 38px;
+  }
+  .landing-actions .button {
+    display: inline-flex;
+    min-height: 38px;
+    padding: 0 11px;
+    border-radius: 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .landing-actions .button-primary {
+    display: none;
+  }
+  .landing-actions .button-quiet {
+    display: inline-flex;
+  }
+
+  .hero-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    min-height: 0;
+    padding: clamp(34px, 8vw, 54px) 22px 42px;
+    overflow: hidden;
+  }
+  .hero-copy {
+    width: 100%;
+    max-width: 620px;
+    min-width: 0;
+  }
+  .hero-copy .eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.15px;
+  }
+  .hero-copy h1 {
+    max-width: 12ch;
+    margin: 17px 0 15px;
+    font-size: clamp(39px, 10.4vw, 58px);
+    line-height: 1.04;
+    letter-spacing: -2.6px;
+    overflow-wrap: normal;
+  }
+  .hero-copy > p {
+    max-width: 42ch;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 23px;
+  }
+  .hero-actions .button {
+    min-height: 48px;
+  }
+  .hero-proof {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 25px;
+    font-size: 11px;
+  }
+  .hero-visual {
+    width: 100%;
+    height: clamp(220px, 58vw, 330px);
+    min-width: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 24px;
+  }
+  .hero-photo-main {
+    top: 5px;
+    right: 9%;
+    width: 54%;
+    height: 86%;
+    border-radius: 100px 100px 22px 22px;
+  }
+  .hero-map-card {
+    left: 3%;
+    bottom: 5px;
+    width: 48%;
+    height: 42%;
+    min-height: 92px;
+    border-width: 5px;
+    border-radius: 16px;
+  }
+  .hero-stat-card {
+    top: 12%;
+    left: 0;
+    max-width: 54%;
+  }
+  .hero-weather-card {
+    right: 0;
+    bottom: 7%;
+    max-width: 62%;
+  }
+  .hero-orbit {
+    display: none;
+  }
+
+  .feature-strip {
+    padding: 48px 22px 54px;
+  }
+  .feature-strip-heading {
+    gap: 8px;
+  }
+  .feature-strip-heading h2,
+  .workflow-copy h2 {
+    font-size: clamp(27px, 7vw, 34px);
+    line-height: 1.12;
+  }
+  .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .feature-card {
+    padding: 21px;
+  }
+  .workflow-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 27px;
+    padding: 8px 22px 58px;
+  }
+  .workflow-image {
+    width: 100%;
+    height: clamp(220px, 62vw, 310px);
+  }
+  .workflow-copy {
+    min-width: 0;
+  }
+  .about-section {
+    padding: 54px 22px 60px;
+  }
+  .about-heading h2 {
+    font-size: clamp(28px, 7vw, 36px);
+  }
+  .about-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .about-card {
+    min-height: 0;
+    padding: 22px;
+  }
+  .about-note {
+    gap: 20px;
+    padding: 22px;
+  }
+  .about-note .button {
+    width: 100%;
+  }
+  .landing-footer {
+    padding: 28px 22px 18px;
+  }
+  .footer-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+  .footer-brand-column {
+    grid-column: 1 / -1;
+  }
+  .footer-link-column {
+    min-width: 0;
+  }
+  .footer-bottom {
+    gap: 9px;
+  }
+
+  .auth-main {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+  .auth-form-wrap {
+    width: 100%;
+    max-width: 465px;
+  }
+  .input-wrap {
+    min-height: 48px;
+  }
+  .input-wrap input {
+    min-width: 0;
+    font-size: 16px;
+  }
+  .auth-form .button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-header {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+  .landing-header .brand-symbol {
+    width: 43px;
+  }
+  .landing-actions {
+    gap: 5px;
+  }
+  .landing-actions .theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+  .landing-actions .button {
+    padding: 0 10px;
+  }
+  .hero-section {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(37px, 10.2vw, 48px);
+    letter-spacing: -2.25px;
+  }
+  .hero-copy > p {
+    font-size: 14px;
+  }
+  .hero-visual {
+    height: 230px;
+  }
+  .hero-stat-card,
+  .hero-weather-card {
+    padding: 9px;
+    gap: 7px;
+  }
+  .hero-stat-card strong,
+  .hero-weather-card strong {
+    font-size: 9px;
+  }
+  .hero-stat-card small,
+  .hero-weather-card small {
+    font-size: 8px;
+  }
+  .stat-icon,
+  .weather-sun {
+    flex: 0 0 29px;
+    width: 29px;
+    height: 29px;
+  }
+  .feature-strip,
+  .workflow-section,
+  .about-section {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+  .footer-main {
+    gap: 22px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .landing-header {
+    gap: 7px;
+  }
+  .landing-actions .button {
+    font-size: 10px;
+    padding: 0 8px;
+  }
+  .hero-copy h1 {
+    font-size: 36px;
+    letter-spacing: -2px;
+  }
+  .hero-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .hero-actions .text-link {
+    min-height: 40px;
+  }
+  .hero-visual {
+    height: 205px;
+  }
+  .footer-main {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .landing-header {
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+  }
+  .landing-footer {
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+  .app-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(62px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   AUTHENTICATION LAYOUT FIX
+   Keep the mobile login/sign-up form full-width. The mobile
+   brand is a sibling of the form inside a flex row; showing it
+   beside the form was squeezing the fields and placing the logo
+   beside the password input.
+========================================================= */
+@media (max-width: 760px) {
+  .auth-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: max(84px, calc(64px + env(safe-area-inset-top)));
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-bottom: max(36px, env(safe-area-inset-bottom));
+    padding-left: max(20px, env(safe-area-inset-left));
+  }
+
+  /* The brand is already present on the desktop split panel.
+     On phones it was laid out beside the form by the flex parent. */
+  .auth-mobile-brand {
+    display: none !important;
+  }
+
+  .auth-form-wrap {
+    width: 100%;
+    max-width: 430px;
+    min-width: 0;
+    margin: auto;
+  }
+
+  .auth-form {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .auth-form label {
+    display: block;
+    margin-top: 9px;
+    font-size: 12px;
+  }
+
+  .input-wrap {
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+  }
+
+  .input-wrap input {
+    min-width: 0;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .auth-form .button {
+    width: 100%;
+    min-height: 50px;
+  }
+
+  .auth-form-heading h2 {
+    font-size: clamp(26px, 7vw, 32px);
+    line-height: 1.15;
+  }
+
+  .auth-main-signup {
+    align-items: flex-start;
+    padding-top: max(84px, calc(64px + env(safe-area-inset-top)));
+  }
+
+  .auth-main-signup .auth-form-wrap {
+    margin: 0 auto;
+  }
+
+  .auth-main-signup .form-two-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .auth-main-signup .form-two-columns > div + div {
+    margin-top: 5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .auth-main {
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-left: max(16px, env(safe-area-inset-left));
+  }
+
+  .auth-form-heading {
+    margin-bottom: 22px;
+  }
+
+  .auth-form-heading h2 {
+    font-size: 26px;
+  }
+
+  .password-rules {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final cascade for the map overlays on mobile/tablet. Weather sits opposite the stats card. */
+@media (max-width: 760px) {
+  .map-weather-card {
+    left: auto !important;
+    right: 10px !important;
+    bottom: 103px !important;
+    width: max-content;
+    min-width: 0;
+    max-width: calc(100vw - 20px);
+  }
+  #restore-weather-card {
+    left: auto;
+    right: 10px;
+    bottom: 103px;
+  }
+  #restore-dashboard-stats {
+    right: 10px;
+    bottom: 49px;
+  }
+  #restore-route-summary {
+    left: 10px;
+    bottom: 70px;
+  }
+}
+@media (max-width: 430px) {
+  .map-weather-card {
+    right: 8px !important;
+    max-width: calc(100vw - 16px);
+  }
+  #restore-weather-card {
+    right: 8px;
+    bottom: 103px;
+  }
+  #restore-dashboard-stats {
+    right: 8px;
+    bottom: 49px;
+  }
+  #restore-route-summary {
+    left: 8px;
+    bottom: 70px;
+  }
+}
+
+/* Destination suggestions: comfortable touch targets on phones and tablets. */
+@media (max-width: 760px) {
+  .header-search-results {
+    max-height: min(58dvh, 420px);
+  }
+  .header-search-results .search-result {
+    min-height: 48px;
+    padding: 11px 10px;
+  }
+  .header-search-results .search-result strong {
+    font-size: 12px;
+  }
+  .header-search-results .search-result small {
+    font-size: 10px;
+  }
+  .search-suggestions-heading {
+    padding-top: 10px;
+    font-size: 9px;
+  }
+}

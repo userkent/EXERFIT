@@ -1,231 +1,219 @@
+/* FILE PURPOSE: Handles sign-up, login, session checks, and authentication UI. */
+/* =========================================================
+   FILE: auth.js
+   PURPOSE: Creates prototype accounts, signs users in/out, and guards the dashboard.
+   SECURITY NOTE: Passwords are stored in localStorage for demonstration only.
+   Replace this module with backend authentication before real deployment.
+========================================================= */
+import {
+  createUser,
+  findUser,
+  getCurrentUser,
+  setSession,
+  clearSession,
+  updateUser,
+} from "./storage.js";
+import { showToast, refreshIcons } from "./ui.js";
+import { initTheme } from "./theme.js";
 
-/*
-- PURPOSE:
-- Local demo registration, login, password feedback, and password visibility controls.
-- Passwords are plain text in localStorage for this classroom-only front-end demo.
- */
-(function () {
-  "use strict";
+// Apply the saved color theme before the user interacts with the page.
+initTheme();
 
-  // Setup: grabs the login/signup forms from the page and stops running if they aren't found
-  const EF = (window.ExerFit = window.ExerFit || {});
-  const loginForm = document.getElementById("login-form");
-  const signupForm = document.getElementById("signup-form");
-  if (!loginForm || !signupForm || !EF.Store) return;
-
-  // Eye Icons: stores the SVG drawings for the open eye (show password) and crossed-out eye (hide password)
-  const eyeOpen =
-    '<img src="images/input/icons/eye-open.svg" alt="" aria-hidden="true">';
-  const eyeClosed =
-    '<img src="images/input/icons/eye-closed.svg" alt="" aria-hidden="true">';
-
-  // Show/Hide Password Button: switches password boxes between dots (••••) and readable text when the eye icon is clicked
-  document.querySelectorAll("[data-password-toggle]").forEach((button) => {
-    const input = document.getElementById(button.dataset.passwordToggle);
-    const render = () => {
-      const visible = input.type === "text";
-      button.innerHTML = visible ? eyeOpen : eyeClosed;
-      button.setAttribute(
-        "aria-label",
-        visible ? "Hide password" : "Show password",
-      );
-      button.setAttribute("aria-pressed", String(visible));
-    };
-    render();
-    button.addEventListener("click", () => {
-      input.type = input.type === "password" ? "text" : "password";
-      render();
-      input.focus();
-    });
-  });
-
-  // Block Copying Passwords: stops users from copying, cutting, or right-clicking inside password boxes (pasting still works)
-  document
-    .querySelectorAll(
-      'input[type="password"], input[autocomplete="new-password"]',
-    )
-    .forEach((input) => {
-      ["copy", "cut", "contextmenu"].forEach((eventName) =>
-        input.addEventListener(eventName, (event) => event.preventDefault()),
-      );
-    });
-
-  // Tab Switcher (Log in vs. Sign up): flips between the two forms and updates the page title text
-  const loginTab = document.getElementById("login-tab");
-  const signupTab = document.getElementById("signup-tab");
-  function showMode(mode) {
-    const signup = mode === "signup";
-    loginForm.classList.toggle("active", !signup);
-    signupForm.classList.toggle("active", signup);
-    loginTab.classList.toggle("active", !signup);
-    signupTab.classList.toggle("active", signup);
-    loginTab.setAttribute("aria-selected", String(!signup));
-    signupTab.setAttribute("aria-selected", String(signup));
-    document.getElementById("auth-heading").textContent = signup
-      ? "Create your account."
-      : "Welcome back.";
-    document.getElementById("auth-subheading").textContent = signup
-      ? "Set up your local activity space."
-      : "Log in to continue to your activity space.";
+export function requireAuth() {
+  const user = getCurrentUser();
+  if (!user) {
+    window.location.replace("login.html");
+    return false;
   }
-  loginTab.addEventListener("click", () => showMode("login"));
-  signupTab.addEventListener("click", () => showMode("signup"));
+  return true;
+}
+export function signOut() {
+  clearSession();
+  window.location.replace("../index.html");
+}
 
-  // Check URL for Starting Mode: opens the Sign up tab automatically if the link ends with "?mode=signup"
-  const initialMode = new URLSearchParams(window.location.search).get("mode");
-  showMode(initialMode === "signup" ? "signup" : "login");
+const loginForm = document.getElementById("login-form");
+const signupForm = document.getElementById("signup-form");
 
-  // Sign-Up Form Rules: grabs the sign-up inputs and sets the 4 password rules (8+ chars, uppercase, lowercase, number)
-  const signupPassword = document.getElementById("signup-password");
-  const confirmPassword = document.getElementById("signup-confirm");
-  const signupEmail = document.getElementById("signup-email");
-  const signupName = document.getElementById("signup-name");
-  const createButton = document.getElementById("create-account");
-  const rules = [
-    {
-      key: "length",
-      label: "At least 8 characters",
-      test: (value) => value.length >= 8,
-    },
-    {
-      key: "upper",
-      label: "One uppercase letter",
-      test: (value) => /[A-Z]/.test(value),
-    },
-    {
-      key: "lower",
-      label: "One lowercase letter",
-      test: (value) => /[a-z]/.test(value),
-    },
-    { key: "number", label: "One number", test: (value) => /\d/.test(value) },
+// Check each required password rule separately so the user can see progress.
+function getPasswordRules(password) {
+  return {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    alphanumeric: /^[A-Za-z0-9]+$/.test(password),
+  };
+}
+
+// Update the strength meter and live checklist while a user types.
+function updatePasswordFeedback() {
+  if (!signupForm) return;
+  const passwordInput = signupForm.elements.password;
+  const confirmInput = signupForm.elements.confirm;
+  const password = passwordInput.value;
+  const rules = getPasswordRules(password);
+  const ruleNames = Object.keys(rules);
+  const score = password ? ruleNames.filter((rule) => rules[rule]).length : 0;
+  const strengthLabels = [
+    "Not entered",
+    "Very weak",
+    "Weak",
+    "Fair",
+    "Good",
+    "Strong",
   ];
+  const strength = document.getElementById("password-strength-label");
+  const track = document.getElementById("password-strength-track");
+  const fill = document.getElementById("password-strength-fill");
 
-  // Email Format Checker: makes sure the typed email looks like "name@domain.com"
-  function emailIsValid(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
+  if (strength) strength.textContent = strengthLabels[score];
+  if (track) {
+    track.dataset.level = String(score);
+    track.setAttribute("aria-valuenow", String(score));
   }
+  if (fill) fill.style.width = `${score * 20}%`;
 
-  // Live Password Strength Checker: updates the progress bar, rule badges, and unlocks the "Create account" button when ready
-  function updatePasswordFeedback() {
-    const value = signupPassword.value;
-    const confirmation = confirmPassword.value;
-    const started = value.length > 0 || confirmation.length > 0;
-    document.getElementById("password-checks").hidden = !started;
+  ruleNames.forEach((rule) => {
+    const item = document.querySelector(`[data-password-rule="${rule}"]`);
+    if (!item) return;
+    item.classList.toggle("is-valid", rules[rule]);
+    const icon = rules[rule] ? "check-circle-2" : "circle";
+    // Lucide turns the original <i> into an <svg>, so replace either element before refreshing.
+    const currentIcon = item.querySelector("svg, i");
+    if (currentIcon) {
+      const iconPlaceholder = document.createElement("i");
+      iconPlaceholder.setAttribute("data-lucide", icon);
+      currentIcon.replaceWith(iconPlaceholder);
+    }
+  });
+  refreshIcons(document.getElementById("password-feedback"));
 
-    // Light up each rule badge as it passes
-    const results = rules.map((rule) => ({ ...rule, good: rule.test(value) }));
-    results.forEach((result) => {
-      const chip = document.querySelector(`[data-rule="${result.key}"]`);
-      chip?.classList.toggle("good", result.good);
-    });
-
-    // Update the 0% to 100% progress bar and text counter
-    const matching = confirmation.length > 0 && value === confirmation;
-    const passed =
-      results.filter((item) => item.good).length + (matching ? 1 : 0);
-    document.getElementById("password-progress").style.width =
-      `${passed * 20}%`;
-    document.getElementById("password-hint").textContent = started
-      ? `${passed} of 5 requirements complete`
-      : "Start typing to see your password progress.";
-
-    // Show a yellow tip box telling the user what rule they are still missing
-    const pop = document.getElementById("password-pop");
-    if (value.length) {
-      const missing = results.find((item) => !item.good);
-      pop.style.display = missing
-        ? "block"
-        : confirmation.length && !matching
-          ? "block"
-          : "none";
-      pop.textContent = missing
-        ? missing.label
-        : confirmation.length && !matching
-          ? "Your confirmation does not match yet."
-          : "Password requirements complete.";
-    } else pop.style.display = "none";
-
-    // Tell the user if the two password boxes match
-    const confirmHint = document.getElementById("confirm-hint");
-    confirmHint.textContent = confirmation.length
-      ? matching
-        ? "Passwords match."
-        : "Passwords do not match yet."
-      : "";
-    confirmHint.style.color = matching ? "var(--green)" : "var(--muted)";
-
-    // Enable the "Create account" button only when name, email, password rules, and password match are all valid
-    const allGood =
-      results.every((item) => item.good) &&
-      matching &&
-      emailIsValid(signupEmail.value) &&
-      signupName.value.trim().length > 0;
-    createButton.disabled = !allGood;
+  const matchMessage = document.getElementById("password-match");
+  if (matchMessage) {
+    const confirmation = confirmInput.value;
+    matchMessage.classList.remove("is-match", "is-mismatch");
+    if (!confirmation) {
+      matchMessage.textContent = "";
+    } else if (password === confirmation) {
+      matchMessage.textContent = "Passwords match.";
+      matchMessage.classList.add("is-match");
+    } else {
+      matchMessage.textContent = "Passwords do not match yet.";
+      matchMessage.classList.add("is-mismatch");
+    }
   }
+}
 
-  // Run the live check every time the user types in any sign-up box
-  [signupPassword, confirmPassword, signupEmail, signupName].forEach((input) =>
-    input.addEventListener("input", updatePasswordFeedback),
+// Password visibility controls use a button with its own eye/eye-off icon.
+document.querySelectorAll("[data-toggle-password]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = document.getElementById(button.dataset.togglePassword);
+    if (!input) return;
+    const reveal = input.type === "password";
+    input.type = reveal ? "text" : "password";
+    button.setAttribute(
+      "aria-label",
+      reveal ? "Hide password" : "Show password",
+    );
+    button.innerHTML = `<i data-lucide="${reveal ? "eye-off" : "eye"}"></i>`;
+    refreshIcons(button);
+  });
+});
+
+if (signupForm) {
+  // Recalculate password quality and confirmation immediately as the user types.
+  signupForm.elements.password.addEventListener(
+    "input",
+    updatePasswordFeedback,
   );
+  signupForm.elements.confirm.addEventListener("input", updatePasswordFeedback);
   updatePasswordFeedback();
+}
 
-  // Log In Button Handler: checks if the email and password match a saved user, then sends them to the Home page
+if (loginForm) {
+  // A signed-in user does not need to see the login form again.
+  if (getCurrentUser()) window.location.replace("dashboard.html");
   loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const email = document
-      .getElementById("login-email")
-      .value.trim()
-      .toLowerCase();
-    const password = document.getElementById("login-password").value;
-    const user = EF.Store.getUsers().find(
-      (item) =>
-        item.email.toLowerCase() === email && item.password === password,
-    );
-    const error = document.getElementById("login-error");
-    if (!emailIsValid(email) || !password) {
-      error.textContent = "Enter a valid email address and password.";
+    const identity = loginForm.elements.identity.value.trim();
+    const password = loginForm.elements.password.value;
+    const message = document.getElementById("login-message");
+    message.textContent = "";
+    message.classList.remove("success");
+    const user = findUser(identity);
+    if (!user || user.password !== password) {
+      message.textContent =
+        "We could not match those details. Check your email/nickname and password.";
       return;
     }
-    if (!user) {
-      error.textContent =
-        "We could not find an account with those details. Check them or create an account.";
-      return;
-    }
-    EF.Store.setSession(user.id);
-    window.location.href = "home.html";
+    setSession(user.id);
+    message.textContent = "Login successful. Opening your dashboard…";
+    message.classList.add("success");
+    window.setTimeout(() => window.location.assign("dashboard.html"), 350);
   });
+}
 
-  // Create Account Button Handler: saves the new user into browser storage, logs them in, and opens the Home page
+if (signupForm) {
+  if (getCurrentUser()) window.location.replace("dashboard.html");
   signupForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    updatePasswordFeedback();
-    const error = document.getElementById("signup-error");
-    if (createButton.disabled) {
-      error.textContent =
-        "Complete the highlighted requirements before creating an account.";
+    const form = signupForm;
+    const nickname = form.elements.nickname.value.trim();
+    const fullName = form.elements.fullname.value.trim();
+    const email = form.elements.email.value.trim().toLowerCase();
+    const password = form.elements.password.value;
+    const confirm = form.elements.confirm.value;
+    const message = document.getElementById("signup-message");
+    message.textContent = "";
+    message.classList.remove("success");
+    if (!nickname || !fullName || !email || !password || !confirm) {
+      message.textContent = "Complete all fields to create your account.";
       return;
     }
-    const email = signupEmail.value.trim().toLowerCase();
-    const users = EF.Store.getUsers();
-    if (users.some((item) => item.email.toLowerCase() === email)) {
-      error.textContent =
-        "An account with this email already exists. Log in instead.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      message.textContent = "Enter a valid email address.";
       return;
     }
-    const user = {
-      id: EF.Store.createId("user"),
-      name: signupName.value.trim(),
-      email,
-      password: signupPassword.value,
-      createdAt: new Date().toISOString(),
-    };
-    users.push(user);
-    if (!EF.Store.saveUsers(users)) {
-      error.textContent = "The account could not be saved in this browser.";
+    if (nickname.length < 3 || /\s/.test(nickname)) {
+      message.textContent =
+        "Nickname must be at least 3 characters and contain no spaces.";
       return;
     }
-    EF.Store.setSession(user.id);
-    EF.Store.getData(user.id);
-    window.location.href = "home.html";
+    const passwordRules = getPasswordRules(password);
+    if (!Object.values(passwordRules).every(Boolean)) {
+      message.textContent = passwordRules.alphanumeric
+        ? "Your password must have at least 8 characters, one uppercase letter, one lowercase letter, and one number."
+        : "Use letters and numbers only. Spaces and special characters are not allowed.";
+      return;
+    }
+    if (password !== confirm) {
+      message.textContent =
+        "The passwords do not match. Enter the same password in both fields.";
+      return;
+    }
+    if (findUser(email) || findUser(nickname)) {
+      message.textContent = "That email or nickname is already registered.";
+      return;
+    }
+    try {
+      const user = {
+        id: `user-${Date.now().toString(36)}`,
+        nickname,
+        fullName,
+        email,
+        password,
+        createdAt: new Date().toISOString(),
+      };
+      createUser(user);
+      setSession(user.id);
+      message.textContent = "Your account is ready. Opening your dashboard…";
+      message.classList.add("success");
+      window.setTimeout(() => window.location.assign("dashboard.html"), 350);
+    } catch (error) {
+      message.textContent = error.message || "Could not create your account.";
+    }
   });
-})();
+}
+
+refreshIcons();
