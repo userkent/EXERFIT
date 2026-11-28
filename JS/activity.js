@@ -13,12 +13,15 @@ import {
   centerOn,
   refreshDataLayers,
   clearRecordedTrack,
+  clearPlannedRoute,
 } from "./map.js";
 import {
   startNavigation,
   stopNavigation,
   updateNavigation,
   getActiveNavigation,
+  isNavigationUsingExternalGPS,
+  refreshNavigationGuidance,
 } from "./navigation.js";
 import {
   showToast,
@@ -74,7 +77,7 @@ export function getActivityPanelMarkup() {
       <div class="metric-card"><small>Average pace</small><strong id="activity-pace">${snapshot.paceMinutes ? `${Math.floor(snapshot.paceMinutes)}:${String(Math.round((snapshot.paceMinutes % 1) * 60)).padStart(2, "0")}` : "—"}</strong><span>min/km</span></div>
     </div>
     <div class="activity-controls">
-      <button class="button button-primary" id="activity-start" type="button" ${active ? "disabled" : ""}><i data-lucide="play"></i> Start</button>
+      <button class="button button-primary" id="activity-start" type="button" ${active ? "disabled" : ""}><i data-lucide="activity"></i> Start Live GPS Tracking</button>
       <button class="button button-secondary" id="activity-pause" type="button" ${!active || paused ? "disabled" : ""}><i data-lucide="pause"></i> Pause</button>
       <button class="button button-secondary" id="activity-resume" type="button" ${!active || !paused ? "disabled" : ""}><i data-lucide="play"></i> Resume</button>
       <button class="button button-danger" id="activity-finish" type="button" ${!active ? "disabled" : ""}><i data-lucide="square"></i> Finish</button>
@@ -128,9 +131,14 @@ function onTrackerUpdate(snapshot, meta) {
   updateActivityMetrics(snapshot);
   if (meta.accepted && meta.point) {
     drawRecordedTrack(snapshot.points);
-    locateOnMap(meta.point.lat, meta.point.lon, meta.point.accuracy || 0);
-    if (followLocation) centerOn(meta.point.lat, meta.point.lon, 17);
-    if (getActiveNavigation()) updateNavigation(meta.point);
+    // Navigation owns the blue position marker while it is active. Otherwise,
+    // Activity shows the ordinary current-location marker and follows it.
+    if (!getActiveNavigation()) {
+      locateOnMap(meta.point.lat, meta.point.lon, meta.point.accuracy || 0);
+      if (followLocation) centerOn(meta.point.lat, meta.point.lon, 17);
+    }
+    if (getActiveNavigation() && isNavigationUsingExternalGPS())
+      updateNavigation(meta.point);
   } else if (meta.reason === "accuracy") {
     const note = document.getElementById("gps-note");
     if (note)
@@ -152,7 +160,9 @@ function finishAndSave() {
   if (!tracker?.isRecording) return;
   const summary = tracker.finish();
   finishTimer();
-  stopNavigation(false);
+  // If navigation was explicitly sharing this recorder's GPS watcher, stop
+  // that dependent navigation session. Independent navigation keeps running.
+  if (isNavigationUsingExternalGPS()) stopNavigation(false);
   setStatus("idle");
   if (summary.points.length < 2 || summary.distanceMeters < 2) {
     showToast(
@@ -201,6 +211,33 @@ function finishAndSave() {
   });
 }
 
+/**
+ * Starts the independent Strava-style GPS recording mode.
+ * It hides an orange preview route, but does not start turn-by-turn navigation.
+ * If navigation is already active, its blue route remains independent.
+ */
+export function startLiveTracking() {
+  if (tracker?.isRecording) {
+    showToast("Live GPS tracking is already running.", "info");
+    return false;
+  }
+  selectedType = document.getElementById("activity-type")?.value || selectedType;
+  if (!getActiveNavigation()) clearPlannedRoute();
+  clearRecordedTrack();
+  tracker = new GPSTracker({
+    onUpdate: onTrackerUpdate,
+    onError: (message) => showToast(message, "error", 5500),
+    onStatus: setStatus,
+  });
+  if (!tracker.start()) {
+    tracker = null;
+    return false;
+  }
+  beginTimer();
+  showToast(`${typeLabel(selectedType)} live GPS tracking started.`, "success");
+  return true;
+}
+
 export function mountActivityPanel(container) {
   container.innerHTML = getActivityPanelMarkup();
   container.dataset.panel = "activity";
@@ -215,22 +252,8 @@ export function mountActivityPanel(container) {
       followLocation = event.target.checked;
     });
   container.querySelector("#activity-start")?.addEventListener("click", () => {
-    if (tracker?.isRecording) return;
     selectedType = typeSelect?.value || selectedType;
-    clearRecordedTrack();
-    tracker = new GPSTracker({
-      onUpdate: onTrackerUpdate,
-      onError: (message) => {
-        showToast(message, "error", 5500);
-      },
-      onStatus: setStatus,
-    });
-    if (tracker.start()) {
-      beginTimer();
-      const activeRoute = getActiveNavigation();
-      if (activeRoute) startNavigation(activeRoute, { externalGPS: true });
-      showToast(`${typeLabel(selectedType)} recording started.`, "success");
-    }
+    startLiveTracking();
   });
   container.querySelector("#activity-pause")?.addEventListener("click", () => {
     tracker?.pause();
@@ -260,6 +283,7 @@ export function mountActivityPanel(container) {
     navigationListenerAttached = true;
   }
   if (tracker?.isRecording) beginTimer();
+  if (getActiveNavigation()) refreshNavigationGuidance();
 }
 
 function openSavedRoutePicker() {
@@ -292,7 +316,7 @@ function openSavedRoutePicker() {
     button.addEventListener("click", () => {
       const route = routes.find((item) => item.id === button.dataset.routeId);
       if (!route) return;
-      startNavigation(route, { externalGPS: Boolean(tracker?.isRecording) });
+      startNavigation(route);
       closeModalSafe();
       showToast(
         `Following ${route.name}. Your real GPS track remains separate.`,

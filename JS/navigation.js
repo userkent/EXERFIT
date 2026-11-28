@@ -3,17 +3,17 @@
    FILE: navigation.js
    PURPOSE: Keeps a separate planned route, estimates route progress,
    provides turn guidance, and flags sustained off-route movement.
-   GPS is supplied by this module when navigating alone, or by the
-   activity recorder when a user follows a route while recording.
+   Navigation owns its GPS watcher unless an explicit caller shares the
+   Activity recorder. Live tracking itself is implemented independently.
 ========================================================= */
 import {
   drawPlannedRoute,
   clearPlannedRoute,
-  drawNavigationTrail,
-  clearNavigationTrail,
+  clearNavigationPosition,
   followNavigationPosition,
 } from "./map.js";
 import { getRoute } from "./routing-service.js";
+import { normalizeRouteGeometry } from "./route-geometry.js";
 import { showToast, formatDistance, escapeHTML } from "./ui.js";
 
 let activeRoute = null;
@@ -24,16 +24,18 @@ let lastOffRouteNotice = 0;
 let lastProgress = null;
 let lastPosition = null;
 let arrivalNotified = false;
-let navigationTrailPoints = [];
-let lastTrailPoint = null;
 
 export function getActiveNavigation() {
   return activeRoute;
 }
 
-// Replace the active route without disconnecting Activity's shared GPS watcher.
+export function isNavigationUsingExternalGPS() {
+  return Boolean(activeRoute && externalGPS);
+}
+
+// Replace the blue navigation route without changing the selected GPS source.
 export function setActiveNavigationRoute(route) {
-  if (!activeRoute || !route?.coordinates?.length) return false;
+  if (!activeRoute || !route) return false;
   if (!startNavigation(route, { externalGPS })) return false;
   window.dispatchEvent(
     new CustomEvent("exerfit:navigation-route-updated", { detail: route }),
@@ -51,44 +53,6 @@ function haversine(a, b) {
     Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
   return 2 * radius * Math.asin(Math.sqrt(h));
 }
-function appendNavigationTrailPoint(position) {
-  if (
-    !position ||
-    !Number.isFinite(position.lat) ||
-    !Number.isFinite(position.lon)
-  )
-    return;
-  // Keep obviously inaccurate fixes from creating noisy lines, but allow ordinary
-  // mobile GPS variation so the trail is not silently empty on phones/tablets.
-  if (Number.isFinite(position.accuracy) && position.accuracy > 100) return;
-  const point = {
-    lat: position.lat,
-    lon: position.lon,
-    timestamp: Number.isFinite(position.timestamp)
-      ? position.timestamp
-      : Date.now(),
-  };
-  if (lastTrailPoint) {
-    const distance = haversine(lastTrailPoint, point);
-    const elapsedSeconds = Math.max(
-      (point.timestamp - lastTrailPoint.timestamp) / 1000,
-      1,
-    );
-    if (distance < 2.5) return;
-    // Reject a large GPS teleport while allowing normal running/cycling movement.
-    if (distance / elapsedSeconds > 55) return;
-  }
-  navigationTrailPoints.push(point);
-  lastTrailPoint = point;
-  // Bound the in-memory trail for long navigation sessions on mobile devices.
-  if (navigationTrailPoints.length > 5000) {
-    navigationTrailPoints = navigationTrailPoints.filter(
-      (_, index) => index % 2 === 0,
-    );
-  }
-  drawNavigationTrail(navigationTrailPoints);
-}
-
 function nearestRouteIndex(point, coordinates) {
   let bestIndex = 0,
     bestDistance = Infinity;
@@ -125,24 +89,35 @@ function stepIndexes(route) {
 }
 
 export function startNavigation(route, options = {}) {
-  if (!route?.coordinates?.length) {
-    showToast("This route does not contain route geometry.", "error");
+  const geometry = normalizeRouteGeometry(
+    route?.geometrySegments || route?.geometry || route?.coordinates,
+  );
+  if (geometry.pointCount < 2) {
+    showToast(
+      "This route does not contain at least two valid GPS coordinates. Recalculate the route and try again.",
+      "error",
+      5500,
+    );
     return false;
   }
-  const plannedLine = drawPlannedRoute(route.coordinates);
+  const normalizedRoute = {
+    ...route,
+    coordinates: geometry.coordinates,
+    geometrySegments: geometry.segments,
+  };
+  // Navigation is a distinct mode: turn the planned orange route blue.
+  const plannedLine = drawPlannedRoute(geometry.segments, "#2878f0");
   if (!plannedLine) {
     showToast(
-      "The route was received, but its line could not be drawn. Recalculate the route and try again.",
+      "The route was received, but Leaflet could not render its geometry. Check the browser console for route details.",
       "error",
       5500,
     );
     return false;
   }
   stopNavigationWatch();
-  clearNavigationTrail();
-  navigationTrailPoints = [];
-  lastTrailPoint = null;
-  activeRoute = { ...route, indexedSteps: stepIndexes(route) };
+  clearNavigationPosition();
+  activeRoute = { ...normalizedRoute, indexedSteps: stepIndexes(normalizedRoute) };
   externalGPS = Boolean(options.externalGPS);
   offRouteCount = 0;
   lastOffRouteNotice = 0;
@@ -172,8 +147,19 @@ export function startNavigation(route, options = {}) {
           accuracy: position.coords.accuracy,
           timestamp: position.timestamp,
         }),
-      (error) => showToast(`Navigation GPS: ${error.message}`, "warning"),
-      { enableHighAccuracy: true, maximumAge: 2500, timeout: 15000 },
+      (error) => {
+        stopNavigationWatch();
+        const message =
+          error.code === 1
+            ? "Location permission was denied. Allow browser location access to use live navigation."
+            : error.code === 2
+              ? "Your current location is unavailable. Try again in an open area."
+              : error.code === 3
+                ? "Navigation GPS timed out. Keep ExerFit open and try again."
+                : error.message || "Navigation GPS is unavailable.";
+        showToast(`Navigation GPS: ${message}`, "warning", 6000);
+      },
+      { enableHighAccuracy: true, maximumAge: 1500, timeout: 20000 },
     );
   } else if (!externalGPS) {
     showToast(
@@ -201,9 +187,7 @@ export function stopNavigation(keepRoute = true) {
   if (!keepRoute) {
     activeRoute = null;
     clearPlannedRoute();
-    clearNavigationTrail();
-    navigationTrailPoints = [];
-    lastTrailPoint = null;
+    clearNavigationPosition();
   }
   const guidance = document.getElementById("nav-guidance");
   if (guidance) guidance.classList.add("is-hidden");
@@ -221,13 +205,14 @@ export function updateNavigation(position) {
     !activeRoute ||
     !position ||
     !Number.isFinite(position.lat) ||
-    !Number.isFinite(position.lon)
+    !Number.isFinite(position.lon) ||
+    Math.abs(position.lat) > 90 ||
+    Math.abs(position.lon) > 180
   )
     return;
   lastPosition = position;
-  // Show the user's live movement as a dedicated polyline, even when Activity
-  // recording is not running. Activity's own saved track remains separate.
-  appendNavigationTrailPoint(position);
+  // Navigation follows the user with a blue position marker. The red dashed
+  // movement trail is owned exclusively by the separate Activity tracker.
   followNavigationPosition(position.lat, position.lon, position.accuracy || 0);
   const nearest = nearestRouteIndex(position, activeRoute.coordinates);
   const remaining = remainingDistance(activeRoute.coordinates, nearest.index);
@@ -353,4 +338,17 @@ export async function recalculateNavigation() {
 }
 export function getNavigationProgress() {
   return lastProgress;
+}
+
+// Activity panels can be mounted after navigation starts. Repaint turn guidance
+// into the newly mounted panel instead of leaving its static placeholder text.
+export function refreshNavigationGuidance() {
+  if (!activeRoute) return;
+  renderGuidance(
+    lastProgress || {
+      instruction: "Navigation ready. Move when you are ready.",
+      remaining: activeRoute.distanceMeters,
+      offRoute: false,
+    },
+  );
 }

@@ -37,7 +37,7 @@ export function mountSavedRoutesPanel(container) {
     button.addEventListener("click", () => {
       const route = routes.find((item) => item.id === button.dataset.viewRoute);
       if (!route) return;
-      drawPlannedRoute(route.coordinates);
+      drawPlannedRoute(route.geometrySegments || route.geometry || route.coordinates);
       showDestination(
         route.destination.lat,
         route.destination.lon,

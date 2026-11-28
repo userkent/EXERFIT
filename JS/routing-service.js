@@ -8,6 +8,7 @@
    LIMIT: Public geocoding/routing endpoints are best-effort demo services.
 ========================================================= */
 import { NOMINATIM_URL, ROUTING_HOSTS } from "./config.js";
+import { normalizeRouteGeometry } from "./route-geometry.js";
 
 const searchCache = new Map();
 function createRateLimiter(intervalMs) {
@@ -92,60 +93,134 @@ function simplifyInstruction(step) {
 }
 
 export async function getRoute(start, destination, mode = "walking") {
-  const host = ROUTING_HOSTS[mode] || ROUTING_HOSTS.walking;
-  const coordinates = `${start.lon},${start.lat};${destination.lon},${destination.lat}`;
-  const url = `${host}/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=true&alternatives=3`;
+  const selectedMode = ["walking", "cycling", "driving"].includes(mode)
+    ? mode
+    : "walking";
+  const host = ROUTING_HOSTS[selectedMode] || ROUTING_HOSTS.walking;
+  const startLat = Number(start?.lat);
+  const startLon = Number(start?.lon);
+  const destinationLat = Number(destination?.lat);
+  const destinationLon = Number(destination?.lon);
+
+  const validPosition = (lat, lon) =>
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    Math.abs(lat) <= 90 &&
+    Math.abs(lon) <= 180;
+  if (!validPosition(startLat, startLon) || !validPosition(destinationLat, destinationLon)) {
+    throw new Error("The start or destination does not contain valid GPS coordinates.");
+  }
+
+  // FOSSGIS selects the actual transport profile from the routed-foot / routed-bike /
+  // routed-car host prefix. The OSRM profile path segment remains `driving` on these
+  // instances; changing the host prefix is what changes the routing profile.
+  const coordinates = `${startLon},${startLat};${destinationLon},${destinationLat}`;
+  const url = `${host.replace(/\/$/, "")}/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=true&alternatives=3`;
   // Respect the public FOSSGIS demo server's one-request-per-second limit.
   await waitForRouteSlot();
-  const response = await fetch(url);
-  if (!response.ok)
-    throw new Error(`Routing service returned ${response.status}.`);
-  const data = await response.json();
-  if (data.code !== "Ok" || !data.routes?.length)
+
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+  let data;
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`Routing service returned HTTP ${response.status}.`);
+    }
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("The routing service returned an unreadable response.");
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Route calculation timed out. Check your connection and try again.");
+    }
+    if (error instanceof TypeError) {
+      throw new Error("Could not reach the routing service. Check your internet connection and try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+
+  if (data.code !== "Ok" || !Array.isArray(data.routes) || !data.routes.length) {
     throw new Error(
-      "No route was found for these locations and this travel mode.",
+      data.message || "No route was found for these locations and this travel mode.",
     );
-  // OSRM returns the recommended route and any alternatives. Rank the returned
-  // options by estimated travel time so the initial route is the fastest available.
-  const buildRoute = (candidate) => {
+  }
+
+  // Validate every candidate geometry before it reaches Leaflet. Invalid alternatives
+  // are ignored with a diagnostic; if none contain a drawable line, fail visibly.
+  const buildRoute = (candidate, index) => {
+    const geometry = normalizeRouteGeometry(candidate.geometry);
+    if (geometry.pointCount < 2) {
+      console.warn(`[ExerFit routing] Route option ${index + 1} has invalid geometry.`, {
+        geometryType: candidate.geometry?.type || "unknown",
+        pointCount: geometry.pointCount,
+      });
+      return null;
+    }
+
     const steps = (candidate.legs || [])
       .flatMap((leg) => leg.steps || [])
       .map((step) => ({
         instruction: simplifyInstruction(step),
-        distance: step.distance || 0,
-        duration: step.duration || 0,
+        distance: Number(step.distance) || 0,
+        duration: Number(step.duration) || 0,
         location: step.maneuver?.location || null,
         type: step.maneuver?.type || "continue",
         modifier: step.maneuver?.modifier || "",
       }));
+
     return {
-      coordinates: candidate.geometry.coordinates,
-      distanceMeters: candidate.distance,
-      durationSeconds: candidate.duration,
-      mode,
+      // `coordinates` stays a flat GeoJSON coordinate list for existing route-progress
+      // calculations; `geometrySegments` preserves multipart geometry for Leaflet.
+      coordinates: geometry.coordinates,
+      geometrySegments: geometry.segments,
+      distanceMeters: Number(candidate.distance) || 0,
+      durationSeconds: Number(candidate.duration) || 0,
+      mode: selectedMode,
       steps,
       start: {
-        lat: start.lat,
-        lon: start.lon,
+        lat: startLat,
+        lon: startLon,
         name: start.name || "Your location",
       },
       destination: {
-        lat: destination.lat,
-        lon: destination.lon,
+        lat: destinationLat,
+        lon: destinationLon,
         name: destination.name || "Destination",
       },
       provider: "FOSSGIS OSRM / OpenStreetMap",
       createdAt: new Date().toISOString(),
     };
   };
+
   const routeOptions = data.routes
     .map(buildRoute)
+    .filter(Boolean)
     .sort(
       (a, b) =>
         a.durationSeconds - b.durationSeconds ||
         a.distanceMeters - b.distanceMeters,
     );
+  if (!routeOptions.length) {
+    throw new Error(
+      "The routing service responded, but its route geometry was missing or invalid. Try another destination.",
+    );
+  }
+
   const fastestRoute = routeOptions[0];
+  console.debug("[ExerFit routing] Valid route geometry received.", {
+    mode: selectedMode,
+    options: routeOptions.length,
+    points: fastestRoute.coordinates.length,
+    segments: fastestRoute.geometrySegments.length,
+  });
   return {
     ...fastestRoute,
     routeOptions,

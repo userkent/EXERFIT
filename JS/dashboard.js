@@ -20,7 +20,7 @@ import {
   centerOn,
   showDestination,
   drawPlannedRoute,
-  clearAllRouteDrawings,
+  clearDestination,
   refreshDataLayers,
   setSavedLayerVisible,
   setActivityLayerVisible,
@@ -34,7 +34,7 @@ import {
   clearNavigation,
   setActiveNavigationRoute,
 } from "./navigation.js";
-import { mountActivityPanel } from "./activity.js";
+import { mountActivityPanel, startLiveTracking, getTracker } from "./activity.js";
 import { mountSavedRoutesPanel } from "./saved-routes.js";
 import { mountWorkoutPanel } from "./workout-planner.js";
 import { mountHistoryPanel } from "./activity-history.js";
@@ -665,7 +665,7 @@ async function recalculateSelectedRoute() {
     const navigationSwitched = setActiveNavigationRoute(currentRoute);
     const routeLine = navigationSwitched
       ? true
-      : drawPlannedRoute(currentRoute.coordinates);
+      : drawPlannedRoute(currentRoute.geometrySegments || currentRoute.coordinates);
     if (!routeLine)
       throw new Error(
         "The route was calculated, but the map could not draw its route line. Please refresh the map and try again.",
@@ -928,7 +928,19 @@ function bindRouteActions() {
     .getElementById("start-route-navigation")
     ?.addEventListener("click", () => {
       if (!currentRoute) return;
-      if (startNavigation(currentRoute)) openPanel("activity");
+      const activeTracker = getTracker();
+      const useActivityGPS = Boolean(
+        activeTracker?.isRecording && !activeTracker?.isPaused,
+      );
+      if (startNavigation(currentRoute, { externalGPS: useActivityGPS }))
+        openPanel("activity");
+    });
+  document
+    .getElementById("start-live-tracking")
+    ?.addEventListener("click", () => {
+      // Mount Activity first so the recorder status/metrics update immediately.
+      openPanel("activity");
+      startLiveTracking();
     });
   document
     .getElementById("refresh-destination-route")
@@ -952,8 +964,10 @@ function bindRouteActions() {
       }
     });
   document.getElementById("clear-route")?.addEventListener("click", () => {
+    // Clear only route guidance. The independent red dashed live GPS track
+    // must remain visible if the user clears a route while tracking.
     clearNavigation();
-    clearAllRouteDrawings();
+    clearDestination();
     currentRoute = null;
     selectedDestination = null;
     document.getElementById("route-summary").hidden = true;
@@ -993,7 +1007,7 @@ function bindFindAnotherRoute() {
       const navigationSwitched = setActiveNavigationRoute(currentRoute);
       const routeLine = navigationSwitched
         ? true
-        : drawPlannedRoute(currentRoute.coordinates);
+        : drawPlannedRoute(currentRoute.geometrySegments || currentRoute.coordinates);
       if (!routeLine) {
         showToast(
           "This alternative route could not be drawn on the map. Try another route.",

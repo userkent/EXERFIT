@@ -12,14 +12,15 @@ import {
   TILE_PROVIDERS,
 } from "./config.js";
 import { getUserData, updatePreferences } from "./storage.js";
+import { toLeafletSegments } from "./route-geometry.js";
 
 let map;
 let baseLayer;
 let hybridLabelLayer;
 let userMarker;
+let navigationPositionMarker;
 let destinationMarker;
 let plannedLine;
-let navigationTrailLine;
 let liveTrackLine;
 let selectedHistoryLine;
 let savedRouteLayer;
@@ -38,20 +39,7 @@ function scheduleMapResize() {
   }, 160);
 }
 
-const toLatLngs = (coordinates) =>
-  (Array.isArray(coordinates) ? coordinates : [])
-    .map((point) => {
-      const lat = Array.isArray(point) ? Number(point[1]) : Number(point?.lat);
-      const lon = Array.isArray(point) ? Number(point[0]) : Number(point?.lon);
-      return [lat, lon];
-    })
-    .filter(
-      ([lat, lon]) =>
-        Number.isFinite(lat) &&
-        Number.isFinite(lon) &&
-        Math.abs(lat) <= 90 &&
-        Math.abs(lon) <= 180,
-    );
+const toLatLngs = (geometry) => toLeafletSegments(geometry).flat();
 const group = () => window.L.layerGroup();
 
 export function initMap() {
@@ -61,19 +49,16 @@ export function initMap() {
     );
   map = L.map("map", {
     zoomControl: false,
-    preferCanvas: true,
+    // Use Leaflet's standard SVG overlay renderer for predictable visible route paths.
+    // Route tracks remain independent layers; they no longer depend on custom renderers.
+    preferCanvas: false,
     scrollWheelZoom: true,
   }).setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
-  // Keep route lines above map tiles while keeping location/destination markers visible.
-  const plannedPane = map.createPane("exerfitPlannedRoutePane");
-  plannedPane.style.zIndex = 430;
-  plannedPane.style.pointerEvents = "none";
-  const navigationPane = map.createPane("exerfitNavigationTrailPane");
-  navigationPane.style.zIndex = 440;
-  navigationPane.style.pointerEvents = "none";
-  const activityPane = map.createPane("exerfitActivityTrackPane");
-  activityPane.style.zIndex = 450;
-  activityPane.style.pointerEvents = "none";
+  // Leaflet's built-in overlay pane sits above map tiles (tilePane: 200) and
+  // below markers (markerPane: 600), so paths stay visible without covering pins.
+  const routeOverlayPane = map.getPane("overlayPane");
+  if (routeOverlayPane) routeOverlayPane.style.zIndex = 450;
+
   // Allow the map canvas to zoom beyond a provider's native tile level; Leaflet scales the last tile.
   map.setMaxZoom(20);
   map.attributionControl.addAttribution(
@@ -203,7 +188,26 @@ export function centerOn(lat, lon, zoom = 16) {
 // Keep the live GPS marker and camera centered on the user during turn-by-turn navigation.
 export function followNavigationPosition(lat, lon, accuracy = 0) {
   if (!map) return;
-  locateOnMap(lat, lon, accuracy);
+  // Navigation uses a dedicated blue position marker, distinct from the red
+  // dashed actual-movement trail and the orange planned route.
+  const blueNavigationIcon = L.divIcon({
+    className: "exerfit-navigation-position-icon",
+    html: '<span class="exerfit-navigation-position-dot"><span></span></span>',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+  if (!navigationPositionMarker) {
+    navigationPositionMarker = L.marker([lat, lon], {
+      icon: blueNavigationIcon,
+      zIndexOffset: 1200,
+    }).addTo(map);
+  } else {
+    navigationPositionMarker.setIcon(blueNavigationIcon);
+    navigationPositionMarker.setLatLng([lat, lon]);
+  }
+  navigationPositionMarker.bindPopup(
+    `<strong>Navigation position</strong><br><small>GPS accuracy: ${Math.round(accuracy)} m</small>`,
+  );
   if (map.getZoom() < 16) map.setZoom(16, { animate: false });
   map.panTo([lat, lon], { animate: true, duration: 0.35 });
 }
@@ -226,25 +230,64 @@ export function clearDestination() {
   if (map && destinationMarker) map.removeLayer(destinationMarker);
   destinationMarker = null;
 }
-export function drawPlannedRoute(coordinates, color = "#e98e62") {
+export function drawPlannedRoute(geometry, color = "#f28a36") {
   if (!map) return null;
-  const latLngs = toLatLngs(coordinates);
-  if (latLngs.length < 2) {
+  // Route planning is orange; once turn-by-turn navigation begins the same
+  // geometry is redrawn blue. These remain one independently managed route layer.
+  const isNavigationRoute = color.toLowerCase() === "#2878f0";
+  color = isNavigationRoute ? "#2878f0" : "#f28a36";
+  const latLngSegments = toLeafletSegments(geometry);
+  const pointCount = latLngSegments.reduce((sum, segment) => sum + segment.length, 0);
+  if (pointCount < 2) {
+    console.warn("[ExerFit map] Planned route has no valid LineString geometry.", {
+      geometryType: geometry?.type || (Array.isArray(geometry) ? "coordinates" : typeof geometry),
+    });
     clearPlannedRoute();
     return null;
   }
   if (plannedLine) map.removeLayer(plannedLine);
-  plannedLine = L.polyline(latLngs, {
-    pane: "exerfitPlannedRoutePane",
+  // A normal GeoJSON LineString is sent to Leaflet as a flat LatLng array.
+  // MultiLineString geometry stays nested so disconnected segments are preserved.
+  const leafletRoute = latLngSegments.length === 1
+    ? latLngSegments[0]
+    : latLngSegments;
+  plannedLine = L.polyline(leafletRoute, {
+    pane: "overlayPane",
+    className: isNavigationRoute
+      ? "exerfit-navigation-route-line"
+      : "exerfit-planned-route-line",
     color,
-    weight: 7,
-    opacity: 0.98,
+    weight: 8,
+    opacity: 1,
     lineCap: "round",
     lineJoin: "round",
     smoothFactor: 1,
     interactive: false,
+    bubblingMouseEvents: false,
   }).addTo(map);
   plannedLine.bringToFront();
+  const renderedPath = plannedLine.getElement?.();
+  const pathDataLength = renderedPath?.getAttribute("d")?.length || 0;
+  if (renderedPath) {
+    // Keep the actual SVG stroke explicit so broad site-wide SVG styles cannot
+    // make the route transparent or collapse its stroke styling.
+    renderedPath.style.stroke = color;
+    renderedPath.style.strokeWidth = "8px";
+    renderedPath.style.strokeOpacity = "1";
+    renderedPath.style.fill = "none";
+    renderedPath.style.strokeLinecap = "round";
+    renderedPath.style.strokeLinejoin = "round";
+  }
+  console.debug(`[ExerFit map] ${isNavigationRoute ? "Navigation" : "Planned"} route rendered.`, {
+    segments: latLngSegments.length,
+    points: pointCount,
+    renderer: "Leaflet default overlay renderer",
+    pane: plannedLine.options.pane,
+    svgPathAttached: Boolean(renderedPath),
+    pathDataLength,
+    firstPoint: latLngSegments[0][0],
+    lastPoint: latLngSegments.at(-1).at(-1),
+  });
   const bounds = plannedLine.getBounds();
   if (bounds.isValid()) {
     scheduleMapResize();
@@ -265,59 +308,35 @@ export function clearPlannedRoute() {
   plannedLine = null;
 }
 
-// Draws the user's actual movement while turn-by-turn navigation is active.
-// This is separate from the planned route and from saved Activity tracks.
-export function drawNavigationTrail(points) {
+// Removes only the blue live-navigation position marker. It never touches
+// the independently recorded red GPS trail.
+export function clearNavigationPosition() {
+  if (map && navigationPositionMarker) map.removeLayer(navigationPositionMarker);
+  navigationPositionMarker = null;
+}
+
+export function drawRecordedTrack(points) {
   if (!map) return null;
-  const latLngs = (Array.isArray(points) ? points : [])
-    .map((point) => [Number(point?.lat), Number(point?.lon)])
-    .filter(
-      ([lat, lon]) =>
-        Number.isFinite(lat) &&
-        Number.isFinite(lon) &&
-        Math.abs(lat) <= 90 &&
-        Math.abs(lon) <= 180,
-    );
-  if (latLngs.length < 2) return navigationTrailLine || null;
-  if (!navigationTrailLine) {
-    navigationTrailLine = L.polyline(latLngs, {
-      pane: "exerfitNavigationTrailPane",
-      color: "#246fe5",
-      weight: 6,
-      opacity: 0.98,
+  const latLngs = toLatLngs(points);
+  if (latLngs.length < 2) return liveTrackLine || null;
+  if (!liveTrackLine)
+    liveTrackLine = L.polyline(latLngs, {
+      pane: "overlayPane",
+      className: "exerfit-live-tracking-line",
+      color: "#e53945",
+      weight: 5,
+      opacity: 0.58,
+      dashArray: "10 9",
+      dashOffset: "0",
       lineCap: "round",
       lineJoin: "round",
       smoothFactor: 1,
       interactive: false,
-    }).addTo(map);
-  } else {
-    navigationTrailLine.setLatLngs(latLngs);
-  }
-  navigationTrailLine.bringToFront();
-  return navigationTrailLine;
-}
-export function clearNavigationTrail() {
-  if (map && navigationTrailLine) map.removeLayer(navigationTrailLine);
-  navigationTrailLine = null;
-}
-
-export function drawRecordedTrack(points) {
-  if (!map) return;
-  const latLngs = (points || [])
-    .map((point) => [Number(point.lat), Number(point.lon)])
-    .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
-  if (latLngs.length < 2) return;
-  if (!liveTrackLine)
-    liveTrackLine = L.polyline(latLngs, {
-      pane: "exerfitActivityTrackPane",
-      color: "#318e68",
-      weight: 5,
-      opacity: 0.95,
-      lineCap: "round",
-      lineJoin: "round",
-      interactive: false,
+      bubblingMouseEvents: false,
     }).addTo(map);
   else liveTrackLine.setLatLngs(latLngs);
+  liveTrackLine.bringToFront();
+  return liveTrackLine;
 }
 export function clearRecordedTrack() {
   if (map && liveTrackLine) map.removeLayer(liveTrackLine);
@@ -326,8 +345,11 @@ export function clearRecordedTrack() {
 export function drawHistoryTrack(points) {
   if (!map || !points?.length) return;
   if (selectedHistoryLine) map.removeLayer(selectedHistoryLine);
-  const latLngs = points.map((point) => [point.lat, point.lon]);
+  const latLngs = toLatLngs(points);
+  if (latLngs.length < 2) return;
   selectedHistoryLine = L.polyline(latLngs, {
+    pane: "overlayPane",
+    className: "exerfit-history-track-line",
     color: "#4e83a4",
     weight: 5,
     dashArray: "7 7",
@@ -351,8 +373,10 @@ export function refreshDataLayers() {
   activityRouteLayer.clearLayers();
   heatmapLayer.clearLayers();
   (data.routes || []).forEach((route) => {
-    if (savedLayerVisible && route.coordinates?.length > 1)
-      L.polyline(toLatLngs(route.coordinates), {
+    const geometry = route.geometrySegments || route.geometry || route.coordinates;
+    const routeSegments = toLeafletSegments(geometry);
+    if (savedLayerVisible && routeSegments.some((segment) => segment.length > 1))
+      L.polyline(routeSegments, {
         color: "#7b9c80",
         weight: 3,
         opacity: 0.75,
@@ -365,7 +389,8 @@ export function refreshDataLayers() {
   });
   (data.activities || []).forEach((activity) => {
     if (activityLayerVisible && activity.points?.length > 1) {
-      const points = activity.points.map((point) => [point.lat, point.lon]);
+      const points = toLatLngs(activity.points);
+      if (points.length < 2) return;
       L.polyline(points, { color: "#4b8eb0", weight: 3, opacity: 0.65 })
         .bindPopup(
           `<strong>${String(activity.type || "Activity")}</strong><br>${(activity.distanceMeters / 1000).toFixed(2)} km`,
@@ -451,7 +476,7 @@ export function restoreMapPreferences() {
 }
 export function clearAllRouteDrawings() {
   clearPlannedRoute();
-  clearNavigationTrail();
+  clearNavigationPosition();
   clearRecordedTrack();
   clearHistoryTrack();
   clearDestination();
